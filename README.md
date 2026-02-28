@@ -1,5 +1,7 @@
 # AIDA — AI-Native 组织运营基础设施平台
 
+> **AIDA**: Agile Intent-Driven Architecture（敏捷意图驱动架构）
+
 AIDA 定义了一套通用的"业务虚拟机（Business Virtual Machine）"规范，使得业务蓝图本身即可被运行时引擎理解和执行，并能由 AI Agent 进行生成、部署、运营维护和操作使用。
 
 核心理念：**业务流程即代码 (Business Process as Code)**
