@@ -1,7 +1,7 @@
-# 闲氪 AI-Native 组织设计 · 会话状态笔记
+# IdleX AI-Native 组织设计 · 会话状态笔记
 
 **会话开始时间**：2026-02-23
-**目标**：以闲氪为案例，设计可商业落地的 AI 原生组织架构与系统，触及 AI 原生组织能力边界
+**目标**：以IdleX为案例，设计可商业落地的 AI 原生组织架构与系统，触及 AI 原生组织能力边界
 
 ---
 
@@ -21,7 +21,7 @@
 ### Phase 3：架构综合设计 ✅
 - 核心洞察：BPS 提供"业务应该如何流转"（What），OpenClaw 提供"Agent如何执行"（How），缺失的是"智能编排层"（When/Who/How many）
 - 目标架构：三层模型 = BPS 业务流程层 + 智能编排层 + OpenClaw Agent 执行层
-- 输出文档：`闲氪AI-Native组织架构深度分析.md`
+- 输出文档：`IdleXAI-Native组织架构深度分析.md`
 
 ### Phase 4：BPS TS 重写决策 ✅
 - 决策：将 BPS 从 Django/Python 改写为 TypeScript，作为 OpenClaw 原生模块
@@ -58,7 +58,7 @@
 - TypeScript 编译 & 构建均通过
 
 ### Phase 7：GEO 业务蓝图 MVP ✅
-- 蓝图文件：`blueprints/geo-ktv-changsha.yaml` — 闲氪GEO门店运营蓝图（长沙自助KTV）
+- 蓝图文件：`blueprints/geo-ktv-changsha.yaml` — IdleXGEO门店运营蓝图（长沙自助KTV）
 - 测试文件：`test/geo-ktv.test.ts` — 15 项集成测试全部通过
 - **全量测试：32 tests, 2 test files, all pass**
 - 蓝图规模：12 服务 / 3 事件 / 4 指令 / 11 规则
@@ -135,7 +135,7 @@
 ## 项目文件清单
 
 ### 设计文档
-- `闲氪AI-Native组织架构深度分析.md` — 架构分析与三层模型设计
+- `IdleXAI-Native组织架构深度分析.md` — 架构分析与三层模型设计
 - `packages/bps-engine/docs/bps-engine-skeleton.md` — BPS TS 引擎骨架设计
 
 ### BPS 引擎源码 (`packages/bps-engine/`)
@@ -145,7 +145,7 @@
 - `src/store/` — SQLite 持久层（3 文件：db / process-store / blueprint-store）
 - `src/loader/yaml-loader.ts` — YAML 蓝图加载器
 - `src/index.ts` — 统一导出 + createBpsEngine() 工厂
-- `blueprints/geo-ktv-changsha.yaml` — 闲氪GEO长沙KTV运营蓝图
+- `blueprints/geo-ktv-changsha.yaml` — IdleXGEO长沙KTV运营蓝图
 - `test/engine.test.ts` — 引擎基础测试（17 tests）
 - `test/geo-ktv.test.ts` — GEO蓝图集成测试（15 tests）
 
@@ -171,13 +171,13 @@
 ## 待讨论/待实施事项
 - [x] 三层架构的详细设计 → 已在骨架文档中完成
 - [x] BPS TS Phase 1 引擎核心编码 → 32 项测试全部通过
-- [x] 闲氪业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
+- [x] IdleX业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
 - [x] 核心 Agent 定义 → BPS Expert + Meta-Architect workspace 文件已完成
 - [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
 - [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
 - [ ] **Meta ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程
 - [ ] Phase 2：OpenClaw 整合层（AgentBridge 实现、Skill 注册、事件桥接、SysCall→Agent 映射）
-- [ ] Skill Registry 初始清单（映射闲氪业务 Service → Agent Skill）
+- [ ] Skill Registry 初始清单（映射IdleX业务 Service → Agent Skill）
 - [ ] 编排层的决策模型（规则驱动 vs LLM动态规划 vs 混合）
 - [ ] 人类介入点的精确定义（当前仅 content-review 为 manual）
 - [ ] 并行 join 模式（等待所有并行子进程完成后再继续）

@@ -1,6 +1,7 @@
 {
   "name": "aida",
   "private": true,
+  "license": "MIT",
   "workspaces": [
     "packages/bps-engine",
     "packages/bps-dashboard"
