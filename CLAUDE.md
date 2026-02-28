@@ -28,7 +28,7 @@ aida/
 │   └── 标准业务建模过程 (SBMP) v0.2 草案.md
 ├── erpsys/                   ← Django 版 BPS 引擎（仅供 bps-engine 开发借鉴）
 ├── research/                 ← BPS 研究（论文提案、评估、backlog 等）
-│   ├── BPS_research.md
+│   ├── research.md
 │   └── backlog.md
 ├── packages/
 │   ├── bps-engine/           ← git submodule → jinniudashu/bps-engine
