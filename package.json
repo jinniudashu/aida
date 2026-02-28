@@ -1,0 +1,8 @@
+{
+  "name": "aida",
+  "private": true,
+  "workspaces": [
+    "packages/bps-engine",
+    "packages/bps-dashboard"
+  ]
+}
