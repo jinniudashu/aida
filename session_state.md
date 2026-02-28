@@ -30,7 +30,7 @@
 - RuleEvaluator 可原生调用 LLM（NON_DETERMINISTIC 支持）
 
 ### Phase 5：BPS TS 骨架设计 ✅
-- 输出文档：`bps-engine-skeleton.md`
+- 输出文档：`packages/bps-engine/docs/bps-engine-skeleton.md`
 - 已完成源码全量研读：BPS 规范、sys_lib.py、kernel/models.py、design/models.py、kernel/types.py
 - 已设计：TypeBox Schema（6 模块）、Engine 核心（5 模块）、OpenClaw 整合层（4 模块）、YAML 加载器
 - 关键设计决策：
@@ -136,7 +136,7 @@
 
 ### 设计文档
 - `闲氪AI-Native组织架构深度分析.md` — 架构分析与三层模型设计
-- `bps-engine-skeleton.md` — BPS TS 引擎骨架设计
+- `packages/bps-engine/docs/bps-engine-skeleton.md` — BPS TS 引擎骨架设计
 
 ### BPS 引擎源码 (`packages/bps-engine/`)
 - `package.json` / `tsconfig.json` — 项目配置
