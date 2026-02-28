@@ -1,4 +1,4 @@
-# AIDA — AI-Native 组织运营基础设施平台
+# AIDA (Agile Intent-Driven Architecture) — AI-Native 组织运营基础设施平台
 
 ## 项目定位
 
