@@ -150,19 +150,19 @@
 - `test/geo-ktv.test.ts` — GEO蓝图集成测试（15 tests）
 
 ### Phase 8：核心 Agent 定义 ✅
-- BPS Expert Agent + Meta-Architect Agent workspace 文件
+- BPS Expert Agent + Org-Architect Agent workspace 文件
 - 文件路径：`packages/bps-engine/agents/`
   - `bps-expert/SOUL.md` — BPS 核心理论知识（六元组、状态机、YAML schema、编排模式）
   - `bps-expert/AGENTS.md` — SBMP 建模方法论（五步法 + EARS 规则格式 + 交互精炼流程）
   - `bps-expert/IDENTITY.md` — 身份定义
-  - `meta/SOUL.md` — 升级版 Meta-Architect（与 BPS Expert 协作、Agent 生命周期管理）
-  - `meta/AGENTS.md` — Agent 创建流程 + Agent 注册表
-  - `meta/IDENTITY.md` — 身份定义
+  - `org-architect/SOUL.md` — Org-Architect（与 BPS Expert 协作、Agent 生命周期管理）
+  - `org-architect/AGENTS.md` — Agent 创建流程 + Agent 注册表
+  - `org-architect/IDENTITY.md` — 身份定义
 - 部署脚本：`deploy/install-agents.sh`
 - **架构决策**：
-  - BPS Expert 独立 Agent，由 Meta-Architect 管理生命周期
-  - Meta 不直接依赖 bps-engine API，通过 BPS Expert 间接协作
-  - 三者（Meta + BPS Expert + bps-engine）打包在一起部署
+  - BPS Expert 独立 Agent，由 Org-Architect 管理生命周期
+  - Org-Architect 不直接依赖 bps-engine API，通过 BPS Expert 间接协作
+  - 三者（Org-Architect + BPS Expert + bps-engine）打包在一起部署
   - BPS Expert 是通用业务设计专家，不包含具体业务领域知识
   - SOUL.md 承载 BPS 理论知识（What it knows），AGENTS.md 承载 SBMP 方法论（How it works）
 
@@ -172,10 +172,10 @@
 - [x] 三层架构的详细设计 → 已在骨架文档中完成
 - [x] BPS TS Phase 1 引擎核心编码 → 32 项测试全部通过
 - [x] IdleX业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
-- [x] 核心 Agent 定义 → BPS Expert + Meta-Architect workspace 文件已完成
+- [x] 核心 Agent 定义 → BPS Expert + Org-Architect workspace 文件已完成
 - [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
 - [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
-- [ ] **Meta ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程
+- [ ] **Org-Architect ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程
 - [ ] Phase 2：OpenClaw 整合层（AgentBridge 实现、Skill 注册、事件桥接、SysCall→Agent 映射）
 - [ ] Skill Registry 初始清单（映射IdleX业务 Service → Agent Skill）
 - [ ] 编排层的决策模型（规则驱动 vs LLM动态规划 vs 混合）

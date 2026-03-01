@@ -129,7 +129,7 @@ npx vitest run            # 全部测试
   - Layer 3: 流程拓扑图（从 rules 自动推导）
   - Layer 4: 实时执行动画（SSE 驱动节点状态变色）
   - Layer 5: ATDD 测试循环（试运行 + 模拟完成 + 执行报告）
-- **Phase 8：核心 Agent 定义**：BPS Expert + Meta-Architect workspace
+- **Phase 8：核心 Agent 定义**：BPS Expert + Org-Architect workspace
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
