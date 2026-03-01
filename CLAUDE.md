@@ -32,10 +32,15 @@ aida/
 │   └── backlog.md
 ├── packages/
 │   ├── bps-engine/           ← git submodule → jinniudashu/bps-engine
+│   │   ├── agents/           ← Agent workspace 文件
+│   │   │   ├── aida/         ← 首席管理助理（智能编排层人格化）
+│   │   │   ├── bps-expert/   ← BPS 业务流程专家
+│   │   │   └── org-architect/← 组织架构师（Agent 生命周期管理）
+│   │   ├── deploy/           ← install-agents.sh 部署脚本
 │   │   └── docs/             ← bps-engine-skeleton.md, OpenClaw框架技术研究报告.md
 │   └── bps-dashboard/        ← git submodule → jinniudashu/bps-dashboard
 │       └── docs/             ← bps-dashboard-visual-gap-analysis.md, dashboard-requirements-spec.md
-└── session_state.md          ← 开发历程笔记（Phase 1-7）
+└── session_state.md          ← 开发历程笔记（Phase 1-9）
 ```
 
 ## BPS 核心概念
@@ -130,6 +135,7 @@ npx vitest run            # 全部测试
   - Layer 4: 实时执行动画（SSE 驱动节点状态变色）
   - Layer 5: ATDD 测试循环（试运行 + 模拟完成 + 执行报告）
 - **Phase 8：核心 Agent 定义**：BPS Expert + Org-Architect workspace
+- **Phase 9：Aida 管理助理 Agent**：Aida workspace（IDENTITY/SOUL/AGENTS），BPS 结晶化判断框架，Agent 协作拓扑（Aida → BPS-Expert / Org-Architect）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

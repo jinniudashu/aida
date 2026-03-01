@@ -166,6 +166,24 @@
   - BPS Expert 是通用业务设计专家，不包含具体业务领域知识
   - SOUL.md 承载 BPS 理论知识（What it knows），AGENTS.md 承载 SBMP 方法论（How it works）
 
+### Phase 9：Aida 管理助理 Agent ✅
+- Aida Agent workspace 文件
+- 文件路径：`packages/bps-engine/agents/aida/`
+  - `IDENTITY.md` — 身份定义（首席管理助理，智能编排层人格化）
+  - `SOUL.md` — 核心知识（定位、双通道、能力框架、BPS 结晶化判断框架七场景）
+  - `AGENTS.md` — 操作指南（工作模式、调度协议、工具表、输出规范）
+- **架构拓扑**：`[User] ↔ [Aida] → [BPS-Expert] / [Org-Architect]`
+- **核心设计决策**：
+  - Aida 是智能编排层的人格化，用户唯一日常交互对象
+  - BPS 是结晶机制而非操作系统——七个结晶化场景判断框架
+  - BPS-Expert ↔ Org-Architect 可直接通信（避免不必要中转），但需通知 Aida 结果
+  - Aida 的 subagents 为显式列表（bps-expert, org-architect），Org-Architect 保留 allowAgents: ["*"]
+- 同步更新：
+  - BPS-Expert SOUL.md：核心边界 #3 更新为"任务来自 Aida 调度"
+  - BPS-Expert AGENTS.md：新增"与 Aida 的协作协议"段
+  - Org-Architect AGENTS.md：Agent 注册表增加 Aida 条目 + 协作说明
+  - deploy/install-agents.sh：新增 Section 0 安装 Aida + patch.json 增加 aida 配置
+
 ---
 
 ## 待讨论/待实施事项
@@ -173,6 +191,7 @@
 - [x] BPS TS Phase 1 引擎核心编码 → 32 项测试全部通过
 - [x] IdleX业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
 - [x] 核心 Agent 定义 → BPS Expert + Org-Architect workspace 文件已完成
+- [x] Aida 管理助理 Agent → workspace 文件 + 结晶化框架 + 协作拓扑已完成
 - [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
 - [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
 - [ ] **Org-Architect ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程
