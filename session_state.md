@@ -46,10 +46,11 @@
 ### Phase 6：BPS TS 引擎核心编码 ✅
 - 包路径：`packages/bps-engine/`
 - **依赖调整**：`better-sqlite3` → `node:sqlite`（Node 24 内建 SQLite，零原生依赖，免编译）
-- 源码结构（18 个 TypeScript 文件）：
+- 源码结构（23 个 TypeScript 文件）：
   - Schema 层（7）：common / entity / service / rule / role / process / resource
   - Engine 层（5）：context / state-machine / rule-evaluator / syscall / process-manager
   - Store 层（3）：db / process-store / blueprint-store
+  - Knowledge 层（5）：types / knowledge-store / context-assembler / conflict-detector / system-knowledge
   - Loader（1）：yaml-loader
   - Entry（1）：index.ts
   - Test（1）：engine.test.ts — 17 项基础测试全部通过
@@ -143,6 +144,7 @@
 - `src/schema/` — TypeBox 类型定义（7 文件）
 - `src/engine/` — 引擎核心（5 文件：context / state-machine / rule-evaluator / syscall / process-manager）
 - `src/store/` — SQLite 持久层（3 文件：db / process-store / blueprint-store）
+- `src/knowledge/` — BKM 知识管理（5 文件：types / knowledge-store / context-assembler / conflict-detector / system-knowledge）
 - `src/loader/yaml-loader.ts` — YAML 蓝图加载器
 - `src/index.ts` — 统一导出 + createBpsEngine() 工厂
 - `blueprints/geo-ktv-changsha.yaml` — IdleXGEO长沙KTV运营蓝图
@@ -184,6 +186,20 @@
   - Org-Architect AGENTS.md：Agent 注册表增加 Aida 条目 + 协作说明
   - deploy/install-agents.sh：新增 Section 0 安装 Aida + patch.json 增加 aida 配置
 
+### Phase 10：BKM 业务知识管理子系统 ✅
+- 新增模块：`src/knowledge/`（5 个 TypeScript 文件）
+- **知识分层**：5 层（charter → strategy → domain → ops → contextual），高层约束低层
+- **作用域**：6 类（system / global / team:{id} / agent:{id} / domain:{d} / service:{s}）
+- **核心模块**：
+  - `KnowledgeStore`：封装 DossierStore，知识存储为 `entityType="knowledge"` 的 Dossier
+  - `ContextAssembler`：scope chain 构建 + 知识装配 + 浅合并
+  - `ConflictDetector`：字段级冲突检测，severity 分级（critical/warning/info）
+  - `loadSystemKnowledge()`：3 条系统保留知识（结晶化框架、冲突规则、审计流程）
+- **ProcessManager 集成**：createProcess() 自动装配 `_knowledge` 到 frame.localVars
+- **新增事件**：`knowledge:conflict`（critical 冲突触发）
+- **测试**：30 项新测试（knowledge-store 15 + context-assembly 15），**全量 190 tests 通过**
+- 规范文档：`docs/业务知识管理 (BKM) v0.1.md`
+
 ---
 
 ## 待讨论/待实施事项
@@ -192,6 +208,7 @@
 - [x] IdleX业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
 - [x] 核心 Agent 定义 → BPS Expert + Org-Architect workspace 文件已完成
 - [x] Aida 管理助理 Agent → workspace 文件 + 结晶化框架 + 协作拓扑已完成
+- [x] BKM 业务知识管理子系统 → 5 层知识分级 + scope chain 装配 + 冲突检测 + ProcessManager 集成（190 tests）
 - [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
 - [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
 - [ ] **Org-Architect ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程

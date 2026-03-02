@@ -27,6 +27,7 @@ aida/
 │   ├── 业务流程描述通用规范 (BPS) v0.9 Draft.md
 │   ├── 标准业务建模过程 (SBMP) v0.2 草案.md
 │   ├── 业务项目装载协议 (BPLP) v0.1.md
+│   ├── 业务知识管理 (BKM) v0.1.md
 │   └── BPS.png               ← 系统架构图
 ├── erpsys/                   ← Django 版 BPS 引擎（仅供 bps-engine 开发借鉴）
 │   ├── research.md           ← erpsys 深度分析报告
@@ -41,6 +42,12 @@ aida/
 │       └── data/             ← 种子数据（mock-first）
 ├── packages/
 │   ├── bps-engine/           ← git submodule → jinniudashu/bps-engine
+│   │   ├── src/knowledge/    ← BKM 业务知识管理子系统
+│   │   │   ├── types.ts      ← 类型定义（Layer/Scope/Entry/ConflictReport）
+│   │   │   ├── knowledge-store.ts  ← 知识 CRUD（封装 DossierStore）
+│   │   │   ├── context-assembler.ts ← Scope chain 构建 + 知识装配
+│   │   │   ├── conflict-detector.ts ← 字段级冲突检测
+│   │   │   └── system-knowledge.ts  ← 系统保留知识 + loadSystemKnowledge()
 │   │   ├── agents/           ← Agent workspace 文件
 │   │   │   ├── aida/         ← 首席管理助理（智能编排层人格化）
 │   │   │   ├── bps-expert/   ← BPS 业务流程专家
@@ -94,7 +101,8 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - TypeScript (ES2022 ESM), Node.js 24+
 - TypeBox（运行时类型校验）, node:sqlite（零依赖内置 SQLite）
 - expr-eval（安全表达式求值）, yaml, uuid
-- Vitest（测试框架）, 132 tests
+- BKM 知识管理子系统（5 层知识分级 + scope chain + 冲突检测）
+- Vitest（测试框架）, 190 tests
 
 ### bps-dashboard（监控面板）
 - 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
@@ -131,6 +139,7 @@ npx vitest run            # 全部测试
 - Design/Kernel 双轨制 → 单层 + status 字段（draft/active/archived）
 - Django Signals → EventEmitter（7 种进程事件）
 - 5 类独立资源表 → 统一 ResourceRequirement
+- Agent SOUL 内嵌知识 → BKM 知识 Dossier（分层分布 + scope chain 装配）
 
 ## 项目进展
 
@@ -145,6 +154,8 @@ npx vitest run            # 全部测试
   - Layer 5: ATDD 测试循环（试运行 + 模拟完成 + 执行报告）
 - **Phase 8：核心 Agent 定义**：BPS Expert + Org-Architect workspace
 - **Phase 9：Aida 管理助理 Agent**：Aida workspace（IDENTITY/SOUL/AGENTS），BPS 结晶化判断框架，Agent 协作拓扑（Aida → BPS-Expert / Org-Architect）
+- **Phase 10：BKM 业务知识管理**：5 层知识分级（charter→contextual）+ 6 类作用域 + 冲突检测 + ProcessManager 集成（30 新测试）
+  - 详见 `docs/业务知识管理 (BKM) v0.1.md`
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
