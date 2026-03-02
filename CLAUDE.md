@@ -26,6 +26,7 @@ aida/
 ├── docs/                     ← BPS 核心规范文档 + 架构图
 │   ├── 业务流程描述通用规范 (BPS) v0.9 Draft.md
 │   ├── 标准业务建模过程 (SBMP) v0.2 草案.md
+│   ├── 业务项目装载协议 (BPLP) v0.1.md
 │   └── BPS.png               ← 系统架构图
 ├── erpsys/                   ← Django 版 BPS 引擎（仅供 bps-engine 开发借鉴）
 │   ├── research.md           ← erpsys 深度分析报告
@@ -33,6 +34,11 @@ aida/
 │   └── plan.md               ← erpsys 重构计划（已过时）
 ├── research/                 ← BPS 理论研究
 │   └── paper_proposal.md     ← 学术论文提案
+├── projects/
+│   └── idlex/                ← IdleX 商业项目（BPLP 首个实例）
+│       ├── project.yaml      ← 项目清单
+│       ├── context/          ← 业务上下文（供 Agent 消费）
+│       └── data/             ← 种子数据（mock-first）
 ├── packages/
 │   ├── bps-engine/           ← git submodule → jinniudashu/bps-engine
 │   │   ├── agents/           ← Agent workspace 文件
