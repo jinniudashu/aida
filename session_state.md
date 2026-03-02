@@ -200,6 +200,19 @@
 - **测试**：30 项新测试（knowledge-store 15 + context-assembly 15），**全量 190 tests 通过**
 - 规范文档：`docs/业务知识管理 (BKM) v0.1.md`
 
+### Phase 11：~/.aida/ 项目目录迁移 ✅
+- **目标**：业务项目数据从代码仓库迁移到 `~/.aida/`，实现代码与数据分离
+- **核心变更**：
+  - 新增 `src/loader/aida-project.ts`：`loadAidaProject()` 一键装载 API
+  - 修改 `src/loader/project-loader.ts`：新增 knowledge seed 支持（KnowledgeSeedYaml + 加载逻辑）
+  - 修改 `src/index.ts`：导出新 API（loadAidaProject, initAidaProject, getDefaultAidaDir）
+  - 修改 `index.ts`（plugin 入口）：替换 auto-glob 为 `loadAidaProject()`
+  - 测试 fixtures 独立化：`test/fixtures/` 下包含蓝图 + 种子数据 + project.yaml
+  - 所有测试不再依赖 `projects/idlex/` 或 `bps-engine/blueprints/`
+- **迁移**：`projects/idlex/*` + `bps-engine/blueprints/*` → `~/.aida/`
+- **文档**：BPLP v0.1 → v0.2，CLAUDE.md 更新目录结构
+- **测试**：7 项新测试（aida-project.test.ts），**全量 197 tests 通过**
+
 ---
 
 ## 待讨论/待实施事项
@@ -208,7 +221,8 @@
 - [x] IdleX业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
 - [x] 核心 Agent 定义 → BPS Expert + Org-Architect workspace 文件已完成
 - [x] Aida 管理助理 Agent → workspace 文件 + 结晶化框架 + 协作拓扑已完成
-- [x] BKM 业务知识管理子系统 → 5 层知识分级 + scope chain 装配 + 冲突检测 + ProcessManager 集成（190 tests）
+- [x] BKM 业务知识管理子系统 → 5 层知识分级 + scope chain 装配 + 冲突检测 + ProcessManager 集成
+- [x] ~/.aida/ 项目目录迁移 → loadAidaProject() + knowledge seed + 测试 fixtures 独立化（197 tests）
 - [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
 - [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
 - [ ] **Org-Architect ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程

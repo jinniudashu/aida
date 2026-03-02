@@ -1,4 +1,4 @@
-# 业务项目装载协议 (BPLP) v0.1
+# 业务项目装载协议 (BPLP) v0.2
 
 > Business Project Loading Protocol — 将静态业务文档转化为可执行业务进程的通用方法论
 
@@ -97,39 +97,48 @@ BPLP（业务项目装载协议）   → 如何将项目加载到引擎（协议
 
 ## 4. 项目目录规范
 
+每个 AIDA 实例承载一个业务项目。项目的完整用户态数据存放在 `~/.aida/`，与代码仓库分离：
+
 ```
-projects/
-└── {project-id}/
-    ├── project.yaml              ← 项目清单（必需）
-    ├── context/                  ← 业务上下文
-    │   └── business-context.yaml
-    └── data/                     ← 种子数据
-        ├── mock-*.yaml           ← Mock 数据文件
-        └── import-*.yaml         ← 真实数据导入文件
+~/.aida/
+├── project.yaml              ← 项目清单（必需）
+├── blueprints/               ← 业务蓝图 YAML
+│   └── geo-ktv-changsha.yaml
+├── data/                     ← bps.db + 种子数据
+│   ├── bps.db                ← SQLite 数据库（运行时生成）
+│   └── mock-stores-changsha.yaml
+└── context/                  ← 业务上下文（Agent 消费）
+    └── business-context.yaml
 ```
 
-**命名约定**：
-- 项目目录名 = `projectId`（小写，短横线分隔）
+**设计原则**：
+- 一个 AIDA 实例 = 一个业务项目
+- 用户态数据（`~/.aida/`）与代码仓库完全分离
+- `~/.aida/` 与 OpenClaw 的 `~/.openclaw/` 同构
 - 种子数据文件前缀标识来源：`mock-`、`import-`、`api-`
 
 ## 5. project.yaml Schema
 
 ```yaml
-version: "1.0"                     # 清单格式版本
+version: "1.1"                     # 清单格式版本
 name: "项目显示名称"                # 人类可读名称
 projectId: "project-id"            # 项目唯一标识符
 
-blueprints:                        # 蓝图文件列表（文件名，基于引擎 blueprints/ 目录）
+blueprints:                        # 蓝图文件列表（相对于 ~/.aida/blueprints/）
   - "blueprint-file.yaml"
 
-context:                           # 业务上下文文件（信息性，供 Agent 读取）
+context:                           # 业务上下文文件（相对于 ~/.aida/）
   - "context/business-context.yaml"
 
 seeds:                             # 种子数据引用列表
-  - file: "data/mock-stores.yaml"  # 相对于 project.yaml 的路径
+  - file: "data/mock-stores.yaml"  # 相对于 ~/.aida/
     entityType: "store"            # 该文件中所有实体的类型
     source: "mock"                 # 数据来源：mock | import | api
     description: "说明文字"         # 可选描述
+
+knowledge:                         # 知识种子文件（可选，v1.1 新增）
+  - file: "data/domain-knowledge.yaml"
+    description: "领域知识"
 ```
 
 ## 6. 种子数据文件 Schema
@@ -171,17 +180,41 @@ entities:
 
 ## 8. loadProject API
 
+### 高级 API：loadAidaProject()（推荐）
+
+一键装载 AIDA 项目：创建引擎 → 加载系统知识 → 加载项目清单。
+
+```typescript
+import { loadAidaProject } from 'bps-engine';
+
+const { engine, project, aidaDir, systemKnowledge } = await loadAidaProject();
+// engine: BpsEngine 实例
+// project: ProjectLoadResult | null（无 project.yaml 时为 null）
+// aidaDir: 实际使用的 ~/.aida/ 路径
+// systemKnowledge: { loaded, skipped }
+```
+
+可指定自定义目录（测试场景）：
+
+```typescript
+const result = await loadAidaProject({ aidaDir: '/tmp/my-aida' });
+```
+
+### 底层 API：loadProject()
+
+直接加载项目清单到已有引擎：
+
 ```typescript
 import { loadProject } from 'bps-engine';
 
 const result = loadProject(
-  'projects/idlex/project.yaml',  // 项目清单路径
-  blueprintStore,                  // 蓝图存储
-  dossierStore,                    // 档案存储
-  { blueprintBasePath: 'packages/bps-engine/blueprints/' }  // 可选
+  '~/.aida/project.yaml',
+  blueprintStore,
+  dossierStore,
+  { blueprintBasePath: '~/.aida/blueprints/' },
 );
 
-// result: { blueprints, seeds, errors }
+// result: { projectId, name, blueprints, seeds, knowledge }
 ```
 
-详见 `packages/bps-engine/src/loader/project-loader.ts`。
+详见 `packages/bps-engine/src/loader/aida-project.ts` 和 `project-loader.ts`。
