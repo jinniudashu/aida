@@ -30,6 +30,7 @@ aida/
 │   ├── 标准业务建模过程 (SBMP) v0.2 草案.md
 │   ├── 业务项目装载协议 (BPLP) v0.2.md
 │   ├── 业务知识管理 (BKM) v0.1.md
+│   ├── AIDA 架构决策与现状 (ADR).md  ← 关键设计决策 + 子系统实现状态
 │   └── BPS.png               ← 系统架构图
 ├── erpsys/                   ← Django 版 BPS 引擎（仅供 bps-engine 开发借鉴）
 │   ├── research.md           ← erpsys 深度分析报告
