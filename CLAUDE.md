@@ -58,9 +58,10 @@ aida/
 │   │   │   ├── aida/         ← 首席管理助理（智能编排层人格化）
 │   │   │   ├── bps-expert/   ← BPS 业务流程专家
 │   │   │   └── org-architect/← 组织架构师（Agent 生命周期管理）
-│   │   ├── deploy/           ← install-agents.sh 部署脚本
+│   │   ├── deploy/           ← install-aida.sh 一键部署（bps-engine + bps-dashboard + Agent workspace）
 │   │   └── docs/             ← bps-engine-skeleton.md, OpenClaw框架技术研究报告.md
 │   └── bps-dashboard/        ← git submodule → jinniudashu/bps-dashboard
+│       ├── deploy/           ← bps-dashboard.service systemd 模板
 │       └── docs/             ← bps-dashboard-visual-gap-analysis.md, dashboard-requirements-spec.md
 └── session_state.md          ← 开发历程笔记（Phase 1-10）
 ```
@@ -187,6 +188,12 @@ npx vitest run            # 全部测试
   - `install-aida.sh` 移除 IdleX 示例数据填充，项目初始化交给 Aida 引导
   - Aida SOUL.md 新增首次启动行为（sys:project-init 状态检测）
   - 12 新测试，总计 209 tests
+
+- **Phase 13：Dashboard 部署 + Agent 指令优化**
+  - bps-dashboard 生产部署：Hono 静态文件托管（dist/client/）+ SPA fallback
+  - install-aida.sh 扩展：Dashboard 构建 + systemd 服务自动部署
+  - Agent workspace 整理：操作性内容（项目目录、首次启动）从 SOUL.md 迁移到 AGENTS.md
+  - Aida 行为优化：长操作分步汇报规则 + Dashboard 引导指令
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
