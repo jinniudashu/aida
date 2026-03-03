@@ -223,6 +223,7 @@
 - [x] Aida 管理助理 Agent → workspace 文件 + 结晶化框架 + 协作拓扑已完成
 - [x] BKM 业务知识管理子系统 → 5 层知识分级 + scope chain 装配 + 冲突检测 + ProcessManager 集成
 - [x] ~/.aida/ 项目目录迁移 → loadAidaProject() + knowledge seed + 测试 fixtures 独立化（197 tests）
+- [x] 系统蓝图 sys:project-init → 8 services + 8 rules 顺序链 + loadSystemBlueprints() 幂等加载 + install-aida.sh 简化（209 tests）
 - [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
 - [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
 - [ ] **Org-Architect ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程

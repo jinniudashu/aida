@@ -44,6 +44,8 @@ aida/
 │   │   │   ├── aida-project.ts    ← ~/.aida/ 项目装载（loadAidaProject）
 │   │   │   ├── project-loader.ts  ← 项目清单解析（loadProject）
 │   │   │   └── yaml-loader.ts     ← 蓝图 YAML 解析
+│   │   ├── src/system/        ← 系统蓝图（sys:project-init）
+│   │   │   └── system-blueprint.ts  ← 系统蓝图定义 + loadSystemBlueprints()
 │   │   ├── src/knowledge/    ← BKM 业务知识管理子系统
 │   │   │   ├── types.ts      ← 类型定义（Layer/Scope/Entry/ConflictReport）
 │   │   │   ├── knowledge-store.ts  ← 知识 CRUD（封装 DossierStore）
@@ -115,7 +117,7 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - expr-eval（安全表达式求值）, yaml, uuid
 - BKM 知识管理子系统（5 层知识分级 + scope chain + 冲突检测）
 - `loadAidaProject()` 一键装载（~/.aida/ → 引擎 + 系统知识 + 项目）
-- Vitest（测试框架）, 197 tests
+- Vitest（测试框架）, 209 tests
 
 ### bps-dashboard（监控面板）
 - 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
@@ -175,6 +177,14 @@ npx vitest run            # 全部测试
   - OpenClaw 插件入口改用 `loadAidaProject()` 替代 auto-glob
   - 测试 fixtures 独立化（不再依赖 in-repo 项目文件）
   - BPLP 文档升级到 v0.2（7 新测试，总计 197 tests）
+- **Phase 12：系统蓝图 sys:project-init**：项目初始化形式化为系统保留 BPS 蓝图
+  - `src/system/system-blueprint.ts`：8 services + 2 events + 2 instructions + 8 rules 顺序链
+  - `loadSystemBlueprints()` 幂等加载 + `verifySystemBlueprints()` 完整性校验
+  - `loadAidaProject()` 自动加载系统蓝图，`AidaProjectResult` 扩展 `systemBlueprints` 字段
+  - `BlueprintStore.getServiceRule()` 新增对称查询方法
+  - `install-aida.sh` 移除 IdleX 示例数据填充，项目初始化交给 Aida 引导
+  - Aida SOUL.md 新增首次启动行为（sys:project-init 状态检测）
+  - 12 新测试，总计 209 tests
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
