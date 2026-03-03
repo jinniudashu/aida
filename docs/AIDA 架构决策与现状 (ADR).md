@@ -242,7 +242,7 @@
 | 组件 | 说明 |
 |------|------|
 | `deploy/install-aida.sh` | 一键部署：git pull → npm install → ~/.aida/ 初始化 → Agent workspace → 插件注册 → openclaw.json 自动合并 |
-| 测试服务器 | `root@47.236.109.62`，SSH key `oc-alicloud.pem` |
+| 测试服务器 | 见 `.dev/server-alicloud.env`（不纳入 Git） |
 
 ---
 
@@ -254,7 +254,7 @@
 | `docs/标准业务建模过程 (SBMP) v0.2 草案.md` | v0.2 | 从业务到蓝图的 5 步建模方法论 |
 | `docs/业务项目装载协议 (BPLP) v0.2.md` | v0.2 | project.yaml schema、loadAidaProject API、Mock-First 策略 |
 | `docs/业务知识管理 (BKM) v0.1.md` | v0.1 | 5 层知识分级、scope chain、冲突检测 |
-| `docs/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾、风险评估、阶段性结论 |
+| `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾、风险评估、阶段性结论 |
 | `packages/bps-engine/docs/bps-engine-skeleton.md` | — | 引擎架构骨架设计 |
 | `packages/bps-engine/docs/OpenClaw框架技术研究报告.md` | — | OpenClaw 集成技术调研 |
 
