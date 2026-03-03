@@ -26,6 +26,7 @@ aida/
 ├── CLAUDE.md                 ← 本文件
 ├── package.json              ← npm workspaces 根
 ├── .dev/                     ← 本地部署凭据（.gitignore 排除，不入库）
+│   ├── oc-alicloud.pem       ← 测试服务器 SSH 私钥
 │   ├── server-alicloud.env   ← 测试服务器 SSH 连接信息
 │   ├── telegram-bots.env     ← Telegram Bot Token（5 个）
 │   ├── minimax-api.env       ← MiniMax LLM API Key
