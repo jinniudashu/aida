@@ -1,7 +1,22 @@
-# IdleX AI-Native 组织设计 · 会话状态笔记
+# AIDA 开发历程笔记（历史文档）
 
-**会话开始时间**：2026-02-23
-**目标**：以IdleX为案例，设计可商业落地的 AI 原生组织架构与系统，触及 AI 原生组织能力边界
+> **⚠️ 本文件为历史文档，记录 Phase 1-11 的开发历程。**
+> Phase 12 及之后的进展、当前架构状态请参阅：
+> - `CLAUDE.md` — 项目进展摘要（每次会话的唯一保证入口）
+> - `docs/AIDA 架构决策与现状 (ADR).md` — 详细架构决策与实现状态
+> - `archive/AIDA项目全面回顾 (2026-03-04).md` — 全面回顾报告
+>
+> **后续重大变更（本文未覆盖）**：
+> - Phase 12：系统蓝图 sys:project-init
+> - Phase 13：Dashboard 部署 + Agent 指令优化
+> - 架构反思（2026-03-03）：BPS 运行时引擎价值重估
+> - 架构瘦身：engine/ 5→2 文件，knowledge/ 5→3 文件，5-state 模型
+> - Sub-agent 吸收：BPS-Expert + Org-Architect → 5 Aida Skills
+> - Workspace 精简：500+ 行中文 BPS 理论 → 30 行英文 SOUL + 69 行英文 AGENTS
+> - Dashboard 5-state 迁移：78 tests 全部通过
+
+**原始会话开始时间**：2026-02-23
+**原始目标**：以IdleX为案例，设计可商业落地的 AI 原生组织架构与系统，触及 AI 原生组织能力边界
 
 ---
 
@@ -93,7 +108,7 @@
 
 ---
 
-## 关键技术发现
+## 关键技术发现（Phase 1-7 时期，部分已过时）
 
 ### OpenClaw 对组织设计的关键能力
 - `sessions_spawn`：动态创建子Agent（蜂群的基础）
@@ -109,7 +124,7 @@
 
 ### BPS 对组织设计的关键能力
 - Entity/Service/Rule 六元组：业务语义的形式化描述
-- 状态机模型：Process 七状态生命周期，状态迁移可追踪
+- 状态机模型：Process 生命周期（原 7 状态，已精简为 5 状态：OPEN/IN_PROGRESS/COMPLETED/FAILED/BLOCKED）
 - Design-time vs Runtime 分离：元建模→编译→执行的三阶段
 - 规则驱动：Event表达式 → Instruction 映射，声明式业务逻辑
 - 系统调用：start_service / call_sub_service / start_parallel_service 等编排原语
@@ -133,7 +148,7 @@
 
 ---
 
-## 项目文件清单
+## 项目文件清单（Phase 1-11 时期，文件路径和模块计数已过时）
 
 ### 设计文档
 - `IdleXAI-Native组织架构深度分析.md` — 架构分析与三层模型设计
@@ -215,26 +230,27 @@
 
 ---
 
-## 待讨论/待实施事项
+## 待讨论/待实施事项（截至 Phase 11）
+
+> **注意**：以下清单截至 Phase 11 状态。许多项目已在后续 Phase 中完成或因架构方向转变而废弃。
+> 当前待办事项请参阅 `docs/AIDA 架构决策与现状 (ADR).md` 第六节"未完成事项与风险"。
+
 - [x] 三层架构的详细设计 → 已在骨架文档中完成
 - [x] BPS TS Phase 1 引擎核心编码 → 32 项测试全部通过
 - [x] IdleX业务蓝图 YAML 定义 → GEO KTV 长沙蓝图已完成
-- [x] 核心 Agent 定义 → BPS Expert + Org-Architect workspace 文件已完成
+- [x] 核心 Agent 定义 → BPS Expert + Org-Architect workspace 文件已完成（后被吸收为 Aida Skills）
 - [x] Aida 管理助理 Agent → workspace 文件 + 结晶化框架 + 协作拓扑已完成
-- [x] BKM 业务知识管理子系统 → 5 层知识分级 + scope chain 装配 + 冲突检测 + ProcessManager 集成
-- [x] ~/.aida/ 项目目录迁移 → loadAidaProject() + knowledge seed + 测试 fixtures 独立化（197 tests）
-- [x] 系统蓝图 sys:project-init → 8 services + 8 rules 顺序链 + loadSystemBlueprints() 幂等加载 + install-aida.sh 简化（209 tests）
-- [ ] **部署 Agent 到测试服务器**：运行 install-agents.sh，更新 openclaw.json，端到端测试
-- [ ] **BPS Expert 端到端验证**：通过 Telegram 与 BPS Expert 对话，测试蓝图生成能力
-- [ ] **Org-Architect ↔ BPS Expert 协作测试**：验证 Agent 需求提出→创建→部署流程
-- [ ] Phase 2：OpenClaw 整合层（AgentBridge 实现、Skill 注册、事件桥接、SysCall→Agent 映射）
-- [ ] Skill Registry 初始清单（映射IdleX业务 Service → Agent Skill）
-- [ ] 编排层的决策模型（规则驱动 vs LLM动态规划 vs 混合）
-- [ ] 人类介入点的精确定义（当前仅 content-review 为 manual）
-- [ ] 并行 join 模式（等待所有并行子进程完成后再继续）
-- [ ] 可观测性/审计系统设计（Dashboard、日志聚合）
-- [ ] MVP 端到端验证（接入真实 LLM + Agent 执行）
-- [ ] 更多业务蓝图：自助茶室、自助棋牌室、城市扩张编排
+- [x] BKM 业务知识管理子系统 → 已完成后精简（ContextAssembler/ConflictDetector 移除）
+- [x] ~/.aida/ 项目目录迁移 → loadAidaProject() + knowledge seed + 测试 fixtures 独立化
+- [x] 系统蓝图 sys:project-init → Phase 12 完成
+- [x] 可观测性/审计系统设计 → Dashboard 9 页面 + 22 API + SSE 实时推送
+- [~] 部署 Agent 到测试服务器 → install-aida.sh 已完成，端到端测试部分通过
+- [~] Phase 2：OpenClaw 整合层 → 架构方向转变，BPS 从运行时引擎退化为轻量工具
+- [废弃] BPS Expert 端到端验证 → BPS-Expert 已归档，能力吸收为 Aida Skill
+- [废弃] Org-Architect ↔ BPS Expert 协作测试 → 两者均已归档
+- [废弃] Skill Registry 初始清单 → 架构方向转变
+- [废弃] 编排层的决策模型 → Agent 本身即规则引擎
+- [废弃] 并行 join 模式 → ProcessManager 已移除，tracker 不支持此模式
 
 ---
 

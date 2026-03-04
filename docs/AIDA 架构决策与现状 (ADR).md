@@ -2,7 +2,7 @@
 
 > Architecture Decision Record — 关键设计决策的 context / decision / rationale，以及各子系统当前实现状态。
 >
-> 最后更新：2026-03-03（Phase 11 完成后）
+> 最后更新：2026-03-04（Workspace 重写 + Dashboard API 适配后）
 
 ---
 
@@ -10,14 +10,12 @@
 
 ### 1.1 AIDA 要解决什么问题
 
-组织运营本质上是一个"分布式人脑计算系统"在运行"业务程序"。AIDA 回答的核心问题是：
-
-> **如何为 AI 参与组织运营提供一个通用的、形式化的计算基础？**
+> **根本原则：AI-Native 组织应该尽量由 AI 来主导实现人的意图，AIDA 是辅助实现这一目标的基础设施工具。**
 
 三个子问题：
 1. **业务程序是隐性的** — 流程逻辑散落在人脑、文档、习惯中，AI 无法理解
-2. **AI 无法成为一等计算节点** — 只能做工具调用，不能真正参与编排
-3. **人类控制权缺乏结构化保障** — AI 越自主，越需要可观察/可干预/可审计的治理机制
+2. **AI 需要持久化和可观测性** — 跨会话任务追踪、版本化业务数据、人类可见的运营状态
+3. **人类控制权需要结构化保障** — AI 越自主，越需要可观察/可干预/可审计的治理机制
 
 ### 1.2 三层架构
 
@@ -29,10 +27,10 @@
 │         Instruction / Process                        │
 ├─────────────────────────────────────────────────────┤
 │  智能编排层 (When / Who / How many)                    │
-│  Aida 管理助理（用户唯一交互入口）                       │
-│  ├─ BPS-Expert（蓝图设计）                             │
-│  └─ Org-Architect（Agent 生命周期）                    │
-│  结晶化判断 + 规则引擎 + LLM 动态规划                    │
+│  Aida 管理助理（用户唯一交互入口，自给自足）               │
+│  5 Skills: project-init / action-plan /              │
+│            dashboard-guide / blueprint-modeling /     │
+│            agent-create                              │
 ├─────────────────────────────────────────────────────┤
 │  OpenClaw Agent 执行层 (How)                          │
 │  Agent 如何执行任务                                    │
@@ -48,49 +46,49 @@
        │
        │ loadAidaProject()
        ▼
-┌─ bps-engine ──────────────────────────────────────────────┐
-│                                                           │
-│  loader/                  schema/                         │
-│    aida-project.ts          common, entity, service,      │
-│    project-loader.ts        rule, role, process,          │
-│    yaml-loader.ts           resource, dossier             │
-│       │                        │                          │
-│       ▼                        ▼                          │
-│  store/                   engine/                         │
-│    db.ts (SQLite)           process-manager.ts ◄── 核心   │
-│    blueprint-store.ts       state-machine.ts              │
-│    process-store.ts         rule-evaluator.ts             │
-│    dossier-store.ts         syscall.ts                    │
-│    stats-store.ts           context.ts                    │
-│    dashboard-query.ts          │                          │
-│       │                        │                          │
-│       ▼                        ▼                          │
-│  knowledge/               integration/                    │
-│    knowledge-store.ts       agent-bridge.ts               │
-│    context-assembler.ts     llm-evaluator.ts              │
-│    conflict-detector.ts     event-bridge.ts               │
-│    system-knowledge.ts      tools.ts (6 tools)            │
-│    types.ts                 plugin.ts                     │
-│                                                           │
-│  index.ts ─── createBpsEngine() + 全部 exports            │
-│  [root] index.ts ─── OpenClaw 插件入口 (11 tools)         │
-└───────────────────────────────────────────────────────────┘
+┌─ bps-engine (29 files, 3500 lines) ─────────────────┐
+│                                                      │
+│  loader/                  schema/                    │
+│    aida-project.ts          common, entity, service, │
+│    project-loader.ts        rule, role, process,     │
+│    yaml-loader.ts           resource, dossier        │
+│       │                        │                     │
+│       ▼                        ▼                     │
+│  store/ (6)                engine/ (2)               │
+│    db.ts (SQLite)            process-tracker.ts      │
+│    blueprint-store.ts        state-machine.ts        │
+│    process-store.ts                                  │
+│    dossier-store.ts                                  │
+│    stats-store.ts                                    │
+│    dashboard-query.ts                                │
+│       │                                              │
+│       ▼                                              │
+│  knowledge/ (3)            integration/ (5)          │
+│    knowledge-store.ts        event-bridge.ts         │
+│    system-knowledge.ts       tools.ts (9 tools)      │
+│    types.ts                  plugin.ts               │
+│                              openclaw-types.ts       │
+│                              index.ts                │
+│  system/ (1)                                         │
+│    project-init.ts                                   │
+│                                                      │
+│  index.ts ─── createBpsEngine() + 全部 exports       │
+└──────────────────────────────────────────────────────┘
        │
        │ openclaw plugins install --link
        ▼
-┌─ OpenClaw ────────────────────────────────────────────────┐
-│  ~/.openclaw/                                             │
-│    workspace/            ← Aida 主 Agent                  │
-│    workspace-bps-expert/ ← 子 Agent                       │
-│    workspace-org-architect/ ← 子 Agent                    │
-│    openclaw.json         ← 配置（install-aida.sh 自动合并）│
-└───────────────────────────────────────────────────────────┘
+┌─ OpenClaw ───────────────────────────────────────────┐
+│  ~/.openclaw/                                        │
+│    workspace/            ← Aida（唯一活跃 Agent）      │
+│      skills/             ← 5 个 Aida Skills          │
+│    openclaw.json         ← 配置（install-aida.sh 合并）│
+└──────────────────────────────────────────────────────┘
        │
        ▼
-┌─ bps-dashboard ───────────────────────────────────────────┐
-│  Vue 3 + Hono + SSE                                       │
-│  流程拓扑图 / 实时执行动画 / ATDD 测试循环                   │
-└───────────────────────────────────────────────────────────┘
+┌─ bps-dashboard ──────────────────────────────────────┐
+│  Vue 3 + Hono + SSE                                  │
+│  9 页面 + 22 API + 双层告警 + ATDD                     │
+└──────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -101,67 +99,93 @@
 
 - **Context**: 初始设计是 BPS 管控一切（类似传统 BPM），或反过来一切交给 LLM 自由发挥。
 - **Decision**: BPS（What）/ 智能编排层（When/Who/How many）/ Agent 执行层（How）三层分离。
-- **Rationale**: 避免两个极端 — 过度形式化（所有流程都必须 BPS 化）和失去可控性（LLM 自由发挥）。三层各有明确职责边界，可独立演进。
-- **Status**: ✅ 已落地，Phase 3 确立。
+- **Rationale**: 避免两个极端 — 过度形式化（所有流程都必须 BPS 化）和失去可控性（LLM 自由发挥）。
+- **Status**: ✅ 已落地，Phase 3 确立。三层分离仍然成立，但编排权已从框架转移到 AI Agent。
 
 ### ADR-2: BPS 是结晶机制，不是操作系统
 
-- **Context**: BPS 最初定位为"所有业务流程必经的管道"，这导致简单任务也需要走 BPS 建模。
-- **Decision**: BPS 重新定位为"按需激活的结构化工具"。大多数时候 Aida 用自身推理动态规划和执行，只有满足七个结晶化场景之一时才固化为 BPS 蓝图。
-- **Rationale**: 组织运营 80% 是临时性的，只有 20% 需要固化。强制 BPS 化会产生巨大的建模开销且抑制灵活性。
-- **七个结晶化场景**: ① 协作护栏（人工审批点）② 人类可视性（Dashboard 监控）③ 超上下文持久化（跨日/周任务）④ Aida 自主判断（同流程执行 3+ 次）⑤ 可审计性（合规/财务/法务追溯）⑥ 可复用性（成熟最佳实践）⑦ 多方协调（跨部门/外部系统）
-- **Status**: ✅ 已落地，知识系统中 `charter:system:crystallization-framework` 持久化。
+- **Context**: BPS 最初定位为"所有业务流程必经的管道"，导致简单任务也需要走 BPS 建模。
+- **Decision**: BPS 重新定位为"按需激活的结构化工具"。
+- **Rationale**: 组织运营 80% 是临时性的，只有 20% 需要固化。
+- **Status**: ✅ 已落地，但 2026-03-03 反思进一步指出这个修正不够彻底（见 ADR-10）。
 
 ### ADR-3: Django/Python → TypeScript 引擎重写
 
-- **Context**: erpsys（Django 版 BPS 引擎）功能完整但与 OpenClaw Agent 框架存在语言屏障，需要 HTTP/WebSocket 桥接。
+- **Context**: erpsys（Django 版 BPS 引擎）功能完整但与 OpenClaw Agent 框架存在语言屏障。
 - **Decision**: 用 TypeScript 重写引擎，作为 OpenClaw 原生插件运行。
-- **Rationale**: BPS Process ≈ OpenClaw Session，两者在本体论上是同一概念。TypeScript 实现消除了跨语言协议桥接开销，Agent 可直接调用 SysCall。
-- **技术选型**: `node:sqlite`（Node.js 24 内置，零依赖）、`expr-eval`（安全沙箱表达式）、`TypeBox`（运行时类型校验）。
-- **Status**: ✅ 已落地，Phase 4-7。erpsys 保留为参考实现。
+- **Rationale**: TypeScript 实现消除了跨语言协议桥接开销。
+- **技术选型**: `node:sqlite`（零依赖）、`expr-eval`、`TypeBox`。
+- **Status**: ✅ 已落地，Phase 4-7。后经 ADR-10 瘦身。
 
 ### ADR-4: 版本化 JSON 文档存储（Dossier）
 
-- **Context**: erpsys 使用 Django ORM 动态建表，每个 Entity 类型对应一张数据库表，导致 schema 膨胀和迁移困难。
-- **Decision**: 统一使用 Dossier（版本化 JSON 文档）存储所有实体数据。每次写入创建新版本，支持完整历史追溯。
-- **Rationale**: ① 零 schema 迁移成本 ② 天然审计日志 ③ 适合 AI Agent 的非结构化输出 ④ `committedBy` 字段实现可追溯性。
-- **Status**: ✅ 已落地，`DossierStore` + `bps_dossiers` + `bps_dossier_versions` 两张表。
+- **Context**: erpsys 使用 Django ORM 动态建表，导致 schema 膨胀。
+- **Decision**: 统一使用 Dossier（版本化 JSON 文档）存储所有实体数据。
+- **Rationale**: 零 schema 迁移成本、天然审计日志、适合 AI Agent 的非结构化输出。
+- **Status**: ✅ 已落地，`DossierStore` 是引擎瘦身后仍保留的核心组件。
 
-### ADR-5: 规则引擎双模态
+### ADR-5: 规则引擎双模态 → 已废弃
 
-- **Context**: 传统 BPM 规则引擎只支持布尔表达式，无法处理"效果不达标需优化"这类模糊判断。
-- **Decision**: 双模态 — 确定性事件（`expr-eval` 布尔表达式）+ 非确定性事件（自然语言描述，路由给 LLM 判断）。
-- **Rationale**: 这是 BPS "AI-Native" 的核心体现。LLM 评估返回 `{ matched, confidence, reasoning }`，既保留判断结果又保留推理过程。
-- **Status**: ✅ 已落地，`RuleEvaluator` + `OpenClawLlmEvaluator`。
+- **Context**: 传统 BPM 规则引擎只支持布尔表达式，无法处理模糊判断。
+- **Decision**: ~~双模态 — 确定性事件 + 非确定性事件（LLM 判断）。~~
+- **Status**: ❌ **已废弃**。引擎瘦身（ADR-10）移除了 RuleEvaluator。Agent 自身推理能力足以处理事件判断，不需要专用规则引擎。BPS 规范中的规则定义仍保留为设计时参考。
 
 ### ADR-6: Aida 作为唯一用户交互入口
 
-- **Context**: 多 Agent 系统中，用户是否应该直接与专业 Agent（BPS-Expert、Org-Architect）交互？
-- **Decision**: Aida 是用户唯一日常交互对象。BPS-Expert 和 Org-Architect 是 Aida 调度的子 Agent，用户不直接接触。
-- **Rationale**: 人类认知带宽约束 — 用户不应关心"我该找谁"，Aida 负责翻译意图、路由任务、汇报结果。这也提供了统一的业务⇔技术翻译层。
-- **Status**: ✅ 已落地，Aida 写入 `~/.openclaw/workspace/`（主 Agent），其余写入子 Agent workspace。
+- **Context**: 多 Agent 系统中，用户是否应该直接与专业 Agent 交互？
+- **Decision**: Aida 是用户唯一日常交互对象。~~BPS-Expert 和 Org-Architect 是 Aida 调度的子 Agent。~~
+- **Rationale**: 人类认知带宽约束 — 用户不应关心"我该找谁"。
+- **Status**: ✅ 已落地，并在 ADR-11 中进一步强化 — 子 Agent 已废弃，Aida 通过 Skills 自给自足。
 
 ### ADR-7: 知识即 Dossier（BKM 子系统）
 
-- **Context**: Agent 需要业务知识来正确执行任务，但知识散落在 SOUL.md、代码注释、外部文档中。
-- **Decision**: 知识作为 `entityType="knowledge"` 的 Dossier 存储，5 层分级（charter→contextual）+ 6 类作用域 + scope chain 装配。
-- **Rationale**: "零新表"原则 — 复用 Dossier 的版本化/生命周期机制。ProcessManager 创建进程时通过 ContextAssembler 自动注入 `_knowledge` 到执行上下文。
-- **冲突检测**: 字段级比较，critical 冲突暂停进程并通知用户。
-- **Status**: ✅ 已落地，Phase 10。3 条系统知识自动加载。
+- **Context**: Agent 需要业务知识来正确执行任务。
+- **Decision**: 知识作为 `entityType="knowledge"` 的 Dossier 存储。
+- **Status**: ✅ 已落地（Phase 10），但已简化。~~ContextAssembler 和 ConflictDetector~~ 在引擎瘦身中移除（ADR-10），知识模块从 5 文件缩减为 3 文件。
 
 ### ADR-8: 业务项目数据与代码分离（~/.aida/）
 
-- **Context**: 业务项目数据（蓝图、种子数据、上下文）存放在代码仓库 `projects/idlex/` 和 `bps-engine/blueprints/`，耦合且不利于多环境部署。
-- **Decision**: 项目数据迁移到 `~/.aida/`，与 OpenClaw 的 `~/.openclaw/` 同构。一个 AIDA 实例 = 一个业务项目。
-- **Rationale**: ① 代码/数据分离 ② 不同服务器可承载不同项目 ③ `loadAidaProject()` 一键装载 ④ 测试用 fixtures 独立于生产数据。
+- **Context**: 业务项目数据存放在代码仓库，耦合且不利于多环境部署。
+- **Decision**: 项目数据迁移到 `~/.aida/`。
 - **Status**: ✅ 已落地，Phase 11。
 
 ### ADR-9: Meta-Architect → Org-Architect 重命名
 
-- **Context**: 初始命名为 "Meta-Architect"。
-- **Decision**: 重命名为 "Org-Architect"。
-- **Rationale**: "Meta" 太抽象，"Org" 更准确反映其职能 — 构建和管理 Agent 组织拓扑，而非元编程。
-- **Status**: ✅ 已落地，目录 + 文档同步更新。
+- **Decision**: "Meta" 太抽象，"Org" 更准确反映其职能。
+- **Status**: ✅ 已落地，后在 ADR-11 中归档。
+
+### ADR-10: BPS 引擎瘦身 — 从运行时引擎到基础设施工具（2026-03-03 决策，2026-03-04 落地）
+
+- **Context**: BPS 引擎最初构建为完整虚拟机（ProcessManager + 规则引擎 + SysCall + 上下文栈），假设 Agent 需要一个结构化框架来约束和编排。但 Agent 能力进化证明它天然具备编排能力——7-state 状态机、事件→指令映射、非确定性判断都是 Agent 的本职工作。为 20% 需要结晶化的场景，建造了一个完整虚拟机，投入产出比失衡。
+- **Decision**: BPS 从"运行时引擎"退化为"描述规范 + 轻量基础设施工具"。
+  - 移除：ProcessManager、RuleEvaluator、SysCall 执行器、ContextStack、ContextAssembler、ConflictDetector
+  - 保留：ProcessTracker（任务追踪 + 审计日志）、StateMachine（状态约束）、Dossier（持久化）、Dashboard 查询
+  - 状态模型从 7 态简化为 5 态：OPEN → IN_PROGRESS → COMPLETED / FAILED / BLOCKED
+- **Rationale**: 根本原则要求 AIDA 是"AI 的基础设施"而非"AI 的管理者"。ProcessTracker 只追踪和记录，不编排 Agent 行为。
+- **Impact**: engine/ 5→2 文件，knowledge/ 5→3 文件，integration/ 7→5 文件，tools 11→9，总文件 ~35→29
+- **详细分析**: 见 `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md`
+- **Status**: ✅ 已落地。
+
+### ADR-11: 子 Agent 吸收为 Aida Skills（2026-03-04）
+
+- **Context**: BPS-Expert 和 Org-Architect 作为独立 Agent 带来了子 Agent 模型选择（MiniMax 不可靠 → Gemini）、委派协议设计、响应验证逻辑等协调成本。Org-Architect 从未运行过。管理多个 AI 协作比让一个 AI 直接工作更难。
+- **Decision**: 废弃独立子 Agent，将其能力提取为 Aida 的 Skills。
+  - BPS-Expert → `skills/blueprint-modeling`（SBMP 五步法）
+  - Org-Architect → `skills/agent-create`（Agent 生命周期 4 阶段）
+  - 新建 3 个 Skill：project-init、action-plan、dashboard-guide
+  - BPS-Expert 和 Org-Architect 归档至 `agents/_archived/`
+- **Rationale**: "一个能力更强的 Agent"优于"多个需要协调的 Agent"。Skill 按需加载不占 context window。
+- **Status**: ✅ 已落地。Aida workspace 重写为 30 行 SOUL + 69 行 AGENTS（英文）。
+
+### ADR-12: 5-state 任务模型（2026-03-04）
+
+- **Context**: 原 7-state 进程模型（NEW/READY/RUNNING/WAITING/SUSPENDED/TERMINATED/ERROR）继承自传统 BPM，对 AI 驱动的任务追踪过于复杂。READY 和 RUNNING 的区分、SUSPENDED 状态在 AI 场景中无实际价值。
+- **Decision**: 简化为 5 态任务模型：
+  - OPEN（新建）→ IN_PROGRESS（执行中）→ COMPLETED（完成）/ FAILED（失败）
+  - BLOCKED（阻塞，等待外部输入）↔ IN_PROGRESS / OPEN
+- **Rationale**: 语义更清晰，减少状态迁移的认知负担。AI Agent 不需要区分"就绪"和"执行中"——任务要么在做，要么没在做。
+- **Impact**: Dashboard Kanban 从 7 列变 5 列，全部 10 个测试文件 + server 端适配。
+- **Status**: ✅ 已落地。bps-engine 196 tests + bps-dashboard 78 tests 全部通过。
 
 ---
 
@@ -171,77 +195,98 @@
 
 | 模块 | 文件数 | 入口 | 状态 | 说明 |
 |------|--------|------|------|------|
-| `schema/` | 8 | `src/schema/*.ts` | ✅ 完成 | TypeBox 类型定义：Entity/Service/Rule/Role/Process/Resource/Dossier/Common |
-| `engine/` | 5 | `ProcessManager` | ✅ 完成 | 7-state 状态机、规则引擎、5 种 SysCall、ContextStack |
+| `schema/` | 8 | `src/schema/*.ts` | ✅ 完成 | TypeBox 类型定义，5-state 任务模型 |
+| `engine/` | 2 | `ProcessTracker` | ✅ 完成 | 任务追踪器 + 5-state 状态机（审计日志、事件发射） |
 | `store/` | 6 | `createDatabase()` | ✅ 完成 | SQLite 持久化、蓝图/进程/Dossier/统计/Dashboard 查询 |
-| `knowledge/` | 5 | `KnowledgeStore` | ✅ 完成 | 5 层分级、scope chain、冲突检测、3 条系统知识 |
-| `loader/` | 3 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml 解析、蓝图/种子/知识加载 |
-| `integration/` | 7 | `registerBpsPlugin()` | ✅ 完成 | OpenClaw 桥接：AgentBridge/LlmEvaluator/EventBridge/Tools |
+| `knowledge/` | 3 | `KnowledgeStore` | ✅ 完成 | 知识存储 + 系统知识 |
+| `loader/` | 3 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml 解析 |
+| `integration/` | 5 | `registerBpsPlugin()` | ✅ 完成 | OpenClaw 桥接：EventBridge + Tools + Plugin |
+| `system/` | 1 | `project-init.ts` | ✅ 完成 | 项目初始化步骤定义 |
 
 ### 3.2 OpenClaw 插件
 
-| 组件 | 入口 | 说明 |
-|------|------|------|
-| 根 `index.ts` | `register(api)` | 插件入口，注册 **11 tools**，调用 `loadAidaProject()` |
-| `src/integration/plugin.ts` | `registerBpsPlugin()` | 内部入口，注册 **6 tools**（子集） |
-
-**11 tools 完整列表**（根 index.ts）:
+**9 tools**（通过 `registerBpsPlugin()` 注册）:
 
 | # | Tool | 说明 |
 |---|------|------|
-| 1 | `bps_list_services` | 列出所有服务 |
-| 2 | `bps_get_process` | 获取进程状态 + 上下文 |
-| 3 | `bps_query_processes` | 按状态/服务/实体过滤进程 |
-| 4 | `bps_start_process` | 启动新进程 |
-| 5 | `bps_complete_task` | 完成任务（自动推进状态） |
-| 6 | `bps_transition_state` | 手动状态迁移 |
+| 1 | `bps_list_services` | 列出所有服务（任务目录） |
+| 2 | `bps_create_task` | 创建任务追踪记录 |
+| 3 | `bps_get_task` | 获取任务状态 + 元数据 |
+| 4 | `bps_query_tasks` | 按状态/服务/实体过滤任务 |
+| 5 | `bps_update_task` | 更新任务状态/元数据 |
+| 6 | `bps_complete_task` | 完成任务（自动推进状态链） |
 | 7 | `bps_get_entity` | 读取实体 Dossier |
 | 8 | `bps_update_entity` | 写入/更新实体 |
 | 9 | `bps_query_entities` | 搜索实体 |
-| 10 | `bps_dashboard_overview` | Dashboard 全景 JSON |
-| 11 | `bps_dashboard_snapshot` | Dashboard 文本摘要（Agent 友好） |
 
 ### 3.3 Agent 架构
 
-| Agent | 角色 | Workspace 位置 | 文件 |
-|-------|------|----------------|------|
-| **Aida** | 智能编排层人格化，用户唯一交互入口 | `~/.openclaw/workspace/` | IDENTITY + SOUL + AGENTS |
-| **BPS-Expert** | 业务流程架构师，蓝图设计 | `~/.openclaw/workspace-bps-expert/` | IDENTITY + SOUL + AGENTS |
-| **Org-Architect** | 组织架构师，Agent 生命周期管理 | `~/.openclaw/workspace-org-architect/` | IDENTITY + SOUL + AGENTS |
+| 组件 | 状态 | 位置 | 说明 |
+|------|------|------|------|
+| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(69行) |
+| **5 Skills** | ✅ 活跃 | `~/.openclaw/workspace/skills/` | project-init / action-plan / dashboard-guide / blueprint-modeling / agent-create |
+| ~~BPS-Expert~~ | 📦 归档 | `agents/_archived/bps-expert/` | 能力提取为 skills/blueprint-modeling |
+| ~~Org-Architect~~ | 📦 归档 | `agents/_archived/org-architect/` | 能力提取为 skills/agent-create |
 
 ### 3.4 bps-dashboard
 
-| 层 | 说明 | 状态 |
-|----|------|------|
-| Layer 1 | 引擎共享（Dashboard 与 OC 插件共享 SQLite） | ✅ |
-| Layer 2 | 蓝图动态加载 API | ✅ |
-| Layer 3 | 流程拓扑图（从 rules 自动推导） | ✅ |
-| Layer 4 | 实时执行动画（SSE 驱动节点状态变色） | ✅ |
-| Layer 5 | ATDD 测试循环（试运行 + 模拟完成 + 执行报告） | ✅ |
+9 个功能页面 + 22 个 API 端点 + SSE 实时推送：
+
+| 页面 | 路由 | 核心功能 |
+|------|------|---------|
+| 总览 | `/` | 统计卡片 + 活动趋势 + 双层告警（L1 阈值 + L2 基线异常） + 近期变更表格 |
+| 流程列表 | `/processes` | 流程表格（筛选/分页） + 新建流程 |
+| 流程详情 | `/processes/:id` | 元数据 + 上下文快照 + 状态转换 + 流程树双视图（ECharts + Tree） |
+| 看板 | `/kanban` | 5 列状态看板 + 拖拽转换（含校验） |
+| 实体列表 | `/entities` | 动态表列（从实体数据自动提取字段） + 生命周期筛选 |
+| 实体详情 | `/entities/:id` | 当前数据 + 版本历史（时间线/表格双视图） + 关联流程 |
+| 服务拓扑 | `/dag` | 服务依赖 DAG + 试运行面板（ATDD） |
+| 工作负载 | `/workload` | 操作员统计 + 泳道时间线（甘特图） |
+| 实体网络 | `/entity-network` | 实体关系力导向图（自动推导） |
 
 技术栈：Vue 3 + Naive UI + ECharts + Hono + SSE，78 tests。
 
 ### 3.5 测试覆盖
 
+**bps-engine: 196 tests（11 文件）**
+
 | 测试文件 | 数量 | 覆盖范围 |
 |---------|------|----------|
-| `integration.test.ts` | 41 | OpenClaw 集成：AgentBridge/LlmEvaluator/EventBridge/Tools/Plugin |
-| `dossier.test.ts` | 34 | Dossier CRUD、版本化、生命周期、搜索、并发 |
-| `dashboard.test.ts` | 25 | DashboardQueryService：Overview/Kanban/EntityDetail/TimeSeries |
-| `engine.test.ts` | 17 | ProcessManager 核心：状态机、规则求值、SysCall、EventEmitter |
-| `geo-ktv.test.ts` | 15 | IdleX GEO 蓝图端到端：链式/并行/LLM 驱动的完整流程 |
-| `project-loader.test.ts` | 15 | BPLP：种子加载、蓝图加载、幂等性、错误收集 |
-| `knowledge-store.test.ts` | 15 | BKM CRUD：put/get/query/archive、地址编码/解码 |
-| `context-assembly.test.ts` | 15 | Scope chain 构建、5 层合并、冲突检测 |
-| `aida-e2e.test.ts` | 13 | Workspace 部署验证 + BPS 流程编排端到端 |
-| `aida-project.test.ts` | 7 | ~/.aida/ 目录初始化、空/完整项目加载、系统知识 |
-| **合计** | **197** | |
+| `dossier.test.ts` | 34 | Dossier CRUD、版本化、生命周期、搜索 |
+| `scenario-e2e.test.ts` | 29 | 端到端场景验证 |
+| `integration.test.ts` | 28 | OpenClaw 集成：EventBridge/Tools/Plugin |
+| `dashboard.test.ts` | 25 | DashboardQueryService |
+| `engine.test.ts` | 19 | ProcessTracker + 5-state 状态机 |
+| `knowledge-store.test.ts` | 14 | BKM CRUD |
+| `project-loader.test.ts` | 14 | BPLP 加载 |
+| `geo-ktv.test.ts` | 12 | GEO 蓝图集成 |
+| `aida-e2e.test.ts` | 10 | Workspace 部署验证 + Skills + 归档 Agent |
+| `aida-project.test.ts` | 7 | ~/.aida/ 项目装载 |
+| `system-blueprint.test.ts` | 4 | 项目初始化步骤 |
+
+**bps-dashboard: 78 tests（10 文件）**
+
+| 测试文件 | 数量 | 覆盖范围 |
+|---------|------|----------|
+| `api-advanced.test.ts` | 17 | 规则/工作负载/实体网络/告警 |
+| `api-processes.test.ts` | 15 | 流程 CRUD/树/转换/筛选 |
+| `api-entities.test.ts` | 10 | 实体搜索/详情/版本历史 |
+| `api-overview.test.ts` | 8 | 总览统计/时间序列 |
+| `api-trial-run.test.ts` | 7 | 试运行/模拟完成 |
+| `api-sse.test.ts` | 7 | 事件流/心跳 |
+| `api-blueprints.test.ts` | 6 | 蓝图加载/校验 |
+| `api-seed.test.ts` | 6 | 测试数据 |
+| `api-kanban.test.ts` | 5 | 看板列/分组 |
+| `api-timeseries.test.ts` | 5 | 指标聚合 |
+
+**总计：274 tests，全部通过。**
 
 ### 3.6 部署
 
 | 组件 | 说明 |
 |------|------|
-| `deploy/install-aida.sh` | 一键部署：git pull → npm install → ~/.aida/ 初始化 → Agent workspace → 插件注册 → openclaw.json 自动合并 |
+| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（含 tsc） → ~/.aida/ 初始化 → Aida workspace + 5 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并 → 验证 |
+| Dashboard systemd | bps-dashboard.service（port 3456），install-aida.sh 自动生成并启用 |
 | 测试服务器 | 见 `.dev/server-alicloud.env`（不纳入 Git） |
 
 ---
@@ -250,12 +295,13 @@
 
 | 文档 | 版本 | 内容 |
 |------|------|------|
-| `docs/业务流程描述通用规范 (BPS) v0.9 Draft.md` | v0.9 | BPS 六元组元模型、状态机、SysCall 定义 |
-| `docs/标准业务建模过程 (SBMP) v0.2 草案.md` | v0.2 | 从业务到蓝图的 5 步建模方法论 |
-| `docs/业务项目装载协议 (BPLP) v0.2.md` | v0.2 | project.yaml schema、loadAidaProject API、Mock-First 策略 |
-| `docs/业务知识管理 (BKM) v0.1.md` | v0.1 | 5 层知识分级、scope chain、冲突检测 |
-| `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾、风险评估、阶段性结论 |
-| `packages/bps-engine/docs/bps-engine-skeleton.md` | — | 引擎架构骨架设计 |
+| `docs/业务流程描述通用规范 (BPS) v0.9 Draft.md` | v0.9 | BPS 六元组元模型（设计时参考，不再作为运行时约束） |
+| `docs/标准业务建模过程 (SBMP) v0.2 草案.md` | v0.2 | 5 步建模方法论（已提取为 Aida Skill） |
+| `docs/业务项目装载协议 (BPLP) v0.2.md` | v0.2 | project.yaml schema、loadAidaProject API |
+| `docs/业务知识管理 (BKM) v0.1.md` | v0.1 | 知识分级（已简化实现） |
+| `archive/AIDA项目全面回顾 (2026-03-04).md` | 修订版 | 根本原则偏差分析 + 完整资产评估 |
+| `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md` | — | 引擎瘦身决策的完整分析 |
+| `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾 |
 | `packages/bps-engine/docs/OpenClaw框架技术研究报告.md` | — | OpenClaw 集成技术调研 |
 
 ---
@@ -266,13 +312,17 @@
 |-------|------|----------|
 | 1-3 | 上下文理解 + 前置分析 + 架构综合设计 | 三层架构确立 |
 | 4 | Django→TypeScript 重写决策 | 技术栈确定 |
-| 5 | bps-engine 核心编码 | ProcessManager + 5 Store + RuleEvaluator |
+| 5 | bps-engine 核心编码 | ProcessManager + Store + RuleEvaluator |
 | 6 | IdleX GEO 蓝图 + 种子数据 | 首个业务验证 |
-| 7 | OpenClaw 集成 | 插件入口 + 11 tools + 端到端部署 |
+| 7 | OpenClaw 集成 | 插件入口 + tools + 端到端部署 |
 | 8 | 核心 Agent 定义 | BPS-Expert + Org-Architect workspace |
 | 9 | Aida 管理助理 | IDENTITY/SOUL/AGENTS + 结晶化框架 + 协作拓扑 |
-| 10 | BKM 业务知识管理 | 5 层分级 + scope chain + 冲突检测（+30 tests） |
-| 11 | ~/.aida/ 项目目录迁移 | loadAidaProject + 代码/数据分离 + 部署脚本优化（+7 tests） |
+| 10 | BKM 业务知识管理 | 5 层分级 + scope chain + 冲突检测 |
+| 11 | ~/.aida/ 项目目录迁移 | loadAidaProject + 代码/数据分离 |
+| 12 | 系统蓝图 sys:project-init | 项目初始化形式化 |
+| 13 | Dashboard 部署 + Agent 指令优化 | systemd 服务 + workspace 语义分离 |
+| — | 架构反思（03-03） | BPS 引擎价值重估 → 瘦身方向确认（ADR-10） |
+| — | Workspace 重写（03-04） | 子 Agent 吸收为 Skill（ADR-11）+ 5-state 模型（ADR-12）+ Dashboard API 适配 |
 
 ---
 
@@ -280,9 +330,7 @@
 
 | 事项 | 说明 | 优先级 |
 |------|------|--------|
-| Agent 端到端验证 | Aida/BPS-Expert/Org-Architect 尚未经过真实 LLM 交互测试 | 高 |
-| 并行 join | 当前并行扇出后无"等待所有子进程完成"的 join 机制 | 中 |
-| 多业务场景验证 | BPS 通用性只有 GEO KTV 一个场景验证 | 中 |
-| Skill Registry | Service → Agent Skill 的标准映射清单未建立 | 中 |
-| 异常 SysCall | `escalate_process`、`rollback_process` 尚未实现 | 低 |
-| 资源调度 | `ResourceRequirement` schema 已定义但未接入调度逻辑 | 低 |
+| Agent 端到端验证 | Aida 通过 LLM + Skills 完成完整业务流程 | 高 |
+| 多业务场景验证 | BPS 通用性只有 GEO KTV 一个场景验证 | 高 |
+| ADR 文档持续更新 | 需建立 ADR 与代码变更同步的纪律 | 中 |
+| session_state.md 归档 | 仅记录到 Phase 11，考虑标记为历史文档 | 低 |
