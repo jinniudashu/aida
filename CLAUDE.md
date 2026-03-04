@@ -65,9 +65,9 @@ aida/
 │   │   │   ├── conflict-detector.ts ← 字段级冲突检测
 │   │   │   └── system-knowledge.ts  ← 系统保留知识 + loadSystemKnowledge()
 │   │   ├── agents/           ← Agent workspace 文件
-│   │   │   ├── aida/         ← 首席管理助理（智能编排层人格化）
-│   │   │   ├── bps-expert/   ← BPS 业务流程专家
-│   │   │   └── org-architect/← 组织架构师（Agent 生命周期管理）
+│   │   │   ├── aida/         ← 首席管理助理（唯一活跃 Agent）
+│   │   │   │   └── skills/   ← Aida Skills（5 个：project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create）
+│   │   │   └── _archived/    ← 已归档 Agent（bps-expert, org-architect）
 │   │   ├── deploy/           ← install-aida.sh 一键部署（bps-engine + bps-dashboard + Agent workspace）
 │   │   └── docs/             ← bps-engine-skeleton.md, OpenClaw框架技术研究报告.md
 │   └── bps-dashboard/        ← git submodule → jinniudashu/bps-dashboard
@@ -221,7 +221,17 @@ npx vitest run            # 全部测试
 ### 项目全面回顾（2026-03-04）
 - 详见 `archive/AIDA项目全面回顾 (2026-03-04).md`
 - 覆盖 Phase 1-13 + 两次架构反思，含资产价值分级和经验教训
-- 当前状态：架构分叉点——BPS 运行时引擎的必要性已被质疑，瘦身方向已确认但未落地
+
+### Aida Workspace 重写（2026-03-04）
+- **Workspace 英文化 + OpenClaw 风格对齐**：IDENTITY/SOUL/AGENTS 全部重写为英文，遵循 OpenClaw 默认模板，仅叠加 Aida 特定内容
+  - SOUL.md：30 行（Core Truths + Role + Boundaries + Vibe + Continuity）
+  - AGENTS.md：69 行（Boot + Memory + Safety + Aida Operations）
+  - 自我投射原则：删除模型已知的内容，只保留 Aida 独有特征
+- **BPS-Expert → `skills/blueprint-modeling`**：SBMP 五步法提取为 Skill，269 行 BPS 理论讲解删除
+- **Org-Architect → `skills/agent-create`**：4-phase Agent 生命周期提取为 Skill，跨 Agent 协议删除
+- **Aida 自给自足**：不再依赖子 Agent，所有能力通过 5 个 Skill 实现（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create）
+- **install-aida.sh 更新**：移除 Org-Architect 部署，新增 Skills 部署 + 验证
+- BPS-Expert 和 Org-Architect 归档至 `agents/_archived/`
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
