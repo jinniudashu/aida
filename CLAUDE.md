@@ -299,7 +299,18 @@ npx vitest run            # 全部测试
 - **governance.yaml**：治理约束定义文件，存放于 `~/.aida/governance.yaml`
 - **DossierStore 修复**：smartMerge 实现数组追加语义（P1 fix，3 新测试）
 - **测试**：31 新测试（GovernanceStore 6 + GovernanceLoader 5 + ActionGate 9 + CircuitBreaker 7 + ToolWrapper 3 + 1），bps-engine 总计 252 tests
-- **待治理层完成后**：再设计 Dashboard 三问题（现状/目标/下一步）的实现方案
+
+### Phase E2：Dashboard 三问题 + 治理可视化（2026-03-05）
+- **Overview 页重构**：三面板回答"现状/目标/下一步"
+  - Panel 1（现状）：实体/任务/错误计数 + 实体类型标签 + 治理熔断器状态 + 违规徽章
+  - Panel 2（目标）：Action Plan 进度条 + 完成率 + 周期任务计数
+  - Panel 3（下一步）：任务队列分状态 + 待审批 + 最近违规记录
+- **治理 API**（bps-dashboard 新增 2 个 endpoint）：
+  - `GET /api/governance/status` — 熔断器状态 + 约束数 + 待审批数 + 最近违规
+  - `GET /api/governance/violations` — 违规历史（支持 limit 参数）
+- **前端扩展**：GovernanceStatus 类型 + useGovernanceStore（SSE 订阅）
+- **模拟数据增强**：simulate.ts Phase 10 注入 4 条约束 + 3 条违规 + 1 个治理审批
+- **测试**：5 新测试，bps-dashboard 总计 106 tests（bps-engine 252，合计 358）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
