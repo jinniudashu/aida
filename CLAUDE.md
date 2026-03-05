@@ -266,14 +266,22 @@ npx vitest run            # 全部测试
   - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
-### 端到端能力验证（2026-03-05）
+### 端到端能力验证 -- 基础设施级（2026-03-05）
 - 详见 `archive/AIDA端到端能力验证报告 (2026-03-05).md`
 - **验证方法**：三视角（第三方专家 → Aida 自评 → 综合测试），干净环境重新安装 + 41 项自动化测试 + 319 单元测试
 - **测试结果**：40/41 通过（1 个测试脚本 bug，非引擎问题），319 单元测试全部通过
 - **加权完成度**：93.25%（部署100%, 设计时95%, 运行时85%, 可观测100%, HITL100%, 外部出口90%）
-- **关键差距 G1**：规则引擎不自动执行链式任务（有意设计决策，Agent 替代引擎自动化）
-- **商业落地判定**：基本就绪（Conditional Ready）
-- **剩余 P0**：OpenClaw + Aida 端到端验证 + 首个真实业务蓝图验证 + cron 调度验证
+
+### 端到端能力验证 -- OpenClaw 运行时（2026-03-05）
+- 详见 `archive/AIDA端到端能力验证报告-OpenClaw运行时 (2026-03-05).md`
+- **验证方法**：通过 `openclaw agent --agent main --message` 与 Aida 交互，7 次 agent turn，Gemini 3.1 Pro Preview
+- **工作路径**：NL 描述 → Aida 建模 → 实体创建(5个) → 开店流程执行(2店, 各v6) → Heartbeat → 动态 Skill 创建(store-opening) → Skill 复用
+- **加权完成度**：67.75%
+- **核心发现**：Entity + Skill + Heartbeat 路径已具备实用运营管理能力；Blueprint/Task/Rule 路径存在断裂
+- **P0 问题**：Blueprint YAML 格式不兼容（Aida 生成概念 YAML，引擎期望技术 schema）
+- **P1 问题**：DossierStore 浅合并导致数组覆盖（progressLogs 丢数据）
+- **架构结论**：对于 Agent 驱动运营，Entity + Skill 可能已足够，Blueprint 层的独特价值仅在于机器可查询拓扑 + Dashboard 流程可视化
+- **LLM 配置**：install-aida.sh 默认模型已从 MiniMax M2.5 改为 google/gemini-3.1-pro-preview
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
