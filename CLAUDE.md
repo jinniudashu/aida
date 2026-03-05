@@ -132,13 +132,13 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - expr-eval（安全表达式求值）, yaml, uuid
 - BKM 知识管理子系统（知识存储 + 系统知识）
 - `loadAidaProject()` 一键装载（~/.aida/ → 引擎 + 系统知识 + 项目）
-- Vitest（测试框架）, 196 tests
+- Vitest（测试框架）, 218 tests
 
 ### bps-dashboard（监控面板）
 - 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
 - 后端：Hono, @hono/node-server, SSE 实时推送
 - 构建：Vite, TypeScript
-- Vitest（测试框架）, 78 tests
+- Vitest（测试框架）, 101 tests
 
 ### erpsys（BPS 引擎 Django 版，仅供借鉴）
 - Django 4.2.7, DRF, PostgreSQL/SQLite, Redis, Celery, Django Channels
@@ -242,6 +242,29 @@ npx vitest run            # 全部测试
     - `GET /api/store-profiles/:storeId` — 门店详情（JSON-LD Schema.org LocalBusiness 格式）
     - `GET /api/store-profiles/:storeId/availability` — 房型可用性查询
   - bps-engine: 196 tests 全部通过，bps-dashboard: 78 tests 全部通过
+
+### AIDA 能力评估 + Phase A/B/C/D1（2026-03-05）
+- 详见 `archive/AIDA能力评估-三视角分析报告 (2026-03-05).md`
+- **三频运行节律模型**：Event-driven (Freq 1) / Heartbeat (Freq 2) / Cron (Freq 3)
+- **Phase A（Workspace 三频分置）**：HEARTBEAT.md + BOOT.md + business-execution Skill
+- **Phase B（引擎效率增强）**：bps_scan_work (tool #11) + bps_next_steps 增强（currentValues）+ reason 审计字段
+- **Phase C（Dashboard 三页扩展）**：
+  - Agent Log 页：任务审计全景（action/state/reason 过滤）
+  - Business Goals 页：Action Plan 卡片（items + periodicItems + 进度条）
+  - Approvals 页：审批队列 + approve/reject 决策模态框（HITL 闭环）
+  - 4 个新 API + 3 个 Pinia Store + SSE 实时订阅
+  - 23 新测试，bps-dashboard 总计 101 tests
+- **Phase D1（动态 Skill 生成）**：
+  - bps_create_skill (tool #12)：写入 Skill 文件到 Agent workspace
+  - skill-create Skill：元技能，教 Aida 何时/如何结晶重复模式
+  - HEARTBEAT.md 新增 step 5（模式反思），AGENTS.md 新增 Self-Evolution 节
+  - 5 新测试，bps-engine 总计 218 tests
+- **业务场景端到端验证**：`server/simulate.ts` 注入晨光咖啡三店标准化运营完整场景
+  - 测试服务器 `http://47.236.109.62:3456` 全部页面数据可见
+  - 三频操作全景 + HITL 审批闭环 + 动态 Skill 创建记录
+- **工具总览**：12 BPS tools + 3 MCP tools
+  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill
+- **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
