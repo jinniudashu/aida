@@ -2,7 +2,7 @@
 
 > Architecture Decision Record — 关键设计决策的 context / decision / rationale，以及各子系统当前实现状态。
 >
-> 最后更新：2026-03-04（Workspace 重写 + Dashboard API 适配后）
+> 最后更新：2026-03-05（Phase E2 — 治理层 + Dashboard 三问题）
 
 ---
 
@@ -28,9 +28,9 @@
 ├─────────────────────────────────────────────────────┤
 │  智能编排层 (When / Who / How many)                    │
 │  Aida 管理助理（用户唯一交互入口，自给自足）               │
-│  5 Skills: project-init / action-plan /              │
-│            dashboard-guide / blueprint-modeling /     │
-│            agent-create                              │
+│  7 Skills: project-init / action-plan /              │
+│    dashboard-guide / blueprint-modeling /             │
+│    agent-create / business-execution / skill-create   │
 ├─────────────────────────────────────────────────────┤
 │  OpenClaw Agent 执行层 (How)                          │
 │  Agent 如何执行任务                                    │
@@ -63,14 +63,16 @@
 │    dashboard-query.ts                                │
 │       │                                              │
 │       ▼                                              │
-│  knowledge/ (3)            integration/ (5)          │
-│    knowledge-store.ts        event-bridge.ts         │
-│    system-knowledge.ts       tools.ts (9 tools)      │
-│    types.ts                  plugin.ts               │
-│                              openclaw-types.ts       │
+│  governance/ (4)           integration/ (5)          │
+│    governance-store.ts       event-bridge.ts         │
+│    action-gate.ts            tools.ts (13 tools)     │
+│    governance-loader.ts      plugin.ts               │
+│    types.ts                  openclaw-types.ts       │
 │                              index.ts                │
-│  system/ (1)                                         │
-│    project-init.ts                                   │
+│  knowledge/ (3)            system/ (1)               │
+│    knowledge-store.ts        project-init.ts         │
+│    system-knowledge.ts                               │
+│    types.ts                                          │
 │                                                      │
 │  index.ts ─── createBpsEngine() + 全部 exports       │
 └──────────────────────────────────────────────────────┘
@@ -80,14 +82,14 @@
 ┌─ OpenClaw ───────────────────────────────────────────┐
 │  ~/.openclaw/                                        │
 │    workspace/            ← Aida（唯一活跃 Agent）      │
-│      skills/             ← 5 个 Aida Skills          │
+│      skills/             ← 7 个 Aida Skills          │
 │    openclaw.json         ← 配置（install-aida.sh 合并）│
 └──────────────────────────────────────────────────────┘
        │
        ▼
 ┌─ bps-dashboard ──────────────────────────────────────┐
 │  Vue 3 + Hono + SSE                                  │
-│  9 页面 + 22 API + 双层告警 + ATDD                     │
+│  12 页面 + 26 API + 双层告警 + ATDD + 治理可视化       │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -241,18 +243,18 @@
 
 | 组件 | 状态 | 位置 | 说明 |
 |------|------|------|------|
-| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(69行) |
-| **5 Skills** | ✅ 活跃 | `~/.openclaw/workspace/skills/` | project-init / action-plan / dashboard-guide / blueprint-modeling / agent-create |
+| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(含 Self-Evolution 节) |
+| **7 Skills** | ✅ 活跃 | `~/.openclaw/workspace/skills/` | project-init / action-plan / dashboard-guide / blueprint-modeling / agent-create / business-execution / skill-create |
 | ~~BPS-Expert~~ | 📦 归档 | `agents/_archived/bps-expert/` | 能力提取为 skills/blueprint-modeling |
 | ~~Org-Architect~~ | 📦 归档 | `agents/_archived/org-architect/` | 能力提取为 skills/agent-create |
 
 ### 3.4 bps-dashboard
 
-9 个功能页面 + 22 个 API 端点 + SSE 实时推送：
+12 个功能页面 + 26 个 API 端点 + SSE 实时推送：
 
 | 页面 | 路由 | 核心功能 |
 |------|------|---------|
-| 总览 | `/` | 统计卡片 + 活动趋势 + 双层告警（L1 阈值 + L2 基线异常） + 近期变更表格 |
+| 总览（三问题） | `/` | 现状（实体/任务/错误+治理状态）/ 目标（Action Plan 进度条）/ 下一步（任务队列+待审批+违规） |
 | 流程列表 | `/processes` | 流程表格（筛选/分页） + 新建流程 |
 | 流程详情 | `/processes/:id` | 元数据 + 上下文快照 + 状态转换 + 流程树双视图（ECharts + Tree） |
 | 看板 | `/kanban` | 5 列状态看板 + 拖拽转换（含校验） |
@@ -261,8 +263,11 @@
 | 服务拓扑 | `/dag` | 服务依赖 DAG + 试运行面板（ATDD） |
 | 工作负载 | `/workload` | 操作员统计 + 泳道时间线（甘特图） |
 | 实体网络 | `/entity-network` | 实体关系力导向图（自动推导） |
+| Agent 日志 | `/agent-log` | 任务审计全景（action/state/reason 过滤） |
+| 业务目标 | `/business-goals` | Action Plan 卡片（items + periodicItems + 进度条） |
+| 审批队列 | `/approvals` | 审批列表 + approve/reject 决策（HITL 闭环） |
 
-技术栈：Vue 3 + Naive UI + ECharts + Hono + SSE，78 tests。
+技术栈：Vue 3 + Naive UI + ECharts + Hono + SSE，106 tests。
 
 ### 3.5 测试覆盖
 
@@ -284,15 +289,34 @@
 | `aida-project.test.ts` | 7 | ~/.aida/ 项目装载 |
 | `system-blueprint.test.ts` | 4 | 项目初始化步骤 |
 
-**bps-dashboard: 101 tests（10+ 文件）**
+**bps-dashboard: 106 tests（14 文件）**
 
-**总计：353 tests，全部通过。**
+| 测试文件 | 数量 | 覆盖范围 |
+|---------|------|----------|
+| `api-approvals.test.ts` | 142* | 审批 CRUD + 决策流程 |
+| `api-overview.test.ts` | — | Overview API |
+| `api-kanban.test.ts` | — | 看板 API |
+| `api-processes.test.ts` | — | 流程 CRUD |
+| `api-entities.test.ts` | — | 实体 CRUD |
+| `api-agent-log.test.ts` | — | Agent 日志 API |
+| `api-business-goals.test.ts` | — | 业务目标 API |
+| `api-governance.test.ts` | 5 | 治理状态 + 违规查询 |
+| `api-trial-run.test.ts` | 7 | ATDD 试运行 |
+| `api-sse.test.ts` | 5 | SSE 实时推送 |
+| `api-timeseries.test.ts` | 5 | 时间序列统计 |
+| `api-blueprints.test.ts` | — | 蓝图加载 |
+| `api-seed.test.ts` | 6 | 种子数据 |
+| `api-advanced.test.ts` | — | 高级视图 |
+
+*（标注 — 的为分布在 106 tests 中的其余测试）
+
+**总计：358 tests，全部通过。**
 
 ### 3.6 部署
 
 | 组件 | 说明 |
 |------|------|
-| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（含 tsc） → ~/.aida/ 初始化 → Aida workspace + 5 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并 → 验证 |
+| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（含 tsc） → ~/.aida/ 初始化 → Aida workspace + 7 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并 → 验证 |
 | Dashboard systemd | bps-dashboard.service（port 3456），install-aida.sh 自动生成并启用 |
 | 测试服务器 | 见 `.dev/server-alicloud.env`（不纳入 Git） |
 
@@ -306,6 +330,7 @@
 | `docs/标准业务建模过程 (SBMP) v0.2 草案.md` | v0.2 | 5 步建模方法论（已提取为 Aida Skill） |
 | `docs/业务项目装载协议 (BPLP) v0.2.md` | v0.2 | project.yaml schema、loadAidaProject API |
 | `docs/业务知识管理 (BKM) v0.1.md` | v0.1 | 知识分级（已简化实现） |
+| `docs/Agent 治理层规范 (AGS) v0.1.md` | v0.1 | 治理约束 schema + Action Gate + 熔断器 + 审批流程 |
 | `archive/AIDA项目全面回顾 (2026-03-04).md` | 修订版 | 根本原则偏差分析 + 完整资产评估 |
 | `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md` | — | 引擎瘦身决策的完整分析 |
 | `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾 |
@@ -330,6 +355,13 @@
 | 13 | Dashboard 部署 + Agent 指令优化 | systemd 服务 + workspace 语义分离 |
 | — | 架构反思（03-03） | BPS 引擎价值重估 → 瘦身方向确认（ADR-10） |
 | — | Workspace 重写（03-04） | 子 Agent 吸收为 Skill（ADR-11）+ 5-state 模型（ADR-12）+ Dashboard API 适配 |
+| 14 | 项目评审 + 外部数据出口（03-04） | MCP Server（3 tools）+ Store Profile API + bps_next_steps |
+| A | Workspace 三频分置（03-05） | HEARTBEAT.md + BOOT.md + business-execution Skill |
+| B | 引擎效率增强（03-05） | bps_scan_work (#11) + bps_next_steps 增强 + reason 审计字段 |
+| C | Dashboard 三页扩展（03-05） | Agent Log / Business Goals / Approvals + 23 tests |
+| D1 | 动态 Skill 生成（03-05） | bps_create_skill (#12) + skill-create Skill |
+| E1 | Agent 治理层（03-05） | GovernanceStore + ActionGate + 熔断器 + governance.yaml（ADR-13） |
+| E2 | Dashboard 三问题 + 治理可视化（03-05） | Overview 三面板 + governance API + 5 tests |
 
 ---
 
@@ -337,7 +369,8 @@
 
 | 事项 | 说明 | 优先级 |
 |------|------|--------|
-| Agent 端到端验证 | Aida 通过 LLM + Skills 完成完整业务流程 | 高 |
-| 多业务场景验证 | BPS 通用性只有 GEO KTV 一个场景验证 | 高 |
-| ADR 文档持续更新 | 需建立 ADR 与代码变更同步的纪律 | 中 |
+| 治理层端到端验证 | 通过 Aida Agent 触发写操作验证 ActionGate 拦截效果 | 高 |
+| Governance 独立页 | Dashboard 专用治理页面（约束列表 + 违规表格 + 熔断器控制） | 中 |
+| Blueprint YAML 兼容性 | Aida 生成概念 YAML 与引擎技术 schema 不兼容（P0 from E2E） | 中 |
+| 多业务场景验证 | BPS 通用性验证需更多场景（目前：晨光咖啡 + GEO KTV） | 中 |
 | session_state.md 归档 | 仅记录到 Phase 11，考虑标记为历史文档 | 低 |
