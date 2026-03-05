@@ -132,13 +132,13 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - expr-eval（安全表达式求值）, yaml, uuid
 - BKM 知识管理子系统（知识存储 + 系统知识）
 - `loadAidaProject()` 一键装载（~/.aida/ → 引擎 + 系统知识 + 项目）
-- Vitest（测试框架）, 218 tests
+- Vitest（测试框架）, 252 tests
 
 ### bps-dashboard（监控面板）
 - 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
 - 后端：Hono, @hono/node-server, SSE 实时推送
 - 构建：Vite, TypeScript
-- Vitest（测试框架）, 101 tests
+- Vitest（测试框架）, 111 tests
 
 ### erpsys（BPS 引擎 Django 版，仅供借鉴）
 - Django 4.2.7, DRF, PostgreSQL/SQLite, Redis, Celery, Django Channels
@@ -262,8 +262,8 @@ npx vitest run            # 全部测试
 - **业务场景端到端验证**：`server/simulate.ts` 注入晨光咖啡三店标准化运营完整场景
   - 测试服务器 `http://47.236.109.62:3456` 全部页面数据可见
   - 三频操作全景 + HITL 审批闭环 + 动态 Skill 创建记录
-- **工具总览**：12 BPS tools + 3 MCP tools
-  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill
+- **工具总览**：13 BPS tools + 3 MCP tools
+  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_governance_status
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### 端到端能力验证 -- 基础设施级（2026-03-05）
@@ -300,17 +300,29 @@ npx vitest run            # 全部测试
 - **DossierStore 修复**：smartMerge 实现数组追加语义（P1 fix，3 新测试）
 - **测试**：31 新测试（GovernanceStore 6 + GovernanceLoader 5 + ActionGate 9 + CircuitBreaker 7 + ToolWrapper 3 + 1），bps-engine 总计 252 tests
 
-### Phase E2：Dashboard 三问题 + 治理可视化（2026-03-05）
+### Phase E2：Dashboard 三问题 + 治理全景（2026-03-05）
 - **Overview 页重构**：三面板回答"现状/目标/下一步"
   - Panel 1（现状）：实体/任务/错误计数 + 实体类型标签 + 治理熔断器状态 + 违规徽章
   - Panel 2（目标）：Action Plan 进度条 + 完成率 + 周期任务计数
   - Panel 3（下一步）：任务队列分状态 + 待审批 + 最近违规记录
-- **治理 API**（bps-dashboard 新增 2 个 endpoint）：
+- **GovernancePage**（专用治理页面，4 面板）：
+  - Panel 1（熔断器）：状态标签 + 约束数 + 待审批数 + 重置按钮（带确认）
+  - Panel 2（约束清单）：完整表格（ID/策略/严重级别/动作/条件/scope）
+  - Panel 3（治理审批）：待审批列表 + Approve/Reject 模态框（显示 tool input 详情）
+  - Panel 4（违规历史）：时间线（严重级别/约束/工具/实体/消息/verdict）
+- **治理 API**（bps-dashboard，7 个 endpoint）：
   - `GET /api/governance/status` — 熔断器状态 + 约束数 + 待审批数 + 最近违规
   - `GET /api/governance/violations` — 违规历史（支持 limit 参数）
-- **前端扩展**：GovernanceStatus 类型 + useGovernanceStore（SSE 订阅）
-- **模拟数据增强**：simulate.ts Phase 10 注入 4 条约束 + 3 条违规 + 1 个治理审批
-- **测试**：5 新测试，bps-dashboard 总计 106 tests（bps-engine 252，合计 358）
+  - `GET /api/governance/constraints` — 约束完整列表
+  - `GET /api/governance/approvals` — 治理层待审批列表
+  - `POST /api/governance/approvals/:id/decide` — 审批/拒绝
+  - `POST /api/governance/circuit-breaker/reset` — 重置熔断器
+- **治理端到端验证**：
+  - 关键修复：governance wrapper 从返回 `{success:false}` 改为 throw Error（LLM 可靠识别工具失败）
+  - Agent 测试通过：REQUIRE_APPROVAL → Agent 报告拦截 + 审批单号 + Dashboard 链接
+  - BLOCK 测试通过：CRITICAL 违规 → Agent 报告直接拒绝 + 熔断器断开
+  - 发现：OpenClaw gateway 需要重启才能加载新插件代码
+- **测试**：bps-dashboard 111 tests（+10 治理测试），bps-engine 252 tests，合计 363
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
