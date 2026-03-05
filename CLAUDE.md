@@ -138,7 +138,7 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
 - 后端：Hono, @hono/node-server, SSE 实时推送
 - 构建：Vite, TypeScript
-- Vitest（测试框架）, 111 tests
+- Vitest（测试框架）, 112 tests
 
 ### erpsys（BPS 引擎 Django 版，仅供借鉴）
 - Django 4.2.7, DRF, PostgreSQL/SQLite, Redis, Celery, Django Channels
@@ -322,7 +322,11 @@ npx vitest run            # 全部测试
   - Agent 测试通过：REQUIRE_APPROVAL → Agent 报告拦截 + 审批单号 + Dashboard 链接
   - BLOCK 测试通过：CRITICAL 违规 → Agent 报告直接拒绝 + 熔断器断开
   - 发现：OpenClaw gateway 需要重启才能加载新插件代码
-- **测试**：bps-dashboard 111 tests（+10 治理测试），bps-engine 252 tests，合计 363
+- **Approval→Execution 闭环**：Dashboard 审批通过后自动执行原始工具调用
+  - `replayToolCall()` 支持全部 5 个写操作工具（update_entity/create_task/update_task/complete_task/create_skill）
+  - 前端审批后显示执行结果模态框（成功/失败）
+  - 端到端验证通过：APPROVED → 实体写入 + 版本递增；REJECTED → 无执行
+- **测试**：bps-dashboard 112 tests（+11 治理测试），bps-engine 252 tests，合计 364
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
