@@ -283,6 +283,20 @@ npx vitest run            # 全部测试
 - **架构结论**：对于 Agent 驱动运营，Entity + Skill 可能已足够，Blueprint 层的独特价值仅在于机器可查询拓扑 + Dashboard 流程可视化
 - **LLM 配置**：install-aida.sh 默认模型已从 MiniMax M2.5 改为 google/gemini-3.1-pro-preview
 
+### Blueprint 治理层重定位 + DossierStore 修复（2026-03-05）
+- 讨论纪要：`archive/Blueprint治理层讨论纪要 (2026-03-05).md`
+- 治理层设计文档：`docs/Agent 治理层规范 (AGS) v0.1.md`
+- **核心决策**：Blueprint 从"流程编排器"重定位为"治理宪法"——定义 Agent 不能做什么，而非应该做什么
+- **治理层架构**：Constraint（约束规则）+ Action Gate（前置拦截器）+ Circuit Breaker（熔断器）
+  - 机械的（expr-eval 确定性求值，无 LLM）
+  - 前置的（工具执行前拦截）
+  - 不可绕过的（Agent 无法"说服"放行）
+  - 有熔断的（NORMAL → WARNING → RESTRICTED → DISCONNECTED）
+- **governance.yaml**：治理约束定义文件，存放于 `~/.aida/governance.yaml`
+- **DossierStore 修复**：smartMerge 实现数组追加语义（P1 fix，3 新测试）
+- **实现计划**：Phase E1（核心 Gate）→ E2（Circuit Breaker + Approval）→ E3（运营化）
+- **待治理层完成后**：再设计 Dashboard 三问题（现状/目标/下一步）的实现方案
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

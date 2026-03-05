@@ -187,6 +187,19 @@
 - **Impact**: Dashboard Kanban 从 7 列变 5 列，全部 10 个测试文件 + server 端适配。
 - **Status**: ✅ 已落地。bps-engine 196 tests + bps-dashboard 78 tests 全部通过。
 
+### ADR-13: Blueprint 重定位为治理宪法（2026-03-05）
+
+- **Context**: E2E 测试证明 Aida 完全绕过 Blueprint/Task/Rule 基础设施，仅用 Entity + Skill 完成运营。Blueprint-as-workflow 的价值被 Agent 自主能力吞噬。但用户指出：Agent 越强大，越需要刚性治理框架——"不是告诉 Agent 做什么，而是确保 Agent 不能做什么"。
+- **Decision**: Blueprint 从"流程编排器"重定位为"治理宪法"。新增 Agent Governance Specification (AGS)：
+  - `governance.yaml`：约束规则（Constraint）定义，存放于 `~/.aida/governance.yaml`
+  - Action Gate：前置拦截器，在写操作工具执行前检查所有适用约束
+  - Circuit Breaker：熔断器状态机（NORMAL → WARNING → RESTRICTED → DISCONNECTED）
+  - 所有约束使用 expr-eval 确定性求值，不涉及 LLM 判断
+- **Rationale**: 运营自主权（Agent 决定做什么）和治理约束（系统阻止 Agent 不能做什么）是互补关系。Agent 能力越强，治理层越重要。
+- **Impact**: 新增 governance.yaml 文件、GovernanceStore、ActionGate 模块，扩展 loadAidaProject()
+- **详细设计**: 见 `docs/Agent 治理层规范 (AGS) v0.1.md`
+- **Status**: 设计完成，待实现（Phase E1/E2/E3）
+
 ---
 
 ## 3. 子系统实现状态
