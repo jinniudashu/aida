@@ -56,8 +56,10 @@ aida/
 │   │   │   ├── aida-project.ts    ← ~/.aida/ 项目装载（loadAidaProject）
 │   │   │   ├── project-loader.ts  ← 项目清单解析（loadProject）
 │   │   │   └── yaml-loader.ts     ← 蓝图 YAML 解析
-│   │   ├── src/system/        ← 系统蓝图（sys:project-init）
-│   │   │   └── system-blueprint.ts  ← 系统蓝图定义 + loadSystemBlueprints()
+│   │   ├── src/mcp/           ← MCP Server（外部 AI Agent 数据出口）
+│   │   │   └── server.ts          ← IdleX MCP Server（3 tools: search/detail/availability）
+│   │   ├── src/system/        ← 项目初始化步骤定义
+│   │   │   └── project-init.ts    ← 初始化检查清单（替代原 system-blueprint）
 │   │   ├── src/knowledge/    ← BKM 业务知识管理子系统
 │   │   │   ├── types.ts      ← 类型定义（Layer/Scope/Entry/ConflictReport）
 │   │   │   ├── knowledge-store.ts  ← 知识 CRUD（封装 DossierStore）
@@ -209,7 +211,7 @@ npx vitest run            # 全部测试
 - 详见 `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md`
 - **核心结论**：BPS 大部分运行时价值正在被 Agent 能力进化所吞噬
 - **架构方向转变**：BPS 从"运行时引擎"退化为"描述规范 + 轻量工具"
-- **落地状态**：引擎瘦身已部分完成（engine/ 5→2 文件, knowledge/ 5→3 文件, integration/ 7→5 文件, tools 11→9）
+- **落地状态**：引擎瘦身已部分完成（engine/ 5→2 文件, knowledge/ 5→3 文件, integration/ 7→5 文件, tools 9→10）
 
 ### 项目全面回顾（2026-03-04，已修订）
 - 详见 `archive/AIDA项目全面回顾 (2026-03-04).md`
@@ -225,6 +227,21 @@ npx vitest run            # 全部测试
 - **Aida 自给自足**：不再依赖子 Agent，所有能力通过 5 个 Skill 实现（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create）
 - **install-aida.sh 更新**：移除 Org-Architect 部署，新增 Skills 部署 + 验证
 - BPS-Expert 和 Org-Architect 归档至 `agents/_archived/`
+
+### Phase 14：项目评审 + 外部数据出口（2026-03-04）
+- 详见 `archive/AIDA项目评审报告-偏差分析与优化建议 (2026-03-04).md`
+- **评审核心发现**：系统自洽但封闭——13 个 Phase 建设内部基础设施，对外数据出口为零
+- **关键偏差**：蓝图 agentPrompt 被存入数据库但 Aida 无法读取；规则拓扑从未被运行时评估
+- **P0 改动已落地**：
+  - `bps_list_services` 返回 agentPrompt/agentSkills（蓝图业务知识不再被截断）
+  - 新增第 10 个 BPS tool `bps_next_steps`（轻量级下游服务建议器，查询 rules 表）
+  - `BlueprintStore.getNextSteps()` 新增规则拓扑查询方法
+  - **MCP Server**（`src/mcp/server.ts`）：3 tools（search_stores, get_store_detail, check_availability），stdio transport，读取 ~/.aida/data/bps.db，暴露门店数据给外部 AI Agent
+  - **Store Profile API**（bps-dashboard 新增 3 个 REST endpoints）：
+    - `GET /api/store-profiles` — 门店列表（支持 city/district/businessCircle/keyword 过滤）
+    - `GET /api/store-profiles/:storeId` — 门店详情（JSON-LD Schema.org LocalBusiness 格式）
+    - `GET /api/store-profiles/:storeId/availability` — 房型可用性查询
+  - bps-engine: 196 tests 全部通过，bps-dashboard: 78 tests 全部通过
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
