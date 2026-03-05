@@ -266,6 +266,15 @@ npx vitest run            # 全部测试
   - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
+### 端到端能力验证（2026-03-05）
+- 详见 `archive/AIDA端到端能力验证报告 (2026-03-05).md`
+- **验证方法**：三视角（第三方专家 → Aida 自评 → 综合测试），干净环境重新安装 + 41 项自动化测试 + 319 单元测试
+- **测试结果**：40/41 通过（1 个测试脚本 bug，非引擎问题），319 单元测试全部通过
+- **加权完成度**：93.25%（部署100%, 设计时95%, 运行时85%, 可观测100%, HITL100%, 外部出口90%）
+- **关键差距 G1**：规则引擎不自动执行链式任务（有意设计决策，Agent 替代引擎自动化）
+- **商业落地判定**：基本就绪（Conditional Ready）
+- **剩余 P0**：OpenClaw + Aida 端到端验证 + 首个真实业务蓝图验证 + cron 调度验证
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
