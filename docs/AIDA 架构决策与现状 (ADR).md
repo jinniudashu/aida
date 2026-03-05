@@ -198,7 +198,7 @@
 - **Rationale**: 运营自主权（Agent 决定做什么）和治理约束（系统阻止 Agent 不能做什么）是互补关系。Agent 能力越强，治理层越重要。
 - **Impact**: 新增 governance.yaml 文件、GovernanceStore、ActionGate 模块，扩展 loadAidaProject()
 - **详细设计**: 见 `docs/Agent 治理层规范 (AGS) v0.1.md`
-- **Status**: 设计完成，待实现（Phase E1/E2/E3）
+- **Status**: ✅ Phase E1 已落地（GovernanceStore + ActionGate + governance-loader + 31 tests）
 
 ---
 
@@ -211,26 +211,31 @@
 | `schema/` | 8 | `src/schema/*.ts` | ✅ 完成 | TypeBox 类型定义，5-state 任务模型 |
 | `engine/` | 2 | `ProcessTracker` | ✅ 完成 | 任务追踪器 + 5-state 状态机（审计日志、事件发射） |
 | `store/` | 6 | `createDatabase()` | ✅ 完成 | SQLite 持久化、蓝图/进程/Dossier/统计/Dashboard 查询 |
+| `governance/` | 4 | `ActionGate` | ✅ 完成 | 治理层：约束加载 + 前置拦截 + 熔断器 + 审批 |
 | `knowledge/` | 3 | `KnowledgeStore` | ✅ 完成 | 知识存储 + 系统知识 |
-| `loader/` | 3 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml 解析 |
+| `loader/` | 3 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml + governance.yaml 解析 |
 | `integration/` | 5 | `registerBpsPlugin()` | ✅ 完成 | OpenClaw 桥接：EventBridge + Tools + Plugin |
 | `system/` | 1 | `project-init.ts` | ✅ 完成 | 项目初始化步骤定义 |
 
 ### 3.2 OpenClaw 插件
 
-**9 tools**（通过 `registerBpsPlugin()` 注册）:
+**13 tools**（通过 `registerBpsPlugin()` 注册，其中 5 个写操作工具受治理层拦截）:
 
-| # | Tool | 说明 |
-|---|------|------|
-| 1 | `bps_list_services` | 列出所有服务（任务目录） |
-| 2 | `bps_create_task` | 创建任务追踪记录 |
-| 3 | `bps_get_task` | 获取任务状态 + 元数据 |
-| 4 | `bps_query_tasks` | 按状态/服务/实体过滤任务 |
-| 5 | `bps_update_task` | 更新任务状态/元数据 |
-| 6 | `bps_complete_task` | 完成任务（自动推进状态链） |
-| 7 | `bps_get_entity` | 读取实体 Dossier |
-| 8 | `bps_update_entity` | 写入/更新实体 |
-| 9 | `bps_query_entities` | 搜索实体 |
+| # | Tool | 说明 | 治理层拦截 |
+|---|------|------|-----------|
+| 1 | `bps_list_services` | 列出所有服务（任务目录） | 否（只读） |
+| 2 | `bps_create_task` | 创建任务追踪记录 | **是** |
+| 3 | `bps_get_task` | 获取任务状态 + 元数据 | 否（只读） |
+| 4 | `bps_query_tasks` | 按状态/服务/实体过滤任务 | 否（只读） |
+| 5 | `bps_update_task` | 更新任务状态/元数据 | **是** |
+| 6 | `bps_complete_task` | 完成任务（自动推进状态链） | **是** |
+| 7 | `bps_get_entity` | 读取实体 Dossier | 否（只读） |
+| 8 | `bps_update_entity` | 写入/更新实体 | **是** |
+| 9 | `bps_query_entities` | 搜索实体 | 否（只读） |
+| 10 | `bps_next_steps` | 下游服务建议器 | 否（只读） |
+| 11 | `bps_scan_work` | 工作全景扫描 | 否（只读） |
+| 12 | `bps_create_skill` | 动态 Skill 创建 | **是** |
+| 13 | `bps_governance_status` | 治理状态查询 | 否（只读） |
 
 ### 3.3 Agent 架构
 
@@ -261,38 +266,27 @@
 
 ### 3.5 测试覆盖
 
-**bps-engine: 196 tests（11 文件）**
+**bps-engine: 252 tests（14 文件）**
 
 | 测试文件 | 数量 | 覆盖范围 |
 |---------|------|----------|
-| `dossier.test.ts` | 34 | Dossier CRUD、版本化、生命周期、搜索 |
+| `integration.test.ts` | 37 | OpenClaw 集成：EventBridge/Tools/Plugin |
+| `dossier.test.ts` | 37 | Dossier CRUD、版本化、生命周期、搜索、smart merge |
+| `governance.test.ts` | 31 | 治理层：约束加载/PASS/BLOCK/审批/熔断器/工具包装 |
 | `scenario-e2e.test.ts` | 29 | 端到端场景验证 |
-| `integration.test.ts` | 28 | OpenClaw 集成：EventBridge/Tools/Plugin |
 | `dashboard.test.ts` | 25 | DashboardQueryService |
 | `engine.test.ts` | 19 | ProcessTracker + 5-state 状态机 |
 | `knowledge-store.test.ts` | 14 | BKM CRUD |
 | `project-loader.test.ts` | 14 | BPLP 加载 |
+| `capability-e2e.test.ts` | 13 | 能力验证 |
 | `geo-ktv.test.ts` | 12 | GEO 蓝图集成 |
 | `aida-e2e.test.ts` | 10 | Workspace 部署验证 + Skills + 归档 Agent |
 | `aida-project.test.ts` | 7 | ~/.aida/ 项目装载 |
 | `system-blueprint.test.ts` | 4 | 项目初始化步骤 |
 
-**bps-dashboard: 78 tests（10 文件）**
+**bps-dashboard: 101 tests（10+ 文件）**
 
-| 测试文件 | 数量 | 覆盖范围 |
-|---------|------|----------|
-| `api-advanced.test.ts` | 17 | 规则/工作负载/实体网络/告警 |
-| `api-processes.test.ts` | 15 | 流程 CRUD/树/转换/筛选 |
-| `api-entities.test.ts` | 10 | 实体搜索/详情/版本历史 |
-| `api-overview.test.ts` | 8 | 总览统计/时间序列 |
-| `api-trial-run.test.ts` | 7 | 试运行/模拟完成 |
-| `api-sse.test.ts` | 7 | 事件流/心跳 |
-| `api-blueprints.test.ts` | 6 | 蓝图加载/校验 |
-| `api-seed.test.ts` | 6 | 测试数据 |
-| `api-kanban.test.ts` | 5 | 看板列/分组 |
-| `api-timeseries.test.ts` | 5 | 指标聚合 |
-
-**总计：274 tests，全部通过。**
+**总计：353 tests，全部通过。**
 
 ### 3.6 部署
 

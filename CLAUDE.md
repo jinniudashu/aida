@@ -283,18 +283,22 @@ npx vitest run            # 全部测试
 - **架构结论**：对于 Agent 驱动运营，Entity + Skill 可能已足够，Blueprint 层的独特价值仅在于机器可查询拓扑 + Dashboard 流程可视化
 - **LLM 配置**：install-aida.sh 默认模型已从 MiniMax M2.5 改为 google/gemini-3.1-pro-preview
 
-### Blueprint 治理层重定位 + DossierStore 修复（2026-03-05）
+### Phase E1：Agent 治理层实现（2026-03-05）
 - 讨论纪要：`archive/Blueprint治理层讨论纪要 (2026-03-05).md`
 - 治理层设计文档：`docs/Agent 治理层规范 (AGS) v0.1.md`
 - **核心决策**：Blueprint 从"流程编排器"重定位为"治理宪法"——定义 Agent 不能做什么，而非应该做什么
-- **治理层架构**：Constraint（约束规则）+ Action Gate（前置拦截器）+ Circuit Breaker（熔断器）
-  - 机械的（expr-eval 确定性求值，无 LLM）
-  - 前置的（工具执行前拦截）
-  - 不可绕过的（Agent 无法"说服"放行）
-  - 有熔断的（NORMAL → WARNING → RESTRICTED → DISCONNECTED）
+- **治理层实现**（`src/governance/`，4 文件）：
+  - `types.ts`：类型定义（Constraint/Verdict/CircuitBreakerState/ViolationRecord/ApprovalRequest）
+  - `governance-store.ts`：SQLite 持久化（4 表：constraints/violations/circuit_breaker/approvals）
+  - `action-gate.ts`：前置拦截器（scope 匹配 + expr-eval 求值 + verdict 判定 + 熔断器状态机）
+  - `governance-loader.ts`：governance.yaml 解析 + 校验
+- **工具集成**：
+  - 5 个写操作工具自动包装治理检查（bps_update_entity/create_task/update_task/complete_task/create_skill）
+  - 新增 `bps_governance_status` tool (#13)：查询熔断器状态 + 违规记录 + 待审批
+- **loadAidaProject() 扩展**：自动加载 `~/.aida/governance.yaml`，返回 `governance` 字段
 - **governance.yaml**：治理约束定义文件，存放于 `~/.aida/governance.yaml`
 - **DossierStore 修复**：smartMerge 实现数组追加语义（P1 fix，3 新测试）
-- **实现计划**：Phase E1（核心 Gate）→ E2（Circuit Breaker + Approval）→ E3（运营化）
+- **测试**：31 新测试（GovernanceStore 6 + GovernanceLoader 5 + ActionGate 9 + CircuitBreaker 7 + ToolWrapper 3 + 1），bps-engine 总计 252 tests
 - **待治理层完成后**：再设计 Dashboard 三问题（现状/目标/下一步）的实现方案
 
 ### BPS 论文研究
