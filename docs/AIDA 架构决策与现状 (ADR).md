@@ -2,7 +2,7 @@
 
 > Architecture Decision Record — 关键设计决策的 context / decision / rationale，以及各子系统当前实现状态。
 >
-> 最后更新：2026-03-06（技术债清理 + Blueprint YAML P0 修复 + 文档同步）
+> 最后更新：2026-03-06（OpenClaw 集成加固 + 治理 SSE 修复 + 文档同步）
 
 ---
 
@@ -89,7 +89,7 @@
        ▼
 ┌─ bps-dashboard ──────────────────────────────────────┐
 │  Vue 3 + Hono + SSE                                  │
-│  12 页面 + 26 API + 双层告警 + ATDD + 治理可视化       │
+│  13 页面 + 33 API + 双层告警 + ATDD + 治理可视化       │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -243,14 +243,14 @@
 
 | 组件 | 状态 | 位置 | 说明 |
 |------|------|------|------|
-| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(含 Self-Evolution 节) |
+| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(88行，含 Self-Evolution 节 + memory_search 指引 + cron 恢复) |
 | **7 Skills** | ✅ 活跃 | `~/.openclaw/workspace/skills/` | project-init / action-plan / dashboard-guide / blueprint-modeling / agent-create / business-execution / skill-create |
 | ~~BPS-Expert~~ | 📦 归档 | `agents/_archived/bps-expert/` | 能力提取为 skills/blueprint-modeling |
 | ~~Org-Architect~~ | 📦 归档 | `agents/_archived/org-architect/` | 能力提取为 skills/agent-create |
 
 ### 3.4 bps-dashboard
 
-12 个功能页面 + 26 个 API 端点 + SSE 实时推送：
+13 个功能页面 + 33 个 API 端点 + SSE 实时推送：
 
 | 页面 | 路由 | 核心功能 |
 |------|------|---------|
@@ -266,8 +266,9 @@
 | Agent 日志 | `/agent-log` | 任务审计全景（action/state/reason 过滤） |
 | 业务目标 | `/business-goals` | Action Plan 卡片（items + periodicItems + 进度条） |
 | 审批队列 | `/approvals` | 审批列表 + approve/reject 决策（HITL 闭环） |
+| 治理面板 | `/governance` | 熔断器状态 + 约束清单 + 治理审批（Approve/Reject + 自动执行）+ 违规历史 |
 
-技术栈：Vue 3 + Naive UI + ECharts + Hono + SSE，106 tests。
+技术栈：Vue 3 + Naive UI + ECharts + Hono + SSE，112 tests。
 
 ### 3.5 测试覆盖
 
@@ -308,7 +309,7 @@
 | `api-seed.test.ts` | 6 | 种子数据 |
 | `api-advanced.test.ts` | — | 高级视图 |
 
-*（标注 — 的为分布在 106 tests 中的其余测试）
+*（标注 — 的为分布在 112 tests 中的其余测试）
 
 **总计：367 tests，全部通过。**
 
@@ -316,7 +317,7 @@
 
 | 组件 | 说明 |
 |------|------|
-| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（含 tsc） → ~/.aida/ 初始化 → Aida workspace + 7 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并 → 验证 |
+| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（含 tsc） → ~/.aida/ 初始化 → Aida workspace + 7 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并（含安全基线 + 模型 Fallback + Hooks + Compaction + Loop Detection + Context Pruning） → 验证 |
 | Dashboard systemd | bps-dashboard.service（port 3456），install-aida.sh 自动生成并启用 |
 | 测试服务器 | 见 `.dev/server-alicloud.env`（不纳入 Git） |
 
@@ -334,7 +335,8 @@
 | `archive/AIDA项目全面回顾 (2026-03-04).md` | 修订版 | 根本原则偏差分析 + 完整资产评估 |
 | `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md` | — | 引擎瘦身决策的完整分析 |
 | `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾 |
-| `packages/bps-engine/docs/OpenClaw框架技术研究报告.md` | — | OpenClaw 集成技术调研 |
+| `packages/bps-engine/docs/OpenClaw框架技术研究报告.md` | v2 | OpenClaw 官方文档系统学习（733 行，覆盖 14 大能力域） |
+| `archive/AIDA-OpenClaw利用充分度评估 (2026-03-06).md` | — | 14 域利用度评估 + 6 个高价值 Gap 分析 |
 
 ---
 
@@ -361,7 +363,8 @@
 | C | Dashboard 三页扩展（03-05） | Agent Log / Business Goals / Approvals + 23 tests |
 | D1 | 动态 Skill 生成（03-05） | bps_create_skill (#12) + skill-create Skill |
 | E1 | Agent 治理层（03-05） | GovernanceStore + ActionGate + 熔断器 + governance.yaml（ADR-13） |
-| E2 | Dashboard 三问题 + 治理可视化（03-05） | Overview 三面板 + governance API + 5 tests |
+| E2 | Dashboard 三问题 + 治理可视化（03-05） | Overview 三面板 + GovernancePage + governance API + 11 tests |
+| — | 治理 SSE 修复 + OpenClaw 集成加固（03-06） | GovernanceStore EventEmitter + 专用 SSE 事件 + OpenClaw 研究报告 v2 + install-aida.sh 安全基线/Fallback/Hooks/Compaction/LoopDetection/Pruning + AGENTS.md 加固 |
 
 ---
 
@@ -375,4 +378,5 @@
 | ~~引擎瘦身文档残留~~ | README/skeleton/BKM/dashboard-spec 中 ProcessManager 等旧引用已清理 | ✅ 清理 |
 | 蓝图热加载 | 运行时新增/修改蓝图需重启 gateway（P2 from E2E） | 中 |
 | 多业务场景验证 | BPS 通用性验证需更多场景（目前：晨光咖啡 + GEO KTV） | 中 |
-| Cron 调度验证 | 三频模型中 Freq 3（Cron）未经真实运行时验证 | 低 |
+| Cron 调度验证 | 三频模型中 Freq 3（Cron）未经真实运行时验证。AGENTS.md Boot step 4 已加入 cron 恢复检查 | 低 |
+| 文件 I/O 治理绕过 | Agent 可通过 write/edit 工具直接操作文件绕过 governance 层。已加 AGENTS.md Red Line 3 + `tools.exec.security: allowlist`，但 OpenClaw fs 工具尚无路径级限制 | 中 |
