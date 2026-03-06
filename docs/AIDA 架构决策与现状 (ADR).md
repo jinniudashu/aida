@@ -2,7 +2,7 @@
 
 > Architecture Decision Record — 关键设计决策的 context / decision / rationale，以及各子系统当前实现状态。
 >
-> 最后更新：2026-03-06（OpenClaw 集成加固 + 治理 SSE 修复 + 文档同步）
+> 最后更新：2026-03-06（Dashboard 合并入 bps-engine + OpenClaw 集成加固 + 文档同步）
 
 ---
 
@@ -85,11 +85,11 @@
 │      skills/             ← 7 个 Aida Skills          │
 │    openclaw.json         ← 配置（install-aida.sh 合并）│
 └──────────────────────────────────────────────────────┘
-       │
-       ▼
-┌─ bps-dashboard ──────────────────────────────────────┐
+
+┌─ dashboard/ (bps-engine 子目录) ─────────────────────┐
 │  Vue 3 + Hono + SSE                                  │
 │  13 页面 + 33 API + 双层告警 + ATDD + 治理可视化       │
+│  共享同一 DatabaseSync 实例（零 DB 并发问题）           │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -187,7 +187,7 @@
   - BLOCKED（阻塞，等待外部输入）↔ IN_PROGRESS / OPEN
 - **Rationale**: 语义更清晰，减少状态迁移的认知负担。AI Agent 不需要区分"就绪"和"执行中"——任务要么在做，要么没在做。
 - **Impact**: Dashboard Kanban 从 7 列变 5 列，全部 10 个测试文件 + server 端适配。
-- **Status**: ✅ 已落地。bps-engine 196 tests + bps-dashboard 78 tests 全部通过。
+- **Status**: ✅ 已落地。
 
 ### ADR-13: Blueprint 重定位为治理宪法（2026-03-05）
 
@@ -248,9 +248,9 @@
 | ~~BPS-Expert~~ | 📦 归档 | `agents/_archived/bps-expert/` | 能力提取为 skills/blueprint-modeling |
 | ~~Org-Architect~~ | 📦 归档 | `agents/_archived/org-architect/` | 能力提取为 skills/agent-create |
 
-### 3.4 bps-dashboard
+### 3.4 Dashboard（bps-engine/dashboard/）
 
-13 个功能页面 + 33 个 API 端点 + SSE 实时推送：
+13 个功能页面 + 33 个 API 端点 + SSE 实时推送（已合并入 bps-engine，非独立仓库）：
 
 | 页面 | 路由 | 核心功能 |
 |------|------|---------|
@@ -290,7 +290,7 @@
 | `aida-project.test.ts` | 7 | ~/.aida/ 项目装载 |
 | `system-blueprint.test.ts` | 4 | 项目初始化步骤 |
 
-**bps-dashboard: 112 tests（14 文件）**
+**Dashboard: 112 tests（14 文件，位于 bps-engine/dashboard/test/）**
 
 | 测试文件 | 数量 | 覆盖范围 |
 |---------|------|----------|
@@ -317,8 +317,8 @@
 
 | 组件 | 说明 |
 |------|------|
-| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（含 tsc） → ~/.aida/ 初始化 → Aida workspace + 7 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并（含安全基线 + 模型 Fallback + Hooks + Compaction + Loop Detection + Context Pruning） → 验证 |
-| Dashboard systemd | bps-dashboard.service（port 3456），install-aida.sh 自动生成并启用 |
+| `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（tsc + vite build） → ~/.aida/ 初始化 → Aida workspace + 7 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并（含安全基线 + 模型 Fallback + Hooks + Compaction + Loop Detection + Context Pruning） → 验证 |
+| Dashboard systemd | bps-dashboard.service（port 3456），Dashboard 代码位于 `bps-engine/dashboard/`，install-aida.sh 自动生成并启用 |
 | 测试服务器 | 见 `.dev/server-alicloud.env`（不纳入 Git） |
 
 ---
@@ -365,6 +365,7 @@
 | E1 | Agent 治理层（03-05） | GovernanceStore + ActionGate + 熔断器 + governance.yaml（ADR-13） |
 | E2 | Dashboard 三问题 + 治理可视化（03-05） | Overview 三面板 + GovernancePage + governance API + 11 tests |
 | — | 治理 SSE 修复 + OpenClaw 集成加固（03-06） | GovernanceStore EventEmitter + 专用 SSE 事件 + OpenClaw 研究报告 v2 + install-aida.sh 安全基线/Fallback/Hooks/Compaction/LoopDetection/Pruning + AGENTS.md 加固 |
+| — | Dashboard 合并入 bps-engine（03-06） | bps-dashboard 吸收为 `dashboard/` 子目录 → 单进程零 DB 并发 + EventEmitter 原生 + 统一测试（367 tests） |
 
 ---
 
