@@ -51,28 +51,17 @@ aida/
 ├── research/                 ← BPS 理论研究
 │   └── paper_proposal.md     ← 学术论文提案
 ├── packages/
-│   ├── bps-engine/           ← git submodule → jinniudashu/bps-engine
-│   │   ├── src/loader/       ← 项目装载子系统
-│   │   │   ├── aida-project.ts    ← ~/.aida/ 项目装载（loadAidaProject）
-│   │   │   ├── project-loader.ts  ← 项目清单解析（loadProject）
-│   │   │   └── yaml-loader.ts     ← 蓝图 YAML 解析
-│   │   ├── src/mcp/           ← MCP Server（外部 AI Agent 数据出口）
-│   │   │   └── server.ts          ← IdleX MCP Server（3 tools: search/detail/availability）
-│   │   ├── src/system/        ← 项目初始化步骤定义
-│   │   │   └── project-init.ts    ← 初始化检查清单（替代原 system-blueprint）
-│   │   ├── src/knowledge/    ← BKM 业务知识管理子系统（3 文件）
-│   │   │   ├── types.ts      ← 类型定义（Scope/Entry）
-│   │   │   ├── knowledge-store.ts  ← 知识 CRUD（封装 DossierStore）
-│   │   │   └── system-knowledge.ts  ← 系统保留知识 + loadSystemKnowledge()
-│   │   ├── agents/           ← Agent workspace 文件
-│   │   │   ├── aida/         ← 首席管理助理（唯一活跃 Agent）
-│   │   │   │   └── skills/   ← Aida Skills（7 个：project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
-│   │   │   └── _archived/    ← 已归档 Agent（bps-expert, org-architect）
-│   │   ├── deploy/           ← install-aida.sh 一键部署（bps-engine + bps-dashboard + Agent workspace）
-│   │   └── docs/             ← bps-engine-skeleton.md, OpenClaw框架技术研究报告.md
-│   └── bps-dashboard/        ← git submodule → jinniudashu/bps-dashboard
-│       ├── deploy/           ← bps-dashboard.service systemd 模板
-│       └── docs/             ← bps-dashboard-visual-gap-analysis.md, dashboard-requirements-spec.md
+│   └── bps-engine/           ← git submodule → jinniudashu/bps-engine（引擎 + Dashboard 合并）
+│       ├── src/              ← 引擎核心（store/engine/governance/knowledge/loader/mcp/integration）
+│       ├── dashboard/        ← Dashboard（原 bps-dashboard，已合并）
+│       │   ├── client/       ← Vue 3 SPA（13 页面）
+│       │   ├── server/       ← Hono API + SSE（33 endpoints）
+│       │   ├── blueprints/   ← 演示蓝图
+│       │   └── test/         ← Dashboard API 测试（112 tests）
+│       ├── test/             ← 引擎核心测试（255 tests）
+│       ├── agents/           ← Agent workspace（Aida + 7 Skills）
+│       ├── deploy/           ← install-aida.sh 一键部署
+│       └── docs/             ← OpenClaw框架技术研究报告.md 等
 └── session_state.md          ← 开发历程笔记（历史文档，仅 Phase 1-11）
 ```
 
@@ -124,19 +113,13 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
   - BPS Rule 非确定性事件 → LLM 评估
 - **技术研究**：`packages/bps-engine/docs/OpenClaw框架技术研究报告.md`
 
-### bps-engine（BPS 引擎，OpenClaw 插件）
+### bps-engine（BPS 引擎 + Dashboard，OpenClaw 插件）
 - TypeScript (ES2022 ESM), Node.js 24+
-- TypeBox（运行时类型校验）, node:sqlite（零依赖内置 SQLite）
-- expr-eval（安全表达式求值）, yaml, uuid
-- BKM 知识管理子系统（知识存储 + 系统知识）
-- `loadAidaProject()` 一键装载（~/.aida/ → 引擎 + 系统知识 + 项目）
-- Vitest（测试框架）, 255 tests
-
-### bps-dashboard（监控面板）
-- 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
-- 后端：Hono, @hono/node-server, SSE 实时推送
-- 构建：Vite, TypeScript
-- Vitest（测试框架）, 112 tests
+- 引擎核心：TypeBox, node:sqlite, expr-eval, yaml, uuid
+- Dashboard 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
+- Dashboard 后端：Hono, @hono/node-server, SSE 实时推送
+- 构建：Vite (dashboard), tsc (engine)
+- Vitest（测试框架）, 367 tests（255 引擎 + 112 Dashboard）
 
 ### erpsys（BPS 引擎 Django 版，仅供借鉴）
 - Django 4.2.7, DRF, PostgreSQL/SQLite, Redis, Celery, Django Channels
@@ -147,16 +130,12 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 # 安装（npm workspaces 根目录）
 npm install
 
-# bps-engine
+# bps-engine（引擎 + Dashboard 统一仓库）
 cd packages/bps-engine
-npx tsc --noEmit          # 类型检查
-npx vitest run            # 全部测试
-
-# bps-dashboard
-cd packages/bps-dashboard
-npm run dev               # 启动开发服务器
-npx vite build            # 构建
-npx vitest run            # 全部测试
+npx tsc --noEmit          # 引擎类型检查
+npx vitest run            # 全部测试（引擎 255 + Dashboard 112 = 367）
+npm run build:dashboard   # 构建 Dashboard SPA
+npm run dev:dashboard     # 开发模式（API + Vite HMR）
 ```
 
 ## 关键设计决策（erpsys → bps-engine 的演进）
@@ -174,7 +153,7 @@ npx vitest run            # 全部测试
 ### 已完成
 - **Phase 1-7**：bps-engine 核心开发（详见 `session_state.md`）
 - **OpenClaw 集成**：bps-engine 部署为 OpenClaw 插件，端到端测试通过
-- **bps-dashboard**：Layer 1-5 可视化蓝图反馈全部完成（10 文件 78 测试）
+- **Dashboard**：Layer 1-5 可视化蓝图反馈全部完成（10 文件 78 测试）
   - Layer 1: 引擎共享（Dashboard 与 OC 插件共享 SQLite）
   - Layer 2: 蓝图动态加载 API
   - Layer 3: 流程拓扑图（从 rules 自动推导）
@@ -200,7 +179,7 @@ npx vitest run            # 全部测试
   - 12 新测试，总计 209 tests
 
 - **Phase 13：Dashboard 部署 + Agent 指令优化**
-  - bps-dashboard 生产部署：Hono 静态文件托管（dist/client/）+ SPA fallback
+  - Dashboard 生产部署：Hono 静态文件托管（dist/client/）+ SPA fallback
   - install-aida.sh 扩展：Dashboard 构建 + systemd 服务自动部署
   - Agent workspace 整理：操作性内容（项目目录、首次启动）从 SOUL.md 迁移到 AGENTS.md
   - Aida 行为优化：长操作分步汇报规则 + Dashboard 引导指令
@@ -239,7 +218,7 @@ npx vitest run            # 全部测试
     - `GET /api/store-profiles` — 门店列表（支持 city/district/businessCircle/keyword 过滤）
     - `GET /api/store-profiles/:storeId` — 门店详情（JSON-LD Schema.org LocalBusiness 格式）
     - `GET /api/store-profiles/:storeId/availability` — 房型可用性查询
-  - bps-engine: 196 tests 全部通过，bps-dashboard: 78 tests 全部通过
+  - bps-engine: 196 tests 全部通过，Dashboard: 78 tests 全部通过
 
 ### AIDA 能力评估 + Phase A/B/C/D1（2026-03-05）
 - 详见 `archive/AIDA能力评估-三视角分析报告 (2026-03-05).md`
@@ -324,7 +303,7 @@ npx vitest run            # 全部测试
   - `replayToolCall()` 支持全部 5 个写操作工具（update_entity/create_task/update_task/complete_task/create_skill）
   - 前端审批后显示执行结果模态框（成功/失败）
   - 端到端验证通过：APPROVED → 实体写入 + 版本递增；REJECTED → 无执行
-- **测试**：bps-dashboard 112 tests（+11 治理测试），bps-engine 252 tests，合计 364
+- **测试**：Dashboard 112 tests（+11 治理测试），引擎 255 tests，合计 367
 
 ### OpenClaw 集成加固（2026-03-06）
 - 评估报告：`archive/AIDA-OpenClaw利用充分度评估 (2026-03-06).md`
@@ -339,6 +318,19 @@ npx vitest run            # 全部测试
   - P2 语义搜索：AGENTS.md Memory 节加入 `memory_search` 指引
   - P2 循环检测 + 上下文修剪：`loopDetection` + `contextPruning` 配置
 - **治理 SSE 修复**（同日早期）：GovernanceStore 继承 EventEmitter，emit 4 个治理专用事件，Dashboard SSE 直接转发
+
+### bps-engine + bps-dashboard 合并（2026-03-06）
+- **决策依据**：Dashboard 是引擎的视图层，10 维度耦合分析显示无独立价值
+  - 5 个文件导入引擎 13+ exports，直接 EventEmitter 订阅，共享 SQLite DB，作为一个单元部署
+  - 分离导致 DB 并发问题（SQLITE_BUSY）、EventEmitter 跨进程失效、3 仓库同步负担
+- **合并方式**：bps-dashboard 代码移入 `packages/bps-engine/dashboard/`
+  - `dashboard/client/` — Vue 3 SPA（13 页面）
+  - `dashboard/server/` — Hono API + SSE（33 endpoints）
+  - `dashboard/test/` — 112 API tests
+  - `dashboard/blueprints/` — 演示蓝图
+- **收益**：单进程 → 零 DB 并发问题；EventEmitter 原生工作；1 commit 替代 3；直接源码导入
+- **parent repo**：移除 bps-dashboard submodule，workspaces 精简为 `[packages/bps-engine]`
+- **测试**：367 tests 全部通过（统一 vitest 运行）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

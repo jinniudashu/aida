@@ -1,9 +1,6 @@
 [submodule "packages/bps-engine"]
 	path = packages/bps-engine
 	url = https://github.com/jinniudashu/bps-engine.git
-[submodule "packages/bps-dashboard"]
-	path = packages/bps-dashboard
-	url = https://github.com/jinniudashu/bps-dashboard.git
 [submodule "erpsys"]
 	path = erpsys
 	url = https://github.com/jinniudashu/erpsys.git

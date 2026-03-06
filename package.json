@@ -3,7 +3,6 @@
   "private": true,
   "license": "MIT",
   "workspaces": [
-    "packages/bps-engine",
-    "packages/bps-dashboard"
+    "packages/bps-engine"
   ]
 }
