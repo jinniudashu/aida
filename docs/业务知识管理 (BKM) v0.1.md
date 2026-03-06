@@ -1,6 +1,10 @@
 # 业务知识管理 (BKM) v0.1
 
 > Business Knowledge Management — AIDA 知识分层分布与多 Agent 共享机制
+>
+> **注意**：本文档描述的是 Phase 10 的完整设计。引擎瘦身（ADR-10, 2026-03-03）后，
+> ContextAssembler 和 ConflictDetector 已移除，知识模块从 5 文件缩减为 3 文件
+> （types.ts + knowledge-store.ts + system-knowledge.ts）。文中对应章节仅作历史参考。
 
 ## 1. 概述
 

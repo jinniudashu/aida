@@ -2,7 +2,7 @@
 
 > Architecture Decision Record — 关键设计决策的 context / decision / rationale，以及各子系统当前实现状态。
 >
-> 最后更新：2026-03-05（Phase E2 — 治理层 + Dashboard 三问题）
+> 最后更新：2026-03-06（技术债清理 + Blueprint YAML P0 修复 + 文档同步）
 
 ---
 
@@ -271,7 +271,7 @@
 
 ### 3.5 测试覆盖
 
-**bps-engine: 252 tests（14 文件）**
+**bps-engine: 255 tests（13 文件）**
 
 | 测试文件 | 数量 | 覆盖范围 |
 |---------|------|----------|
@@ -282,14 +282,14 @@
 | `dashboard.test.ts` | 25 | DashboardQueryService |
 | `engine.test.ts` | 19 | ProcessTracker + 5-state 状态机 |
 | `knowledge-store.test.ts` | 14 | BKM CRUD |
-| `project-loader.test.ts` | 14 | BPLP 加载 |
+| `project-loader.test.ts` | 17 | BPLP 加载 + YAML 诊断 warnings |
 | `capability-e2e.test.ts` | 13 | 能力验证 |
 | `geo-ktv.test.ts` | 12 | GEO 蓝图集成 |
 | `aida-e2e.test.ts` | 10 | Workspace 部署验证 + Skills + 归档 Agent |
 | `aida-project.test.ts` | 7 | ~/.aida/ 项目装载 |
 | `system-blueprint.test.ts` | 4 | 项目初始化步骤 |
 
-**bps-dashboard: 106 tests（14 文件）**
+**bps-dashboard: 112 tests（14 文件）**
 
 | 测试文件 | 数量 | 覆盖范围 |
 |---------|------|----------|
@@ -310,7 +310,7 @@
 
 *（标注 — 的为分布在 106 tests 中的其余测试）
 
-**总计：358 tests，全部通过。**
+**总计：367 tests，全部通过。**
 
 ### 3.6 部署
 
@@ -367,10 +367,12 @@
 
 ## 6. 未完成 / 已知限制
 
-| 事项 | 说明 | 优先级 |
-|------|------|--------|
-| 治理层端到端验证 | 通过 Aida Agent 触发写操作验证 ActionGate 拦截效果 | 高 |
-| Governance 独立页 | Dashboard 专用治理页面（约束列表 + 违规表格 + 熔断器控制） | 中 |
-| Blueprint YAML 兼容性 | Aida 生成概念 YAML 与引擎技术 schema 不兼容（P0 from E2E） | 中 |
+| 事项 | 说明 | 状态 |
+|------|------|------|
+| ~~治理层端到端验证~~ | Phase E2 验证通过：BLOCK/REQUIRE_APPROVAL/PASS 全路径 | ✅ 完成 |
+| ~~Governance 独立页~~ | GovernancePage 4 面板 + 7 API（Phase E2） | ✅ 完成 |
+| ~~Blueprint YAML 兼容性~~ | blueprint-modeling Skill 新增完整 YAML schema + yaml-loader 诊断 warnings | ✅ 修复 |
+| ~~引擎瘦身文档残留~~ | README/skeleton/BKM/dashboard-spec 中 ProcessManager 等旧引用已清理 | ✅ 清理 |
+| 蓝图热加载 | 运行时新增/修改蓝图需重启 gateway（P2 from E2E） | 中 |
 | 多业务场景验证 | BPS 通用性验证需更多场景（目前：晨光咖啡 + GEO KTV） | 中 |
-| session_state.md 归档 | 仅记录到 Phase 11，考虑标记为历史文档 | 低 |
+| Cron 调度验证 | 三频模型中 Freq 3（Cron）未经真实运行时验证 | 低 |

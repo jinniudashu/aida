@@ -60,15 +60,13 @@ aida/
 │   │   │   └── server.ts          ← IdleX MCP Server（3 tools: search/detail/availability）
 │   │   ├── src/system/        ← 项目初始化步骤定义
 │   │   │   └── project-init.ts    ← 初始化检查清单（替代原 system-blueprint）
-│   │   ├── src/knowledge/    ← BKM 业务知识管理子系统
-│   │   │   ├── types.ts      ← 类型定义（Layer/Scope/Entry/ConflictReport）
+│   │   ├── src/knowledge/    ← BKM 业务知识管理子系统（3 文件）
+│   │   │   ├── types.ts      ← 类型定义（Scope/Entry）
 │   │   │   ├── knowledge-store.ts  ← 知识 CRUD（封装 DossierStore）
-│   │   │   ├── context-assembler.ts ← Scope chain 构建 + 知识装配
-│   │   │   ├── conflict-detector.ts ← 字段级冲突检测
 │   │   │   └── system-knowledge.ts  ← 系统保留知识 + loadSystemKnowledge()
 │   │   ├── agents/           ← Agent workspace 文件
 │   │   │   ├── aida/         ← 首席管理助理（唯一活跃 Agent）
-│   │   │   │   └── skills/   ← Aida Skills（5 个：project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create）
+│   │   │   │   └── skills/   ← Aida Skills（7 个：project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 │   │   │   └── _archived/    ← 已归档 Agent（bps-expert, org-architect）
 │   │   ├── deploy/           ← install-aida.sh 一键部署（bps-engine + bps-dashboard + Agent workspace）
 │   │   └── docs/             ← bps-engine-skeleton.md, OpenClaw框架技术研究报告.md
@@ -132,7 +130,7 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - expr-eval（安全表达式求值）, yaml, uuid
 - BKM 知识管理子系统（知识存储 + 系统知识）
 - `loadAidaProject()` 一键装载（~/.aida/ → 引擎 + 系统知识 + 项目）
-- Vitest（测试框架）, 252 tests
+- Vitest（测试框架）, 255 tests
 
 ### bps-dashboard（监控面板）
 - 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
@@ -184,7 +182,7 @@ npx vitest run            # 全部测试
   - Layer 5: ATDD 测试循环（试运行 + 模拟完成 + 执行报告）
 - **Phase 8：核心 Agent 定义**：BPS Expert + Org-Architect workspace
 - **Phase 9：Aida 管理助理 Agent**：Aida workspace（IDENTITY/SOUL/AGENTS），BPS 结晶化判断框架，Agent 协作拓扑（Aida → BPS-Expert / Org-Architect）
-- **Phase 10：BKM 业务知识管理**：5 层知识分级（charter→contextual）+ 6 类作用域 + 冲突检测 + ProcessManager 集成（30 新测试）
+- **Phase 10：BKM 业务知识管理**：知识分级 + 作用域 + 知识存储（30 新测试，后经瘦身移除 ContextAssembler/ConflictDetector）
   - 详见 `docs/业务知识管理 (BKM) v0.1.md`
 - **Phase 11：~/.aida/ 项目目录迁移**：业务项目数据从代码仓库迁移到 `~/.aida/`，实现代码与数据分离
   - `loadAidaProject()` 一键装载 API（创建引擎 + 系统知识 + 项目清单）
