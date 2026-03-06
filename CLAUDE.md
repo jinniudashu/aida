@@ -326,6 +326,20 @@ npx vitest run            # 全部测试
   - 端到端验证通过：APPROVED → 实体写入 + 版本递增；REJECTED → 无执行
 - **测试**：bps-dashboard 112 tests（+11 治理测试），bps-engine 252 tests，合计 364
 
+### OpenClaw 集成加固（2026-03-06）
+- 评估报告：`archive/AIDA-OpenClaw利用充分度评估 (2026-03-06).md`
+- 研究报告重写：`packages/bps-engine/docs/OpenClaw框架技术研究报告.md` v1→v2（源码分析→官方文档，462→733 行）
+- **评估结论**：核心路径深（Plugin/Tool/Event/Workspace/Skills），外围配置浅（全部依赖默认值）
+- **已落地优化**（install-aida.sh 配置合并 + AGENTS.md）：
+  - P0 安全基线：`tools.exec.security: "allowlist"` + Red Line 禁止文件 I/O 绕过治理
+  - P0 模型 Fallback：`fallbacks: [claude-sonnet-4-6, gpt-4.1]`
+  - P1 BOOT.md 激活：`hooks.internal.enabled: true`
+  - P1 Compaction 记忆冲刷：`compaction.memoryFlush.enabled: true`
+  - P1 Cron 恢复：Boot 步骤 4 验证/重注册 cron 任务
+  - P2 语义搜索：AGENTS.md Memory 节加入 `memory_search` 指引
+  - P2 循环检测 + 上下文修剪：`loopDetection` + `contextPruning` 配置
+- **治理 SSE 修复**（同日早期）：GovernanceStore 继承 EventEmitter，emit 4 个治理专用事件，Dashboard SSE 直接转发
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
