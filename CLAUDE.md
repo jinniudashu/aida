@@ -327,6 +327,16 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **保留的 submodule**：仅 erpsys（Django 参考实现，只读归档）
 - **测试**：367 tests 全部通过（统一 vitest 运行）
 
+### IdleX GEO E2E v2 业务场景验证（2026-03-07）
+- 评估报告：`archive/IdleX-GEO-E2E-v2-评估报告 (2026-03-07).md`
+- 测试方案：`test/e2e/idlex-geo-v2.md`，自动化脚本：`test/e2e/idlex-geo-v2.sh`
+- **业务目标**：一个 GEO 负责人 + Aida 完成闲氪全部 GEO 运营任务
+- **加权总分：87/100**（业务理解 95, 运营体系 90, 内容质量 90, 治理合规 70, 自进化 100, 可观测 50）
+- **Self-Evolution 100%**：Skill 创建（geo-ops，prospective gap）+ Agent 创建（krypton-assistant，persona isolation）均一次通过
+- **业务覆盖 86%**：7 项 WORKING + 1 项 DESIGNED，日均管理工作量 ~15 分钟
+- **P0 待修复**：Dashboard Vite 构建路径（SPA 404）、内容发布绕过治理（需 Skill 级约束）
+- **P1 待修复**：install-aida.sh 旧路径清理逻辑
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
