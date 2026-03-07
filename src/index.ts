@@ -30,7 +30,8 @@ export * from './knowledge/types.js';
 export { PROJECT_INIT_STEPS, getProjectInitSteps, type ProjectInitStep } from './system/project-init.js';
 
 // ——— Loader exports ———
-export { loadBlueprintFromYaml, loadBlueprintFromString, type LoadResult } from './loader/yaml-loader.js';
+export { loadBlueprintFromYaml, loadBlueprintFromString, loadBlueprintObject, type LoadResult } from './loader/yaml-loader.js';
+export { compileBlueprint, isSimplifiedFormat, type CompileResult, type CompiledBlueprint } from './loader/blueprint-compiler.js';
 export { loadProject, loadProjectFromString, type ProjectLoadResult } from './loader/project-loader.js';
 export { loadAidaProject, initAidaProject, getDefaultAidaDir,
          AIDA_DIR_NAME, type AidaProjectResult } from './loader/aida-project.js';

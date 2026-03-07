@@ -40,9 +40,9 @@ Output: stage breakdown + entity relationships.
 
 | Type | Template | Maps to |
 |------|----------|---------|
-| Event-driven | When {trigger}, system shall {response} | BPS Rule: Event → Instruction |
+| Event-driven | When {trigger}, system shall {response} | flow edge (sequential) |
 | State-driven | While in {state}, system shall {response} | State constraint |
-| Exception | If {condition}, then system shall {response} | Error handling |
+| Conditional | If {condition}, then system shall {response} | flow edge with `| "condition"` |
 
 Output: atomic service list + EARS rules.
 
@@ -59,156 +59,143 @@ Refine through dialogue with the user:
 
 **Checklist per service:**
 - [ ] Atomic or composite?
-- [ ] If composite, are orchestration rules defined in EARS?
-- [ ] Are events and responses explicit?
-- [ ] Sequential (chain) or calling (call_sub) relationship?
-- [ ] Exception handling defined?
+- [ ] If composite, what is the flow topology?
+- [ ] Sequential (chain `->`) or parallel (fanout `,`)?
+- [ ] Any conditional branches (`| "condition"`)?
 
 ## Step 5: Blueprint Generation & Verification
 
-1. Convert the refined model to YAML using the **exact schema** below
-2. Save to `~/.aida/blueprints/{domain}-{scenario}.yaml`
-3. Verify with `bps_list_services` that services loaded (count > 0)
-4. If `Blueprints: 0`, check YAML structure against the schema
+1. Convert the refined model to **simplified YAML** (services + flow)
+2. Load into the engine with `bps_load_blueprint` (auto-compiles events/instructions/rules)
+3. Verify the result: `health: "complete"` means ready to use
+4. If errors, fix and resubmit — the tool returns detailed error messages
 5. Test with `bps_create_task` for the top-level service
 
-## BPS YAML Schema (Engine-Required)
+## Simplified Blueprint Schema
 
-The engine loads 4 arrays: `services`, `events`, `instructions`, `rules`. All 4 are required for a working blueprint.
+You only write **services** and **flow**. The engine compiler auto-generates events, instructions, and rules from the flow topology.
 
-### Translation from SBMP to YAML
+### Service fields
 
-| SBMP concept | YAML array | Key fields |
-|---|---|---|
-| Business activity | `services[]` | `id`, `label`, `serviceType` (atomic/composite), `executorType` (manual/agent/system) |
-| EARS "When {trigger}" | `events[]` | `id`, `label`, `expression`, `evaluationMode` (deterministic/non_deterministic) |
-| EARS "shall {response}" | `instructions[]` | `id`, `label`, `sysCall` (start_service/call_sub_service/terminate_process/...) |
-| EARS full rule | `rules[]` | `id`, `label`, `targetServiceId`, `serviceId`, `eventId`, `instructionId`, `operandServiceId` |
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | yes | Unique ID (kebab-case, e.g., `svc-data-collect`) |
+| `label` | yes | Human-readable name |
+| `composite` | no | Set `true` for the top-level orchestrator service |
+| `executor` | no | `agent`, `manual`, or `system` (default: `manual`) |
+| `entityType` | no | Entity type this service operates on |
+| `agentPrompt` | no | Instructions for the agent (when executor is `agent`) |
+| `agentSkills` | no | List of skill names the agent should use |
 
-### Reusable event/instruction patterns
+### Flow syntax
 
-Most blueprints only need 2 events + 2-3 instructions. Define them once, reference by ID in rules:
+Each flow line describes service connections using `->` arrows:
 
-```yaml
-events:
-  - id: "evt-new"
-    label: "Process created"
-    expression: "process_state == 'NEW'"
-    evaluationMode: "deterministic"
-  - id: "evt-terminated"
-    label: "Process terminated"
-    expression: "process_state == 'TERMINATED'"
-    evaluationMode: "deterministic"
-
-instructions:
-  - id: "instr-start"
-    label: "Start service"
-    sysCall: "start_service"
-  - id: "instr-terminate"
-    label: "Terminate process"
-    sysCall: "terminate_process"
+```
+"A -> B"                          sequential (A completes → start B)
+"A -> B -> C -> D"                chain (A→B→C→D)
+"A -> B, C, D"                    parallel fanout (A completes → start B, C, D simultaneously)
+"A -> B | \"condition text\""     conditional (A triggers B only when LLM evaluates condition as true)
 ```
 
-### Minimal working example (3-service chain)
+The compiler auto-detects:
+- **Entry service**: the first service with no incoming edges → triggered by composite `NEW`
+- **Standard events**: `evt-new` and `evt-terminated` are auto-generated
+- **Conditional events**: `| "..."` creates a `non_deterministic` event for LLM evaluation
+
+### Minimal example (3-service chain)
 
 ```yaml
 version: "1.0"
 name: "store-opening"
 
 services:
-  - id: "svc-opening"
+  - id: svc-opening
     label: "Store Opening"
-    serviceType: "composite"
-    executorType: "system"
-    entityType: "store"
-    manualStart: true
+    composite: true
+    entityType: store
 
-  - id: "svc-env-prep"
+  - id: svc-env-prep
     label: "Environment Prep"
-    serviceType: "atomic"
-    executorType: "manual"
+    executor: manual
 
-  - id: "svc-material-check"
+  - id: svc-material-check
     label: "Material Check"
-    serviceType: "atomic"
-    executorType: "manual"
+    executor: manual
 
-events:
-  - id: "evt-new"
-    label: "Process created"
-    expression: "process_state == 'NEW'"
-    evaluationMode: "deterministic"
-  - id: "evt-terminated"
-    label: "Process terminated"
-    expression: "process_state == 'TERMINATED'"
-    evaluationMode: "deterministic"
-
-instructions:
-  - id: "instr-start"
-    label: "Start service"
-    sysCall: "start_service"
-
-rules:
-  - id: "rule-kickoff"
-    label: "Opening started -> env prep"
-    targetServiceId: "svc-opening"
-    serviceId: "svc-opening"
-    eventId: "evt-new"
-    instructionId: "instr-start"
-    operandServiceId: "svc-env-prep"
-    order: 10
-  - id: "rule-env-done"
-    label: "Env done -> material check"
-    targetServiceId: "svc-opening"
-    serviceId: "svc-env-prep"
-    eventId: "evt-terminated"
-    instructionId: "instr-start"
-    operandServiceId: "svc-material-check"
-    order: 20
+flow:
+  - svc-env-prep -> svc-material-check
 ```
 
-### Rule wiring pattern
-
-Each rule says: "When `serviceId` fires `eventId`, execute `instructionId` on `operandServiceId`".
-- `targetServiceId`: the composite service that owns this rule (scope)
-- `serviceId`: the service whose process event triggers this rule
-- `eventId`: which event (typically `evt-new` or `evt-terminated`)
-- `instructionId`: what to do (typically `instr-start`)
-- `operandServiceId`: which service to act on (the next step)
-- `order`: execution priority (lower = first, use 10/20/30 spacing)
-
-### Agent services
-
-For agent-executed services, add `agentPrompt` (and optionally `agentSkills`):
+### Full example (sequential + parallel + conditional)
 
 ```yaml
-  - id: "svc-data-collect"
-    label: "Data Collection"
-    serviceType: "atomic"
-    executorType: "agent"
-    entityType: "store"
-    agentSkills: ["data_collection"]
-    agentPrompt: |
-      Collect store data: name, address, capacity, pricing.
+version: "1.0"
+name: "geo-operations"
+
+services:
+  - id: svc-geo-ops
+    label: "GEO Operations"
+    composite: true
+    entityType: store
+
+  - id: svc-monitor
+    label: "Visibility Monitor"
+    executor: agent
+    agentPrompt: "Monitor 3 AI models for store recommendations"
+
+  - id: svc-analyze
+    label: "Strategy Analysis"
+    executor: agent
+    agentPrompt: "Analyze model preferences, output per-model strategy"
+
+  - id: svc-generate
+    label: "Content Generation"
+    executor: agent
+    agentPrompt: "Generate differentiated content per model"
+
+  - id: svc-review
+    label: "Content Review"
+    executor: manual
+
+  - id: svc-pub-doubao
+    label: "Publish to Doubao"
+    executor: agent
+
+  - id: svc-pub-qianwen
+    label: "Publish to Qianwen"
+    executor: agent
+
+  - id: svc-pub-yuanbao
+    label: "Publish to Yuanbao"
+    executor: agent
+
+  - id: svc-summary
+    label: "Operations Summary"
+    executor: agent
+
+  - id: svc-optimize
+    label: "Content Optimization"
+    executor: agent
+
+flow:
+  - svc-monitor -> svc-analyze -> svc-generate -> svc-review
+  - svc-review -> svc-pub-doubao, svc-pub-qianwen, svc-pub-yuanbao
+  - svc-pub-doubao -> svc-summary
+  - svc-monitor -> svc-optimize | "GEO score below 60"
+```
+
+### Loading the blueprint
+
+```
+bps_load_blueprint(yaml: "<your YAML>")
+→ { success: true, compiled: true, health: "complete", loaded: { services: 10, events: 3, instructions: 2, rules: 9 } }
 ```
 
 ### Common mistakes to avoid
 
-- **Missing events/instructions/rules**: Services alone won't load into the process engine. You MUST define all 4 arrays.
-- **Form fields in services**: Do NOT put `form:` or `fields:` in service definitions. Use `agentPrompt` to describe what the service does.
-- **Conceptual YAML**: Do NOT generate table-format or EARS-text output. The final YAML must match this schema exactly.
-
-## Output Format
-
-**File naming**: `{domain}-{scenario}.yaml` (e.g., `store-opening.yaml`)
-
-**Header template**:
-```yaml
-# ============================================================
-# {Blueprint Name}
-# ============================================================
-# Objective: {one sentence}
-#
-# Flow: {stage1} -> {stage2} -> ... -> {stageN}
-# ============================================================
-```
+- **Writing events/instructions/rules manually**: The compiler generates these. Just write services + flow.
+- **Form fields in services**: Do NOT put `form:` or `fields:`. Use `agentPrompt` instead.
+- **Conceptual YAML**: Do NOT generate table-format or EARS-text output. Write the simplified schema above.
+- **Missing composite service**: Every blueprint needs exactly one `composite: true` service as the orchestrator.
+- **Skipping verification**: Always check the tool's response for `health: "complete"`.

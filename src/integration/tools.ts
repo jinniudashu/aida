@@ -2,6 +2,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { Type } from '@sinclair/typebox';
+import { stringify as stringifyYaml } from 'yaml';
+import { loadBlueprintFromString, type LoadResult } from '../loader/yaml-loader.js';
+import { isSimplifiedFormat, compileBlueprint, type CompileResult } from '../loader/blueprint-compiler.js';
+import { parse as parseYaml } from 'yaml';
 import type { ProcessTracker } from '../engine/process-tracker.js';
 import type { BlueprintStore } from '../store/blueprint-store.js';
 import type { ProcessStore } from '../store/process-store.js';
@@ -57,7 +61,7 @@ function createListServicesTool(deps: BpsToolDeps): OpenClawAgentTool {
         })),
       };
       if (services.length === 0) {
-        result.hint = 'No services loaded. Check that blueprint YAML has all 4 required arrays: services[], events[], instructions[], rules[]. See blueprint-modeling Skill for the exact schema.';
+        result.hint = 'No services loaded. Use bps_load_blueprint to load a blueprint (simplified format: services[] + flow[] is auto-compiled).';
       }
       return result;
     },
@@ -529,7 +533,73 @@ function createCreateSkillTool(deps: BpsToolDeps): OpenClawAgentTool {
   };
 }
 
-// ——— 13. bps_governance_status ———
+// ——— 13. bps_load_blueprint ———
+
+const LoadBlueprintInput = Type.Object({
+  yaml: Type.String({ description: 'Blueprint YAML content. Simplified format (services + flow) is auto-compiled into full schema. Full format (services + events + instructions + rules) is loaded directly.' }),
+  persist: Type.Optional(Type.Boolean({ description: 'Save to ~/.aida/blueprints/ for persistence across restarts. Default: true' })),
+});
+
+function createLoadBlueprintTool(deps: BpsToolDeps): OpenClawAgentTool {
+  return {
+    name: 'bps_load_blueprint',
+    description: 'Load a blueprint into the BPS engine. Accepts simplified format (services[] + flow[]) which is auto-compiled, or full format. Returns load results with health status.',
+    parameters: LoadBlueprintInput,
+    async execute(_callId: string, input: unknown) {
+      const { yaml, persist } = input as { yaml: string; persist?: boolean };
+
+      // Load (auto-compiles simplified format internally)
+      const loadResult = loadBlueprintFromString(yaml, deps.blueprintStore);
+
+      // Check if it was compiled
+      const raw = parseYaml(yaml) as Record<string, unknown>;
+      const wasCompiled = isSimplifiedFormat(raw);
+
+      // Determine health
+      const health = (loadResult.services > 0 && loadResult.events > 0 && loadResult.rules > 0)
+        ? 'complete'
+        : (loadResult.services > 0) ? 'partial' : 'empty';
+
+      // Persist to ~/.aida/blueprints/ if requested (default: true)
+      let persistedTo: string | undefined;
+      if (persist !== false && loadResult.errors.length === 0 && loadResult.services > 0) {
+        try {
+          const blueprintName = String(raw.name ?? 'blueprint').replace(/[^a-zA-Z0-9\u4e00-\u9fa5-]/g, '-').toLowerCase();
+          const fileName = `${blueprintName}.yaml`;
+          const blueprintDir = path.join(os.homedir(), '.aida', 'blueprints');
+          fs.mkdirSync(blueprintDir, { recursive: true });
+          const filePath = path.join(blueprintDir, fileName);
+          fs.writeFileSync(filePath, yaml, 'utf-8');
+          persistedTo = filePath;
+        } catch (e) {
+          loadResult.warnings.push(`Failed to persist blueprint: ${e}`);
+        }
+      }
+
+      return {
+        success: loadResult.errors.length === 0,
+        compiled: wasCompiled,
+        health,
+        loaded: {
+          services: loadResult.services,
+          events: loadResult.events,
+          instructions: loadResult.instructions,
+          rules: loadResult.rules,
+        },
+        errors: loadResult.errors,
+        warnings: loadResult.warnings,
+        ...(persistedTo ? { persistedTo } : {}),
+        ...(health !== 'complete' ? {
+          hint: health === 'partial'
+            ? 'Blueprint is partial — services loaded but missing events/instructions/rules. Use simplified format (services + flow) for auto-compilation.'
+            : 'Blueprint is empty — no services loaded. Check YAML syntax.',
+        } : {}),
+      };
+    },
+  };
+}
+
+// ——— 14. bps_governance_status ———
 
 function createGovernanceStatusTool(deps: BpsToolDeps): OpenClawAgentTool {
   return {
@@ -635,6 +705,7 @@ export function createBpsTools(deps: BpsToolDeps): OpenClawAgentTool[] {
     createNextStepsTool(deps),
     createScanWorkTool(deps),
     createCreateSkillTool(deps),
+    createLoadBlueprintTool(deps),
   ];
 
   // Add governance status tool if governance is configured

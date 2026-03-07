@@ -90,11 +90,11 @@ rules: []
 // ——————————————————————————————————
 
 describe('Plugin Registration', () => {
-  it('should register 12 tools and subscribe to events', () => {
+  it('should register 13 tools and subscribe to events', () => {
     const runtime = createMockRuntime();
     const { engine } = registerBpsPlugin(runtime.api);
 
-    expect(runtime.registeredTools).toHaveLength(12);
+    expect(runtime.registeredTools).toHaveLength(13);
     expect(runtime.registeredTools.map(t => t.name).sort()).toEqual([
       'bps_complete_task',
       'bps_create_skill',
@@ -102,6 +102,7 @@ describe('Plugin Registration', () => {
       'bps_get_entity',
       'bps_get_task',
       'bps_list_services',
+      'bps_load_blueprint',
       'bps_next_steps',
       'bps_query_entities',
       'bps_query_tasks',

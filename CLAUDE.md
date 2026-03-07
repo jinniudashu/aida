@@ -143,6 +143,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - Django Signals → EventEmitter（7 种进程事件）
 - 5 类独立资源表 → 统一 ResourceRequirement
 - Agent SOUL 内嵌知识 → BKM 知识 Dossier（分层分布 + scope chain 装配）
+- 手写 4 数组蓝图 YAML → Blueprint 编译器（services + flow 拓扑 → 自动生成 events/instructions/rules，类比 erpsys DataItem DAG→ORM 代码生成）
 
 ## 项目进展
 
@@ -235,8 +236,8 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **业务场景端到端验证**：`server/simulate.ts` 注入晨光咖啡三店标准化运营完整场景
   - 测试服务器 `http://47.236.109.62:3456` 全部页面数据可见
   - 三频操作全景 + HITL 审批闭环 + 动态 Skill 创建记录
-- **工具总览**：13 BPS tools + 3 MCP tools
-  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_governance_status
+- **工具总览**：14 BPS tools + 3 MCP tools
+  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_governance_status
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### 端到端能力验证 -- 基础设施级（2026-03-05）
@@ -348,6 +349,19 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - 测试与代码质量：8.5（测试/代码比 1.88:1，TDD 实践优秀）
 - **核心优势**：架构方向正确、测试覆盖充分、治理层完善
 - **主要风险**：Blueprint 格式断裂、真实业务场景验证有限
+
+### Phase F：Blueprint 编译器（2026-03-07）
+- **核心决策**：借鉴 erpsys DataItem 的"DAG 描述 → 代码生成"模式，Aida 只写业务描述（services + flow 拓扑），编译器自动生成引擎 schema（events + instructions + rules）
+- **实现**：
+  - `src/loader/blueprint-compiler.ts`：编译器（isSimplifiedFormat 检测 + compileBlueprint 编译 + flow DSL 解析）
+  - `yaml-loader.ts` 重构：loadBlueprintFromString 自动检测简化格式并编译，loadBlueprintObject 抽取为公共函数
+  - `bps_load_blueprint` tool (#14)：Aida 提交 YAML → 编译 → 加载 → 持久化 → 返回 health 状态
+  - `blueprint-modeling` Skill 重写：从 4 数组手写 schema 改为简化格式（services + flow）
+- **Flow DSL 语法**：`A -> B`（顺序）、`A -> B, C, D`（并行）、`A -> B | "condition"`（条件）
+- **向后兼容**：已有 events/instructions/rules 的 YAML 直接加载（跳过编译）
+- **解决的问题**：Gap 7（Blueprint 格式不兼容）——LLM 出错面从 4 个交叉引用数组缩小到 services + flow 箭头
+- **测试**：22 新测试，总计 391 tests（369 + 22）
+- **BPS tools**：14 个（+bps_load_blueprint）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

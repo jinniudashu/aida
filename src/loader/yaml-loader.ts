@@ -2,11 +2,12 @@ import { parse as parseYaml } from 'yaml';
 import { readFileSync } from 'fs';
 import { BlueprintStore } from '../store/blueprint-store.js';
 import { now } from '../schema/common.js';
+import { isSimplifiedFormat, compileBlueprint } from './blueprint-compiler.js';
 import type { ServiceDef } from '../schema/service.js';
 import type { EventDef, InstructionDef, ServiceRuleDef } from '../schema/rule.js';
 
 /** YAML 蓝图文件的顶层结构 */
-interface BlueprintYaml {
+export interface BlueprintYaml {
   version: string;
   name: string;
   entities?: EntityYaml[];
@@ -18,7 +19,7 @@ interface BlueprintYaml {
   operators?: OperatorYaml[];
 }
 
-interface EntityYaml {
+export interface EntityYaml {
   id: string;
   label: string;
   name?: string;
@@ -30,7 +31,7 @@ interface EntityYaml {
   initContent?: unknown;
 }
 
-interface ServiceYaml {
+export interface ServiceYaml {
   id: string;
   label: string;
   name?: string;
@@ -46,7 +47,7 @@ interface ServiceYaml {
   price?: number;
 }
 
-interface EventYaml {
+export interface EventYaml {
   id: string;
   label: string;
   name?: string;
@@ -56,7 +57,7 @@ interface EventYaml {
   timerConfig?: { cron?: string; intervalMs?: number };
 }
 
-interface InstructionYaml {
+export interface InstructionYaml {
   id: string;
   label: string;
   name?: string;
@@ -64,7 +65,7 @@ interface InstructionYaml {
   parameters?: Record<string, unknown>;
 }
 
-interface RuleYaml {
+export interface RuleYaml {
   id: string;
   label: string;
   name?: string;
@@ -100,7 +101,25 @@ export function loadBlueprintFromYaml(filePath: string, store: BlueprintStore): 
 }
 
 export function loadBlueprintFromString(yamlContent: string, store: BlueprintStore): LoadResult {
-  const blueprint = parseYaml(yamlContent) as BlueprintYaml;
+  const raw = parseYaml(yamlContent) as Record<string, unknown>;
+
+  // Auto-compile simplified format (has flow[], no rules[])
+  if (isSimplifiedFormat(raw)) {
+    const compiled = compileBlueprint(raw);
+    if (compiled.errors.length > 0) {
+      return { services: 0, events: 0, instructions: 0, rules: 0, errors: compiled.errors, warnings: compiled.warnings };
+    }
+    // Load the compiled blueprint
+    const loadResult = loadBlueprintObject(compiled.blueprint as unknown as BlueprintYaml, store);
+    loadResult.warnings.unshift(`Blueprint compiled from simplified format: ${compiled.blueprint.rules.length} rules auto-generated from flow topology.`);
+    return loadResult;
+  }
+
+  return loadBlueprintObject(raw as unknown as BlueprintYaml, store);
+}
+
+/** Load a pre-parsed blueprint object into the store */
+export function loadBlueprintObject(blueprint: BlueprintYaml, store: BlueprintStore): LoadResult {
   const result: LoadResult = { services: 0, events: 0, instructions: 0, rules: 0, errors: [], warnings: [] };
   const timestamp = now();
 
