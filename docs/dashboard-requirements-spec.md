@@ -2,9 +2,15 @@
 
 > 版本：0.2 | 日期：2026-02-24 | 状态：需求确认中
 >
-> **注意**：本文档描述的是 Phase 7 时期的需求设计。文中 ProcessManager、RuleEvaluator
-> 等模块已在引擎瘦身（ADR-10, 2026-03-03）中重命名或移除。
-> ProcessManager → ProcessTracker，事件已从 SSE 实现。当前实现请参见 bps-engine README.md。
+> **⚠️ 历史文档**：本文写于 2026-02-24（Phase 7），与当前实现存在多处重大偏离：
+> - **状态模型**：文中 7-state Kanban（NEW/READY/RUNNING/WAITING/SUSPENDED/TERMINATED/ERROR）
+>   已改为 5-state（OPEN/IN_PROGRESS/COMPLETED/FAILED/BLOCKED），见 ADR-12
+> - **实时通信**：文中全文引用 WebSocket，实际使用 SSE
+> - **引擎模块**：ProcessManager → ProcessTracker，RuleEvaluator 已移除
+> - **技术栈**：无 Vuex/Django Channels/Redis，实际为 Pinia + Hono SSE
+> - **Dashboard 规模**：当前 13 页面、33 API（非文中的 Phase 式规划）
+> - `bps_dashboard_snapshot` 工具从未实现
+> 当前实现请参见 `AIDA 架构决策与现状 (ADR).md` Section 3.4。
 >
 > 变更记录：
 > - v0.1 初稿，7 个开放问题

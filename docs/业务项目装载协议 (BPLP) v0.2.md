@@ -185,19 +185,20 @@ entities:
 一键装载 AIDA 项目：创建引擎 → 加载系统知识 → 加载项目清单。
 
 ```typescript
-import { loadAidaProject } from 'bps-engine';
+import { loadAidaProject } from './src/index.js';
 
-const { engine, project, aidaDir, systemKnowledge } = await loadAidaProject();
+const { engine, project, aidaDir, systemKnowledge, governance } = loadAidaProject();
 // engine: BpsEngine 实例
 // project: ProjectLoadResult | null（无 project.yaml 时为 null）
 // aidaDir: 实际使用的 ~/.aida/ 路径
 // systemKnowledge: { loaded, skipped }
+// governance: { constraintCount, store, gate } | null（无 governance.yaml 时为 null）
 ```
 
 可指定自定义目录（测试场景）：
 
 ```typescript
-const result = await loadAidaProject({ aidaDir: '/tmp/my-aida' });
+const result = loadAidaProject({ aidaDir: '/tmp/my-aida' });
 ```
 
 ### 底层 API：loadProject()
@@ -217,4 +218,4 @@ const result = loadProject(
 // result: { projectId, name, blueprints, seeds, knowledge }
 ```
 
-详见 `packages/bps-engine/src/loader/aida-project.ts` 和 `project-loader.ts`。
+详见 `src/loader/aida-project.ts` 和 `src/loader/project-loader.ts`。

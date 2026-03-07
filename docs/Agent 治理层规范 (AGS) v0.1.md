@@ -329,7 +329,7 @@ circuit_breaker:
 
 ### 6.1 存储
 
-Violation 记录存入 DossierStore，`entityType="governance-violation"`：
+Violation 记录存入专用 SQLite 表 `bps_governance_violations`（非 DossierStore）：
 
 ```typescript
 interface ViolationRecord {
@@ -573,10 +573,11 @@ function wrapWithGovernance(
 | Method | Path | 说明 |
 |--------|------|------|
 | `GET` | `/api/governance/status` | Circuit Breaker 状态 + 统计 |
-| `GET` | `/api/governance/violations` | 违规记录列表（支持分页、过滤） |
+| `GET` | `/api/governance/violations` | 违规记录列表（支持 limit 参数） |
 | `GET` | `/api/governance/constraints` | 当前活跃的约束列表 |
-| `POST` | `/api/governance/reset` | 重置 Circuit Breaker 为 NORMAL（需 owner 权限） |
-| `POST` | `/api/governance/reload` | 重载 governance.yaml |
+| `GET` | `/api/governance/approvals` | 治理层待审批列表 |
+| `POST` | `/api/governance/approvals/:id/decide` | 审批/拒绝（附带 decision + reason） |
+| `POST` | `/api/governance/circuit-breaker/reset` | 重置 Circuit Breaker 为 NORMAL |
 
 ## 11. 实现优先级
 

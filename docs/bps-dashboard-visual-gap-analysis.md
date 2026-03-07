@@ -1,5 +1,10 @@
 # BPS Dashboard 可视化蓝图反馈 — 差距分析报告
 
+> **⚠️ 历史文档**：本文写于 2026-02-27，所列 5 层差距已于 Phase 7-E2 全部关闭。
+> 当前 Dashboard 有 13 个页面（非文中的 7 个）、33 个 API endpoint（非 25+）、
+> 5 列 Kanban（非 7 列）。bps-dashboard 已合并为 `aida/dashboard/` 子目录。
+> 当前实现请参见 `AIDA 架构决策与现状 (ADR).md` Section 3.4。
+
 **日期**：2026-02-27
 **目标**：让 BPS Expert 设计的蓝图对业务用户可见、可运行、可迭代
 

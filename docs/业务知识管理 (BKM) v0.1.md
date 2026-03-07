@@ -1,10 +1,22 @@
 # 业务知识管理 (BKM) v0.1
 
-> Business Knowledge Management — AIDA 知识分层分布与多 Agent 共享机制
+> **⚠️ 严重过时**：本文档描述的知识模型与当前实现严重偏离，不仅是 ContextAssembler/ConflictDetector
+> 被移除，整个知识地址体系也已简化：
 >
-> **注意**：本文档描述的是 Phase 10 的完整设计。引擎瘦身（ADR-10, 2026-03-03）后，
-> ContextAssembler 和 ConflictDetector 已移除，知识模块从 5 文件缩减为 3 文件
-> （types.ts + knowledge-store.ts + system-knowledge.ts）。文中对应章节仅作历史参考。
+> | 维度 | 文档描述 | 当前实现 |
+> |------|---------|---------|
+> | 知识层次 | 5 层（charter/strategy/domain/ops/contextual） | **无 layer 概念** |
+> | 作用域 | 6 种（system/global/team:\*/agent:\*/domain:\*/service:\*） | **仅 2 种**（`system` \| `project`） |
+> | 知识地址 | 三元组 `{layer, scope, topic}` | **二元组** `{scope, topic}` |
+> | KnowledgeStore API | `put(address, data)` 接收 KnowledgeAddress | `put(scope, topic, data)` |
+> | 系统知识 | 3 条（crystallization-framework 等） | **2 条**（project-config / task-tracking-sop） |
+> | 文件数 | 5 个（含 context-assembler, conflict-detector） | **3 个** |
+> | 测试总数 | 190 | 367 |
+>
+> 文中 Section 3.2（ContextAssembler）、3.3（ConflictDetector）、4（ProcessManager 集成）、
+> 5（enableKnowledge/conflictRules 配置）、7（文件清单）、8（测试覆盖）均已失效。
+> Section 3.1（KnowledgeStore）的 API 签名也已变化。
+> 仍有参考价值的部分：Section 1（设计原则"零新表"）、Section 2.1-2.2 的概念解释。
 
 ## 1. 概述
 

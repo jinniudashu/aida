@@ -2,7 +2,7 @@
 
 > Architecture Decision Record — 关键设计决策的 context / decision / rationale，以及各子系统当前实现状态。
 >
-> 最后更新：2026-03-06（Dashboard 合并入 bps-engine + OpenClaw 集成加固 + 文档同步）
+> 最后更新：2026-03-07（仓库扁平化 + 文档事实核查）
 
 ---
 
@@ -46,7 +46,7 @@
        │
        │ loadAidaProject()
        ▼
-┌─ bps-engine (29 files, 3500 lines) ─────────────────┐
+┌─ bps-engine (34 files) ─────────────────────────────┐
 │                                                      │
 │  loader/                  schema/                    │
 │    aida-project.ts          common, entity, service, │
@@ -60,7 +60,7 @@
 │    process-store.ts                                  │
 │    dossier-store.ts                                  │
 │    stats-store.ts                                    │
-│    dashboard-query.ts                                │
+│    dashboard-query-service.ts                        │
 │       │                                              │
 │       ▼                                              │
 │  governance/ (4)           integration/ (5)          │
@@ -69,10 +69,11 @@
 │    governance-loader.ts      plugin.ts               │
 │    types.ts                  openclaw-types.ts       │
 │                              index.ts                │
-│  knowledge/ (3)            system/ (1)               │
-│    knowledge-store.ts        project-init.ts         │
+│  knowledge/ (3)            mcp/ (1)                  │
+│    knowledge-store.ts        server.ts               │
 │    system-knowledge.ts                               │
-│    types.ts                                          │
+│    types.ts                system/ (1)               │
+│                              project-init.ts         │
 │                                                      │
 │  index.ts ─── createBpsEngine() + 全部 exports       │
 └──────────────────────────────────────────────────────┘
@@ -243,7 +244,7 @@
 
 | 组件 | 状态 | 位置 | 说明 |
 |------|------|------|------|
-| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(88行，含 Self-Evolution 节 + memory_search 指引 + cron 恢复) |
+| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(87行，含 Self-Evolution 节 + memory_search 指引 + cron 恢复) |
 | **7 Skills** | ✅ 活跃 | `~/.openclaw/workspace/skills/` | project-init / action-plan / dashboard-guide / blueprint-modeling / agent-create / business-execution / skill-create |
 | ~~BPS-Expert~~ | 📦 归档 | `agents/_archived/bps-expert/` | 能力提取为 skills/blueprint-modeling |
 | ~~Org-Architect~~ | 📦 归档 | `agents/_archived/org-architect/` | 能力提取为 skills/agent-create |
@@ -294,7 +295,7 @@
 
 | 测试文件 | 数量 | 覆盖范围 |
 |---------|------|----------|
-| `api-approvals.test.ts` | 142* | 审批 CRUD + 决策流程 |
+| `api-approvals.test.ts` | — | 审批 CRUD + 决策流程 |
 | `api-overview.test.ts` | — | Overview API |
 | `api-kanban.test.ts` | — | 看板 API |
 | `api-processes.test.ts` | — | 流程 CRUD |
@@ -318,7 +319,7 @@
 | 组件 | 说明 |
 |------|------|
 | `deploy/install-aida.sh` | 8 步部署：前置检查 → 代码构建（tsc + vite build） → ~/.aida/ 初始化 → Aida workspace + 7 Skills → 插件注册 → Dashboard systemd 服务 → openclaw.json 合并（含安全基线 + 模型 Fallback + Hooks + Compaction + Loop Detection + Context Pruning） → 验证 |
-| Dashboard systemd | bps-dashboard.service（port 3456），Dashboard 代码位于 `bps-engine/dashboard/`，install-aida.sh 自动生成并启用 |
+| Dashboard systemd | bps-dashboard.service（port 3456），Dashboard 代码位于 `dashboard/`（aida 根目录），install-aida.sh 自动生成并启用 |
 | 测试服务器 | 见 `.dev/server-alicloud.env`（不纳入 Git） |
 
 ---
@@ -335,7 +336,7 @@
 | `archive/AIDA项目全面回顾 (2026-03-04).md` | 修订版 | 根本原则偏差分析 + 完整资产评估 |
 | `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md` | — | 引擎瘦身决策的完整分析 |
 | `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾 |
-| `packages/bps-engine/docs/OpenClaw框架技术研究报告.md` | v2 | OpenClaw 官方文档系统学习（733 行，覆盖 14 大能力域） |
+| `docs/OpenClaw框架技术研究报告.md` | v2 | OpenClaw 官方文档系统学习（733 行，覆盖 14 大能力域） |
 | `archive/AIDA-OpenClaw利用充分度评估 (2026-03-06).md` | — | 14 域利用度评估 + 6 个高价值 Gap 分析 |
 
 ---
@@ -366,6 +367,7 @@
 | E2 | Dashboard 三问题 + 治理可视化（03-05） | Overview 三面板 + GovernancePage + governance API + 11 tests |
 | — | 治理 SSE 修复 + OpenClaw 集成加固（03-06） | GovernanceStore EventEmitter + 专用 SSE 事件 + OpenClaw 研究报告 v2 + install-aida.sh 安全基线/Fallback/Hooks/Compaction/LoopDetection/Pruning + AGENTS.md 加固 |
 | — | Dashboard 合并入 bps-engine（03-06） | bps-dashboard 吸收为 `dashboard/` 子目录 → 单进程零 DB 并发 + EventEmitter 原生 + 统一测试（367 tests） |
+| — | 仓库扁平化（03-07） | bps-engine → aida 根目录，packages/ 层消除，单一 package.json（无 workspaces），src/ + dashboard/ 平行于根目录 |
 
 ---
 
