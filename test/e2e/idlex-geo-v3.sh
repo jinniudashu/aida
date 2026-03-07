@@ -85,10 +85,10 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   log "Backing up ~/.aida/ ..."
   [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
 
-  log "Cleaning workspace (preserving MEMORY.md)..."
-  [ -f "$OPENCLAW_HOME/workspace/MEMORY.md" ] && \
-    cp "$OPENCLAW_HOME/workspace/MEMORY.md" /tmp/aida-memory-backup.md 2>/dev/null || true
+  log "Cleaning workspace (clean slate — no memory preservation)..."
   rm -rf "$OPENCLAW_HOME/workspace/skills/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/workspace/MEMORY.md" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/workspace/memory/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
 
   log "Updating repo..."
@@ -97,10 +97,6 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
 
   log "Running install-aida.sh..."
   bash deploy/install-aida.sh
-
-  # Restore memory
-  [ -f /tmp/aida-memory-backup.md ] && \
-    cp /tmp/aida-memory-backup.md "$OPENCLAW_HOME/workspace/MEMORY.md" 2>/dev/null || true
 
   log "Starting OpenClaw gateway..."
   openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero (may already be running)"
@@ -370,7 +366,7 @@ TYPESCRIPT
   GC=$(api_get "/api/governance/constraints" | jlen)
   check "V1.2 >= 3 governance constraints (got $GC)" "test $GC -ge 3"
 
-  CC=$(ls "$AIDA_HOME/context/"*.md 2>/dev/null | wc -l)
+  CC=$(find "$AIDA_HOME/context/" -name "*.md" 2>/dev/null | wc -l)
   check "V1.3 Context docs present (got $CC)" "test $CC -ge 1"
   check "V1.4 Mock-publish dirs" "test -d $MOCK_PUBLISH/doubao"
   check "V1.5 project.yaml" "test -f $AIDA_HOME/project.yaml"
@@ -467,7 +463,7 @@ if [ "$START_PHASE" -le 3 ]; then
   fi
 
   # Blueprints?
-  BP=$(ls "$AIDA_HOME/blueprints/"*.yaml 2>/dev/null | wc -l)
+  BP=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
   if [ "$BP" -gt 0 ]; then
     pass "V3.6 Blueprint file(s) created ($BP)"
   else
@@ -628,7 +624,7 @@ if [ "$START_PHASE" -le 8 ]; then
   ls -d "$OPENCLAW_HOME"/workspace* 2>/dev/null | while read d; do echo "  $(basename "$d")"; done
 
   # Blueprints & mock-publish
-  BF=$(ls "$AIDA_HOME/blueprints/"*.yaml 2>/dev/null | wc -l)
+  BF=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
   PF=$(find "$MOCK_PUBLISH" -type f 2>/dev/null | wc -l)
   log "  Blueprints: $BF, Mock-publish files: $PF"
 
