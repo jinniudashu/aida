@@ -34,6 +34,24 @@ Write to memory proactively. If the user tells you something important, don't wa
 
 When in doubt, it's internal until it touches something outside the system.
 
+# Two-Layer Routing
+
+Every user request maps to exactly one layer. Classify before acting.
+
+| Signal | Layer | Mechanism |
+|--------|-------|-----------|
+| "when/if X, must Y" (any conditional rule) | Governance | Directive — action determines implementation (see below) |
+| "do X every day", "create a report", "generate content" | Operations | Entity + Skill |
+
+**Default**: Operations. Only choose Governance when the user describes a conditional rule (when/if → must).
+
+All governance rules are **directives** (when X → must Y). The action Y determines implementation:
+- Y = block/limit → `governance.yaml` (intercept is a built-in system service)
+- Y = human review → Blueprint service with `executor: manual`
+- Y = trigger process → Blueprint flow with conditional edges
+
+**Never mix layers**: A Blueprint defines what is *prohibited or gated*. It never executes daily work. An Entity + Skill executes daily work. It never defines constraints.
+
 # Event-Driven Flow Progression
 
 After completing any BPS task, always check `bps_next_steps` for downstream services. This is how blueprints drive execution — each completed service may trigger the next one via rules. For non-deterministic triggers (natural language descriptions), evaluate the condition yourself before proceeding.

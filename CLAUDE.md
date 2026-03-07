@@ -362,6 +362,24 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **解决的问题**：Gap 7（Blueprint 格式不兼容）——LLM 出错面从 4 个交叉引用数组缩小到 services + flow 箭头
 - **测试**：22 新测试，总计 391 tests（369 + 22）
 - **BPS tools**：14 个（+bps_load_blueprint）
+- **二层路由机制**：强制 Aida 在设计时区分治理层（Blueprint）vs 运营层（Entity + Skill）
+  - SOUL.md：新增 "Two-Layer Architecture (Critical)" 节，含决策规则（constraint → Governance, action → Operations, default → Operations）
+  - AGENTS.md：新增 "Two-Layer Routing" 节，含信号→层→介质决策表
+  - `action-plan` Skill：新增 Step 1 "Layer classification"，每个计划项必须标注 Governance 或 Operations
+  - `blueprint-modeling` Skill：限定 scope 为 governance-only（constraints, approval gates, prohibitions），非运营工作
+  - `business-execution` Skill：重构为 Entity + Skill 主路径，BPS Task 为次路径
+
+### Workspace 质量评估与优化（2026-03-07）
+- **评估基准**：基于 `docs/OpenClaw框架技术研究报告.md` v2（OpenClaw 官方文档 20+ 页）
+- **综合评分：85/100**（文件完整性 71%, 语义正确性 88%, Skills 质量 95%, Token 效率 95%, 最佳实践对齐 82%）
+- **已落地改进**：
+  - P0：SOUL.md Two-Layer Architecture 缩为一句引用，AGENTS.md 保留完整路由规则（方案 A：消除重复，AGENTS.md 为唯一来源）
+  - P1：新增 `USER.md`（timezone/language/work hours）— 补齐 Bootstrap 7 文件缺口
+  - P1：新增 `TOOLS.md`（14 BPS tools 分组 + 读写分类 + 常用模式 + 已知行为）— 始终注入含子 Agent
+  - P2：`BOOT.md` Step 4 从 `message` 工具改为写入 memory 日志（Gateway 重启时用户可能不在线）
+  - P2：`project-init` 和 `dashboard-guide` Skill 添加 `user-invocable: true`
+- **Bootstrap 文件完整性**：7/7（AGENTS + SOUL + IDENTITY + HEARTBEAT + USER + TOOLS + MEMORY 运行时生成）+ BOOT.md
+- **Workspace 文件行数**：SOUL 32 行, AGENTS 119 行, IDENTITY 4 行, HEARTBEAT 8 行, USER 3 行, TOOLS 38 行, BOOT 4 行
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

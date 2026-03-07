@@ -1,10 +1,20 @@
 ---
 name: blueprint-modeling
-description: Guide structured business modeling using the SBMP 5-step methodology to produce BPS YAML blueprints — from value identification through EARS rules to verified output.
+description: Model governance directives as BPS blueprints — conditional rules (when X → must Y) where Y is a non-trivial action (approval, process trigger, orchestration). NOT for daily operational work.
 ---
-# Blueprint Modeling (SBMP)
+# Blueprint Modeling (SBMP) — Governance Directives
 
-Guide the user through structured business modeling to produce a BPS YAML blueprint. Follow the five steps below in order.
+Model governance directives as BPS YAML blueprints. All governance rules share the same form: **when X, must Y**. Blueprints handle directives where Y requires orchestration:
+
+- "When content is ready, require human review" → flow with a `manual` approval service
+- "When GEO score drops below 60, trigger optimization" → conditional edge `| "GEO score below 60"`
+- "When a new store opens, run the onboarding sequence" → flow chain of services
+
+For simple intercept directives (Y = block/limit), use `governance.yaml` instead — intercept is a built-in system service that doesn't need a Blueprint.
+
+**Scope check**: If the user is describing daily work to be done (content generation, data collection, reporting), stop — that belongs to the Operations layer (Entity + Skill). Only proceed if the request is a conditional rule (when/if → must do).
+
+Follow the five steps below in order.
 
 ## Step 1: Core Value & Service Identification
 

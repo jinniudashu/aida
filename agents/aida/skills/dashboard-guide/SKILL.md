@@ -1,6 +1,7 @@
 ---
 name: dashboard-guide
 description: Reference for when and how to surface the BPS Dashboard to users — URL, capabilities, intervention handling, and appropriate tone.
+user-invocable: true
 ---
 # Dashboard Guide
 

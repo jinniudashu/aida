@@ -1,6 +1,7 @@
 ---
 name: project-init
 description: Guide first-time AIDA project setup — preflight check, project identity, business interview, data strategy, and verification. Trigger when ~/.aida/project.yaml does not exist.
+user-invocable: true
 ---
 # Project Initialization
 

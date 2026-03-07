@@ -1,44 +1,41 @@
 ---
 name: business-execution
-description: Execute business tasks guided by BPS blueprints. Follows the blueprint topology to progress work through service chains.
+description: Execute daily business operations using Entity + Skill as the primary approach. Optionally checks BPS task topology for flow-driven work.
 ---
-# Blueprint-Guided Business Execution
+# Business Execution — Operations Layer
 
-Execute business tasks by following the BPS blueprint service topology. Use this when performing actual business work — not planning, not modeling, but executing.
+Execute daily business work. The primary approach is **Entity + Skill**: read/write business entities via DossierStore, apply Skills to produce outputs.
 
-## Execution Protocol
+## Primary Path: Entity + Skill
 
-### Step 1: Read Orders
+### Step 1: Understand the Work
 
-Fetch the task and its blueprint context:
-- `bps_get_task` → current state, metadata, service binding
-- `bps_list_services` → service definition (agentPrompt, agentSkills)
-- Read any bound entity via `bps_get_entity` for business context
+- Read the action plan or user instruction to understand what needs to be done
+- Fetch relevant entities via `bps_get_entity` or `bps_query_entities`
+- Read `~/.aida/context/` for business background if needed
 
 ### Step 2: Execute
 
-Perform the work described by the service's `agentPrompt`:
-- Use the skills and tools indicated by `agentSkills`
-- Update task metadata with progress: `bps_update_task metadata={...}`
-- Transition to IN_PROGRESS: `bps_update_task state=IN_PROGRESS`
+- Perform the work using appropriate Skills and tools
+- Store results by updating entities: `bps_update_entity`
+- For content generation, data collection, reports — work directly with entities
 
-### Step 3: Complete
+### Step 3: Record
 
-When the work is done:
-- `bps_complete_task` with a result summary and reason
-- The engine auto-commits results to the bound entity dossier if applicable
+- Update the entity with results, status changes, timestamps
+- If this was an action plan item, update the plan's progress
 
-### Step 4: Flow Forward
+## Secondary Path: BPS Task Flow
 
-After completion, check what comes next:
-- `bps_next_steps serviceId={completedServiceId}` → downstream services
-- For each triggered next step:
-  - If deterministic event (expression match): auto-create the downstream task
-  - If non-deterministic event (description): evaluate whether the condition is met, then decide
+When a BPS task exists (created by blueprint rules or `bps_create_task`):
 
-### Step 5: Handle Failure
+1. `bps_get_task` → current state, service binding
+2. `bps_list_services` → service definition (agentPrompt, agentSkills)
+3. Execute per the service's `agentPrompt`
+4. `bps_complete_task` with result summary
+5. `bps_next_steps` → check for downstream services triggered by completion
 
-If execution fails:
-- `bps_update_task state=FAILED metadata={error: "..."}`
-- Log the failure reason for diagnosis
+## Failure Handling
+
+- Log the failure reason in the entity or task metadata
 - Do NOT auto-retry — surface to heartbeat for triage
