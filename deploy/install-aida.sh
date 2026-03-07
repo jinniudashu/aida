@@ -365,14 +365,7 @@ if (config.hooks.internal.enabled === undefined) {
   config.hooks.internal.enabled = true;
 }
 
-// 8. Compaction — enable pre-compaction memory flush (P1)
-if (!config.compaction) config.compaction = {};
-if (!config.compaction.memoryFlush) config.compaction.memoryFlush = {};
-if (config.compaction.memoryFlush.enabled === undefined) {
-  config.compaction.memoryFlush.enabled = true;
-}
-
-// 9. Security baseline (P0: prevent governance bypass via native tools)
+// 8. Security baseline (P0: prevent governance bypass via native tools)
 if (!config.tools) config.tools = {};
 // Exec security: require allowlist approval for shell commands
 if (!config.tools.exec) config.tools.exec = {};
@@ -381,22 +374,8 @@ if (!config.tools.exec.security) {
   config.tools.exec.ask = "on-miss";
 }
 
-// 10. Tool loop detection (P2: prevent infinite retry)
-if (!config.tools.loopDetection) {
-  config.tools.loopDetection = {
-    genericRepeat: { warning: 8, critical: 15 },
-    knownPollNoProgress: { warning: 5, critical: 10 }
-  };
-}
-
-// 11. Context pruning (P2: trim long tool results)
-if (!config.contextPruning) {
-  config.contextPruning = {
-    mode: "cache-ttl",
-    ttl: "1h",
-    softTrim: { maxChars: 6000, headChars: 2000, tailChars: 2000 }
-  };
-}
+// NOTE: loopDetection, compaction, contextPruning removed — OpenClaw 2026.3.x
+// rejects these as unrecognized keys, blocking agent startup.
 
 fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
 ' "$OC_CONFIG" "${FEISHU_APP_ID:-}" "${FEISHU_APP_SECRET:-}" && log "openclaw.json 配置已自动合并" || {
