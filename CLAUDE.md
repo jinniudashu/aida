@@ -240,13 +240,13 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### 端到端能力验证 -- 基础设施级（2026-03-05）
-- 详见 `archive/AIDA端到端能力验证报告 (2026-03-05).md`
+- 详见 `test/e2e/AIDA端到端能力验证报告 (2026-03-05).md`
 - **验证方法**：三视角（第三方专家 → Aida 自评 → 综合测试），干净环境重新安装 + 41 项自动化测试 + 319 单元测试
 - **测试结果**：40/41 通过（1 个测试脚本 bug，非引擎问题），319 单元测试全部通过
 - **加权完成度**：93.25%（部署100%, 设计时95%, 运行时85%, 可观测100%, HITL100%, 外部出口90%）
 
 ### 端到端能力验证 -- OpenClaw 运行时（2026-03-05）
-- 详见 `archive/AIDA端到端能力验证报告-OpenClaw运行时 (2026-03-05).md`
+- 详见 `test/e2e/AIDA端到端能力验证报告-OpenClaw运行时 (2026-03-05).md`
 - **验证方法**：通过 `openclaw agent --agent main --message` 与 Aida 交互，7 次 agent turn，Gemini 3.1 Pro Preview
 - **工作路径**：NL 描述 → Aida 建模 → 实体创建(5个) → 开店流程执行(2店, 各v6) → Heartbeat → 动态 Skill 创建(store-opening) → Skill 复用
 - **加权完成度**：67.75%
@@ -328,7 +328,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **测试**：367 tests 全部通过（统一 vitest 运行）
 
 ### IdleX GEO E2E v2 业务场景验证（2026-03-07）
-- 评估报告：`archive/IdleX-GEO-E2E-v2-评估报告 (2026-03-07).md`
+- 评估报告：`test/e2e/IdleX-GEO-E2E-v2-评估报告 (2026-03-07).md`
 - 测试方案：`test/e2e/idlex-geo-v2.md`，自动化脚本：`test/e2e/idlex-geo-v2.sh`
 - **业务目标**：一个 GEO 负责人 + Aida 完成闲氪全部 GEO 运营任务
 - **加权总分：87/100**（业务理解 95, 运营体系 90, 内容质量 90, 治理合规 70, 自进化 100, 可观测 50）
