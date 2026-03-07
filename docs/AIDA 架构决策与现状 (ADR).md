@@ -331,7 +331,7 @@
 | `docs/业务流程描述通用规范 (BPS) v0.9 Draft.md` | v0.9 | BPS 六元组元模型（设计时参考，不再作为运行时约束） |
 | `docs/标准业务建模过程 (SBMP) v0.2 草案.md` | v0.2 | 5 步建模方法论（已提取为 Aida Skill） |
 | `docs/业务项目装载协议 (BPLP) v0.2.md` | v0.2 | project.yaml schema、loadAidaProject API |
-| `docs/业务知识管理 (BKM) v0.1.md` | v0.1 | 知识分级（已简化实现） |
+| `archive/业务知识管理 (BKM) v0.1.md` | v0.1 | 知识分级（已简化实现，历史文档） |
 | `docs/Agent 治理层规范 (AGS) v0.1.md` | v0.1 | 治理约束 schema + Action Gate + 熔断器 + 审批流程 |
 | `archive/AIDA项目全面回顾 (2026-03-04).md` | 修订版 | 根本原则偏差分析 + 完整资产评估 |
 | `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md` | — | 引擎瘦身决策的完整分析 |

@@ -158,7 +158,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **Phase 8：核心 Agent 定义**：BPS Expert + Org-Architect workspace
 - **Phase 9：Aida 管理助理 Agent**：Aida workspace（IDENTITY/SOUL/AGENTS），BPS 结晶化判断框架，Agent 协作拓扑（Aida → BPS-Expert / Org-Architect）
 - **Phase 10：BKM 业务知识管理**：知识分级 + 作用域 + 知识存储（30 新测试，后经瘦身移除 ContextAssembler/ConflictDetector）
-  - 详见 `docs/业务知识管理 (BKM) v0.1.md`
+  - 详见 `archive/业务知识管理 (BKM) v0.1.md`
 - **Phase 11：~/.aida/ 项目目录迁移**：业务项目数据从代码仓库迁移到 `~/.aida/`，实现代码与数据分离
   - `loadAidaProject()` 一键装载 API（创建引擎 + 系统知识 + 项目清单）
   - `project-loader.ts` 扩展 knowledge seed 支持
