@@ -193,7 +193,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 ### Aida Workspace 重写（2026-03-04）
 - **Workspace 英文化 + OpenClaw 风格对齐**：IDENTITY/SOUL/AGENTS 全部重写为英文，遵循 OpenClaw 默认模板，仅叠加 Aida 特定内容
   - SOUL.md：30 行（Core Truths + Role + Boundaries + Vibe + Continuity）
-  - AGENTS.md：69 行（Boot + Memory + Safety + Aida Operations）
+  - AGENTS.md：100 行（Boot + Memory + Safety + Self-Evolution + Aida Operations）
   - 自我投射原则：删除模型已知的内容，只保留 Aida 独有特征
 - **BPS-Expert → `skills/blueprint-modeling`**：SBMP 五步法提取为 Skill，269 行 BPS 理论讲解删除
 - **Org-Architect → `skills/agent-create`**：4-phase Agent 生命周期提取为 Skill，跨 Agent 协议删除

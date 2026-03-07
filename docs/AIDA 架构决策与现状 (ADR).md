@@ -244,7 +244,7 @@
 
 | 组件 | 状态 | 位置 | 说明 |
 |------|------|------|------|
-| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(87行，含 Self-Evolution 节 + memory_search 指引 + cron 恢复) |
+| **Aida** | ✅ 活跃 | `~/.openclaw/workspace/` | 唯一 Agent，IDENTITY + SOUL(30行) + AGENTS(100行，含 Skill vs Agent 决策框架 + Self-Evolution + memory_search 指引 + cron 恢复) |
 | **7 Skills** | ✅ 活跃 | `~/.openclaw/workspace/skills/` | project-init / action-plan / dashboard-guide / blueprint-modeling / agent-create / business-execution / skill-create |
 | ~~BPS-Expert~~ | 📦 归档 | `agents/_archived/bps-expert/` | 能力提取为 skills/blueprint-modeling |
 | ~~Org-Architect~~ | 📦 归档 | `agents/_archived/org-architect/` | 能力提取为 skills/agent-create |
