@@ -134,7 +134,7 @@ MAIN_WS="$OC_HOME/workspace"
 info "合并 Aida → 主 Agent workspace: $MAIN_WS"
 mkdir -p "$MAIN_WS"
 
-for f in IDENTITY.md SOUL.md AGENTS.md HEARTBEAT.md BOOT.md; do
+for f in IDENTITY.md SOUL.md AGENTS.md HEARTBEAT.md BOOT.md USER.md TOOLS.md; do
   if [ -f "$AGENTS_DIR/aida/$f" ]; then
     if [ -f "$MAIN_WS/$f" ]; then
       cp "$MAIN_WS/$f" "$MAIN_WS/$f.bak.$TIMESTAMP"
@@ -399,7 +399,7 @@ else
 fi
 
 # 验证主 workspace
-for f in IDENTITY.md SOUL.md AGENTS.md HEARTBEAT.md BOOT.md; do
+for f in IDENTITY.md SOUL.md AGENTS.md HEARTBEAT.md BOOT.md USER.md TOOLS.md; do
   if [ ! -f "$MAIN_WS/$f" ]; then
     warn "主 workspace 缺少 $f"
     ERRORS=$((ERRORS + 1))
