@@ -1,0 +1,15 @@
+version: "1.0"
+name: "IdleX GEO 长沙自助KTV"
+projectId: "idlex"
+
+blueprints:
+  - "geo-ktv-changsha.yaml"
+
+context:
+  - "business-context.yaml"
+
+seeds:
+  - file: "mock-stores-changsha.yaml"
+    entityType: "store"
+    source: "mock"
+    description: "长沙自助KTV门店模拟数据（5家种子门店）"

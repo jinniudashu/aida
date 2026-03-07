@@ -1,0 +1,89 @@
+# ============================================================
+# 晨光咖啡 Morning Brew — 治理约束 (governance.yaml)
+# ============================================================
+# 本文件定义 Agent (Aida) 的操作边界。
+# 所有写操作工具在执行前经过 ActionGate 检查。
+# 违规会被记录，严重违规触发熔断器。
+
+policies:
+  - id: p-financial
+    label: "财务管控"
+    constraints:
+      - id: c-large-purchase
+        label: "大额采购审批"
+        scope:
+          tools: [bps_update_entity]
+          entityTypes: [procurement]
+          dataFields: [amount]
+        condition: "amount <= 5000"
+        onViolation: REQUIRE_APPROVAL
+        severity: HIGH
+        approver: owner
+        message: "采购金额 ¥{amount} 超过 ¥5,000 限额，需老板审批"
+
+      - id: c-salary-change
+        label: "薪资调整审批"
+        scope:
+          tools: [bps_update_entity]
+          entityTypes: [employee]
+          dataFields: [salary]
+        condition: "salary <= 15000"
+        onViolation: REQUIRE_APPROVAL
+        severity: HIGH
+        approver: owner
+        message: "薪资 ¥{salary} 超过 ¥15,000 自动审批上限"
+
+  - id: p-operational
+    label: "运营安全"
+    constraints:
+      - id: c-business-hours
+        label: "营业时间限制"
+        scope:
+          tools: [bps_update_entity, bps_create_task, bps_update_task]
+        condition: "hour >= 7 and hour <= 23"
+        onViolation: BLOCK
+        severity: MEDIUM
+        message: "非营业时间（{hour}:00），写操作被阻止"
+
+  - id: p-data-integrity
+    label: "数据完整性保护"
+    constraints:
+      - id: c-store-modify-guard
+        label: "门店数据修改保护"
+        scope:
+          tools: [bps_update_entity]
+          entityTypes: [store]
+          dataFields: [status, address]
+        # Condition is the PASS condition: only allowed when entity is NOT active (i.e. draft)
+        condition: "lifecycle != 'ACTIVE'"
+        onViolation: REQUIRE_APPROVAL
+        severity: HIGH
+        approver: owner
+        message: "门店关键字段（{entityId}）修改需审批"
+
+      - id: c-no-archive-active
+        label: "禁止归档活跃实体"
+        scope:
+          tools: [bps_update_entity]
+          dataFields: [lifecycle]
+        # PASS when lifecycle in patch is NOT 'ARCHIVED'; BLOCK when archiving
+        condition: "lifecycle != 'ARCHIVED'"
+        onViolation: BLOCK
+        severity: CRITICAL
+        message: "不允许将活跃实体 {entityType}/{entityId} 归档"
+
+circuit_breaker:
+  thresholds:
+    - severity: CRITICAL
+      max_violations: 1
+      window: 1h
+      action: DISCONNECTED
+    - severity: HIGH
+      max_violations: 5
+      window: 1h
+      action: RESTRICTED
+    - severity: HIGH
+      max_violations: 2
+      window: 1h
+      action: WARNING
+  cooldown: 30m

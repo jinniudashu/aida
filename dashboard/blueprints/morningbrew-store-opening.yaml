@@ -1,0 +1,97 @@
+version: "1.0"
+name: "Morning Brew Store Opening (晨光咖啡每日开店流程)"
+
+services:
+  - id: "svc-daily-opening"
+    label: "每日开店总流程"
+    serviceType: "composite"
+    executorType: "system"
+    entityType: "store"
+    manualStart: true
+    agentPrompt: "Orchestrate the daily 30-minute store opening routine. Ensure all 4 steps complete in sequence before flipping the sign to Open."
+
+  - id: "svc-environment-prep"
+    label: "环境与大厅准备"
+    serviceType: "atomic"
+    executorType: "manual"
+    entityType: "store"
+    agentPrompt: "Step 1: Turn on lights and AC, clean lobby floor and corners, arrange tables per standard layout diagram."
+
+  - id: "svc-material-prep"
+    label: "物料检查与补充"
+    serviceType: "atomic"
+    executorType: "manual"
+    entityType: "store"
+    agentPrompt: "Step 2: Restock espresso/single-origin beans, fresh/oat milk in fridge, syrups, and takeaway cups and bags."
+
+  - id: "svc-equipment-prep"
+    label: "设备调试与品控"
+    serviceType: "atomic"
+    executorType: "manual"
+    entityType: "store"
+    agentPrompt: "Step 3: Warm up espresso machine and grinder to operating temperature, pull a test shot, verify extraction parameters (flow rate, weight, flavor)."
+
+  - id: "svc-pos-final-prep"
+    label: "收银开启与最终确认"
+    serviceType: "atomic"
+    executorType: "manual"
+    entityType: "store"
+    agentPrompt: "Step 4: Boot POS system, count and prepare change, turn on storefront lights and flip door sign to Open."
+
+events:
+  - id: "evt-opening-start"
+    label: "Opening Process Created"
+    expression: "process_state == 'NEW'"
+    evaluationMode: "deterministic"
+
+  - id: "evt-step-done"
+    label: "Step Completed"
+    expression: "process_state == 'TERMINATED'"
+    evaluationMode: "deterministic"
+
+instructions:
+  - id: "instr-start-step"
+    label: "Start Step"
+    sysCall: "start_service"
+
+  - id: "instr-complete-opening"
+    label: "Complete Opening"
+    sysCall: "terminate_process"
+
+rules:
+  # Sequential chain: environment → material → equipment → POS/final
+  - id: "rule-opening-env"
+    label: "开店启动 → 环境准备"
+    targetServiceId: "svc-daily-opening"
+    serviceId: "svc-daily-opening"
+    eventId: "evt-opening-start"
+    instructionId: "instr-start-step"
+    operandServiceId: "svc-environment-prep"
+    order: 10
+
+  - id: "rule-env-material"
+    label: "环境就绪 → 物料检查"
+    targetServiceId: "svc-daily-opening"
+    serviceId: "svc-environment-prep"
+    eventId: "evt-step-done"
+    instructionId: "instr-start-step"
+    operandServiceId: "svc-material-prep"
+    order: 20
+
+  - id: "rule-material-equipment"
+    label: "物料就绪 → 设备调试"
+    targetServiceId: "svc-daily-opening"
+    serviceId: "svc-material-prep"
+    eventId: "evt-step-done"
+    instructionId: "instr-start-step"
+    operandServiceId: "svc-equipment-prep"
+    order: 30
+
+  - id: "rule-equipment-pos"
+    label: "设备就绪 → 收银与最终确认"
+    targetServiceId: "svc-daily-opening"
+    serviceId: "svc-equipment-prep"
+    eventId: "evt-step-done"
+    instructionId: "instr-start-step"
+    operandServiceId: "svc-pos-final-prep"
+    order: 40

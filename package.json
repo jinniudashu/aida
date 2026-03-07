@@ -1,8 +1,51 @@
 {
   "name": "aida",
+  "version": "0.3.0",
+  "description": "AIDA — AI-Native organizational operations infrastructure (BPS engine + Dashboard + Agent workspace)",
   "private": true,
   "license": "MIT",
-  "workspaces": [
-    "packages/bps-engine"
-  ]
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:dashboard": "vite build --config dashboard/vite.config.ts",
+    "dev:dashboard": "concurrently -n api,ui \"tsx watch dashboard/server/index.ts\" \"vite --config dashboard/vite.config.ts\"",
+    "test": "vitest run",
+    "test:dashboard": "vitest run --config dashboard/vitest.config.ts",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^2.0.4",
+    "@hono/node-server": "^1.14.0",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@sinclair/typebox": "^0.34.0",
+    "@vicons/ionicons5": "^0.12.0",
+    "echarts": "^5.6.0",
+    "expr-eval": "^2.0.2",
+    "hono": "^4.7.0",
+    "naive-ui": "^2.40.0",
+    "pinia": "^3.0.0",
+    "uuid": "^11.0.0",
+    "vue": "^3.5.0",
+    "vue-echarts": "^7.0.0",
+    "vue-router": "^4.5.0",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.0"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
 }

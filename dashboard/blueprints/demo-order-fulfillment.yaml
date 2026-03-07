@@ -1,0 +1,171 @@
+version: "1.0"
+name: "Order Fulfillment Pipeline"
+
+services:
+  - id: "svc-order-pipeline"
+    label: "Order Fulfillment"
+    serviceType: "composite"
+    executorType: "system"
+    entityType: "order"
+    manualStart: true
+
+  - id: "svc-validate-order"
+    label: "Validate Order"
+    serviceType: "atomic"
+    executorType: "system"
+    entityType: "order"
+
+  - id: "svc-payment-processing"
+    label: "Payment Processing"
+    serviceType: "atomic"
+    executorType: "system"
+    entityType: "order"
+
+  - id: "svc-inventory-check"
+    label: "Inventory Check"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "order"
+    agentSkills: ["inventory_lookup"]
+    agentPrompt: "Check warehouse inventory for order items and reserve stock."
+
+  - id: "svc-pick-pack"
+    label: "Pick & Pack"
+    serviceType: "atomic"
+    executorType: "manual"
+    entityType: "order"
+
+  - id: "svc-ship"
+    label: "Ship Order"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "order"
+    agentSkills: ["shipping_api"]
+    agentPrompt: "Generate shipping label and schedule carrier pickup."
+
+  - id: "svc-notify-customer"
+    label: "Notify Customer"
+    serviceType: "atomic"
+    executorType: "system"
+    entityType: "order"
+
+  - id: "svc-customer-onboard"
+    label: "Customer Onboarding"
+    serviceType: "composite"
+    executorType: "system"
+    entityType: "customer"
+    manualStart: true
+
+  - id: "svc-kyc-check"
+    label: "KYC Verification"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "customer"
+    agentSkills: ["identity_verification"]
+    agentPrompt: "Verify customer identity documents and run compliance checks."
+
+  - id: "svc-welcome-email"
+    label: "Send Welcome Email"
+    serviceType: "atomic"
+    executorType: "system"
+    entityType: "customer"
+
+events:
+  - id: "evt-new"
+    label: "Process Created"
+    expression: "process_state == 'NEW'"
+    evaluationMode: "deterministic"
+
+  - id: "evt-terminated"
+    label: "Process Completed"
+    expression: "process_state == 'TERMINATED'"
+    evaluationMode: "deterministic"
+
+  - id: "evt-error"
+    label: "Process Error"
+    expression: "process_state == 'ERROR'"
+    evaluationMode: "deterministic"
+
+instructions:
+  - id: "instr-start"
+    label: "Start Service"
+    sysCall: "start_service"
+
+  - id: "instr-terminate"
+    label: "Terminate Process"
+    sysCall: "terminate_process"
+
+rules:
+  # Order pipeline: validate → payment → (inventory + notify) → pick-pack → ship
+  - id: "rule-order-start"
+    label: "Order created → Validate"
+    targetServiceId: "svc-order-pipeline"
+    serviceId: "svc-order-pipeline"
+    eventId: "evt-new"
+    instructionId: "instr-start"
+    operandServiceId: "svc-validate-order"
+    order: 10
+
+  - id: "rule-validated-payment"
+    label: "Validated → Payment"
+    targetServiceId: "svc-order-pipeline"
+    serviceId: "svc-validate-order"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-payment-processing"
+    order: 20
+
+  - id: "rule-paid-inventory"
+    label: "Paid → Inventory Check"
+    targetServiceId: "svc-order-pipeline"
+    serviceId: "svc-payment-processing"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-inventory-check"
+    order: 30
+
+  - id: "rule-paid-notify"
+    label: "Paid → Notify Customer"
+    targetServiceId: "svc-order-pipeline"
+    serviceId: "svc-payment-processing"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-notify-customer"
+    order: 31
+
+  - id: "rule-inventory-pick"
+    label: "Inventory OK → Pick & Pack"
+    targetServiceId: "svc-order-pipeline"
+    serviceId: "svc-inventory-check"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-pick-pack"
+    order: 40
+
+  - id: "rule-packed-ship"
+    label: "Packed → Ship"
+    targetServiceId: "svc-order-pipeline"
+    serviceId: "svc-pick-pack"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-ship"
+    order: 50
+
+  # Customer onboarding: KYC → welcome email
+  - id: "rule-onboard-kyc"
+    label: "Onboarding → KYC"
+    targetServiceId: "svc-customer-onboard"
+    serviceId: "svc-customer-onboard"
+    eventId: "evt-new"
+    instructionId: "instr-start"
+    operandServiceId: "svc-kyc-check"
+    order: 10
+
+  - id: "rule-kyc-welcome"
+    label: "KYC passed → Welcome Email"
+    targetServiceId: "svc-customer-onboard"
+    serviceId: "svc-kyc-check"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-welcome-email"
+    order: 20

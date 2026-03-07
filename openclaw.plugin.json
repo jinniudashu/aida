@@ -1,0 +1,10 @@
+{
+  "id": "bps-engine",
+  "name": "BPS Engine",
+  "description": "Business Process Specification engine - manage processes, services, and workflows via agent tools.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

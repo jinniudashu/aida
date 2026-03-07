@@ -1,0 +1,354 @@
+# ============================================================
+# IdleX GEO 门店运营蓝图 — 长沙自助KTV
+# ============================================================
+# 业务目标：将线下自助KTV门店转化为AI可理解、可调用、可履约的
+#           数字资产，实现"找闲置空间，问IdleX"的心智占领。
+#
+# 流程概览：
+#   门店入驻 → GEO内容生产 → 多模型发布 → 效果监测 → 迭代优化
+#
+# 编排模式：
+#   - 链式顺序：入驻阶段各步骤串行执行
+#   - 并行扇出：发布阶段三渠道同时推送
+#   - LLM驱动：效果监测驱动的智能优化决策
+# ============================================================
+
+version: "1.0"
+name: "IdleXGEO门店运营蓝图 - 长沙自助KTV"
+
+# ============================================================
+# 服务定义 (13 services)
+# ============================================================
+services:
+  # ——— 顶层编排 ———
+  - id: "svc-geo-store-ops"
+    label: "GEO门店运营"
+    serviceType: "composite"
+    executorType: "system"
+    entityType: "store"
+    manualStart: true
+
+  # ——— Phase 1: 门店入驻（顺序链） ———
+  - id: "svc-data-collect"
+    label: "基础数据采集"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "store"
+    agentSkills: ["data_collection", "store_survey"]
+    agentPrompt: |
+      采集长沙自助KTV门店基础数据：
+      1. 门店名称、地址、商圈归属（3公里流量圈定位）
+      2. 包厢类型与数量（小包/中包/大包/VIP）
+      3. 价格体系（工作日/周末、白天/晚间、节假日差异定价）
+      4. 营业时间、自助设备品牌、音响配置、环境设施
+      5. 实拍照片（门面/各型包厢/设备/走廊环境）
+      6. SaaS系统型号与API接入信息、门禁/计费系统对接能力
+      要求：数据必须真实、实时、可验证。"真"字当头，杜绝虚假信息。
+
+  - id: "svc-data-verify"
+    label: "数据核验"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "store"
+    agentSkills: ["data_verification", "fact_check"]
+    agentPrompt: |
+      核验门店采集数据的真实性与完整性：
+      1. 地址与高德/百度地图POI交叉验证
+      2. 价格与美团/抖音/大众点评公开信息比对
+      3. 照片EXIF信息验证（拍摄时间、GPS定位一致性）
+      4. 包厢数量与实际面积合理性校验
+      5. SaaS系统接口连通性测试
+      原则：宁缺毋滥，不合格数据打回重采，不允许"给AI下毒"。
+
+  - id: "svc-profile-gen"
+    label: "结构化门店档案生成"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "store"
+    agentSkills: ["profile_generation", "structured_data"]
+    agentPrompt: |
+      将核验通过的门店数据转化为AI可调用的结构化门店档案：
+      1. 标准JSON-LD Schema（LocalBusiness + EntertainmentBusiness）
+      2. 空间能力描述：可容纳人数、适用场景（朋友K歌/生日派对/商务接待）
+      3. 履约能力描述：可预订时段、最低消费、核销方式、退改规则
+      4. 差异化标签：设备品牌、音效评级、环境评分、性价比指数
+      5. 商圈上下文：周边交通、停车场、餐饮配套
+      目标：让AI能直接调用IdleX数据回答"长沙XX附近哪有空的KTV包厢"。
+
+  # ——— Phase 2: GEO 内容生产 ———
+  - id: "svc-model-analysis"
+    label: "目标模型偏好分析"
+    serviceType: "atomic"
+    executorType: "agent"
+    agentSkills: ["model_analysis", "geo_research"]
+    agentPrompt: |
+      分析三大目标模型对本地生活/空间推荐内容的偏好：
+      【豆包（字节跳动）】偏好：短视频场景关联、抖音POI数据、场景化口语描述、UGC风格
+      【通义千问（阿里巴巴）】偏好：结构化商品数据、评价体系、高德POI、电商转化链路
+      【腾讯元宝（腾讯）】偏好：社交场景、微信生态小程序、口碑分享、熟人推荐风格
+      输出：每个模型的"内容策略卡"——包含推荐格式、关键词策略、数据接口偏好、更新频率要求
+      遵循"一模一策"原则，严禁一套内容打天下。
+
+  - id: "svc-content-gen"
+    label: "一模一策内容生成"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "store"
+    agentSkills: ["geo_content_gen", "multi_model_adapt"]
+    agentPrompt: |
+      根据模型偏好分析结果，为门店生成三套差异化GEO内容：
+      【豆包版】场景化问答对 + 短视频关联数据 + 抖音搜索优化内容
+      【千问版】结构化商品信息 + 用户评价摘要 + 高德POI关联 + 预订schema
+      【元宝版】社交场景推荐 + 微信入口数据 + 口碑种子内容 + 预约闭环
+      每套内容包含：
+      - 核心推荐文案（3版不同风格）
+      - 结构化数据接口文档
+      - FAQ问答对（≥10组高频场景问答）
+      - 实时数据更新规范
+      原则：信息真实可履约，每一条推荐都能落地为真实订单。
+
+  - id: "svc-content-review"
+    label: "内容质量审核"
+    serviceType: "atomic"
+    executorType: "manual"
+    entityType: "store"
+
+  # ——— Phase 3: GEO 多渠道发布（并行） ———
+  - id: "svc-publish-doubao"
+    label: "豆包渠道发布"
+    serviceType: "atomic"
+    executorType: "agent"
+    agentSkills: ["channel_publish", "doubao_api"]
+    agentPrompt: |
+      将豆包适配内容发布到字节生态：
+      1. 抖音POI信息更新
+      2. 豆包知识库数据提交
+      3. 结构化数据API端点部署
+      4. 发布验证：向豆包提问测试门店是否被正确推荐
+
+  - id: "svc-publish-qianwen"
+    label: "千问渠道发布"
+    serviceType: "atomic"
+    executorType: "agent"
+    agentSkills: ["channel_publish", "qianwen_api"]
+    agentPrompt: |
+      将千问适配内容发布到阿里生态：
+      1. 高德POI信息同步
+      2. 千问知识索引提交
+      3. 口碑/支付宝小程序数据更新
+      4. 发布验证：向通义千问提问测试门店推荐准确性
+
+  - id: "svc-publish-yuanbao"
+    label: "元宝渠道发布"
+    serviceType: "atomic"
+    executorType: "agent"
+    agentSkills: ["channel_publish", "yuanbao_api"]
+    agentPrompt: |
+      将元宝适配内容发布到腾讯生态：
+      1. 微信小程序数据接口更新
+      2. 腾讯元宝知识库提交
+      3. 搜一搜结构化数据同步
+      4. 发布验证：向腾讯元宝提问测试门店推荐表现
+
+  # ——— Phase 4: 效果监测与优化 ———
+  - id: "svc-geo-monitor"
+    label: "GEO效果监测"
+    serviceType: "atomic"
+    executorType: "agent"
+    agentSkills: ["geo_monitoring", "analytics"]
+    agentPrompt: |
+      监测门店GEO运营效果（持续周期性任务）：
+      1. AI推荐出现率：各模型回答中提及本门店的频率与排名
+      2. 推荐准确性：AI回答中门店信息（价格/时段/位置）是否准确
+      3. 转化漏斗：AI推荐 → 用户点击 → 预订 → 到店核销 全链路数据
+      4. 履约完成率与用户满意度（核销后评价）
+      5. 竞品对比：同商圈（3公里流量圈）其他KTV的AI推荐情况
+      输出：GEO效果周报 + 内容优化建议 + 效果评分(0-100)
+
+  - id: "svc-content-optimize"
+    label: "内容迭代优化"
+    serviceType: "atomic"
+    executorType: "agent"
+    entityType: "store"
+    agentSkills: ["geo_content_gen", "optimization"]
+    agentPrompt: |
+      根据GEO监测报告迭代优化内容：
+      1. 低转化内容替换：识别并替换点击率/转化率低的推荐文案
+      2. 高效模式复制：将高转化内容模式推广到其他时段/场景
+      3. 时令活动更新：节假日/促销活动的内容及时更新
+      4. 数据鲜度维护：确保价格/时段/房态信息实时准确
+      5. 用户反馈闭环：将差评/投诉转化为内容改进点
+      目标：持续提升AI推荐效果评分，保持"可信履约"闭环。
+
+# ============================================================
+# 事件定义
+# ============================================================
+events:
+  - id: "evt-new"
+    label: "进程已创建"
+    expression: "process_state == 'NEW'"
+    evaluationMode: "deterministic"
+
+  - id: "evt-terminated"
+    label: "进程已终止"
+    expression: "process_state == 'TERMINATED'"
+    evaluationMode: "deterministic"
+
+  - id: "evt-needs-optimization"
+    label: "GEO效果不达标需优化"
+    expression: "GEO效果评分低于60分，AI推荐出现率或转化率不达预期，需要启动内容迭代优化"
+    evaluationMode: "non_deterministic"
+
+# ============================================================
+# 指令定义
+# ============================================================
+instructions:
+  - id: "instr-start"
+    label: "启动服务"
+    sysCall: "start_service"
+
+  - id: "instr-call-sub"
+    label: "调用子服务"
+    sysCall: "call_sub_service"
+
+  - id: "instr-return"
+    label: "调用返回"
+    sysCall: "calling_return"
+
+  - id: "instr-terminate"
+    label: "终止进程"
+    sysCall: "terminate_process"
+
+# ============================================================
+# 规则定义 — 全部挂在 svc-geo-store-ops 程序下
+# ============================================================
+#
+# 执行拓扑：
+#
+#   [geo-store-ops] NEW
+#         │
+#         ▼
+#   [data-collect] ──TERMINATED──▶ [data-verify] ──TERMINATED──▶ [profile-gen]
+#                                                                      │
+#                                                                 TERMINATED
+#                                                                      ▼
+#   [model-analysis] ──TERMINATED──▶ [content-gen] ──TERMINATED──▶ [content-review]
+#                                                                      │
+#                                                                 TERMINATED
+#                                                           ┌──────────┼──────────┐
+#                                                           ▼          ▼          ▼
+#                                                   [pub-doubao] [pub-qianwen] [pub-yuanbao]
+#                                                           │
+#                                                      TERMINATED
+#                                                           ▼
+#                                                    [geo-monitor]
+#                                                           │
+#                                                      TERMINATED
+#                                                     (LLM判断)
+#                                                           ▼
+#                                                  [content-optimize]
+#
+rules:
+  # ——— Phase 1: 门店入驻链 ———
+  - id: "rule-ops-kickoff"
+    label: "运营启动 → 开始数据采集"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-geo-store-ops"
+    eventId: "evt-new"
+    instructionId: "instr-start"
+    operandServiceId: "svc-data-collect"
+    order: 10
+
+  - id: "rule-collect-done"
+    label: "数据采集完成 → 启动数据核验"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-data-collect"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-data-verify"
+    order: 20
+
+  - id: "rule-verify-done"
+    label: "数据核验通过 → 生成门店档案"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-data-verify"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-profile-gen"
+    order: 30
+
+  # ——— Phase 2: GEO内容生产链 ———
+  - id: "rule-profile-done"
+    label: "档案生成完成 → 启动模型偏好分析"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-profile-gen"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-model-analysis"
+    order: 40
+
+  - id: "rule-analysis-done"
+    label: "模型分析完成 → 一模一策内容生成"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-model-analysis"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-content-gen"
+    order: 50
+
+  - id: "rule-gen-done"
+    label: "内容生成完成 → 人工质量审核"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-content-gen"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-content-review"
+    order: 60
+
+  # ——— Phase 3: 并行多渠道发布（3条规则同一事件 = 扇出） ———
+  - id: "rule-review-done-pub-doubao"
+    label: "审核通过 → 豆包渠道发布"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-content-review"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-publish-doubao"
+    order: 70
+
+  - id: "rule-review-done-pub-qianwen"
+    label: "审核通过 → 千问渠道发布"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-content-review"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-publish-qianwen"
+    order: 71
+
+  - id: "rule-review-done-pub-yuanbao"
+    label: "审核通过 → 元宝渠道发布"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-content-review"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-publish-yuanbao"
+    order: 72
+
+  # ——— Phase 4: 效果监测（任一发布完成即启动） ———
+  - id: "rule-pub-done-monitor"
+    label: "发布完成 → 启动GEO效果监测"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-publish-doubao"
+    eventId: "evt-terminated"
+    instructionId: "instr-start"
+    operandServiceId: "svc-geo-monitor"
+    order: 80
+
+  # ——— Phase 5: LLM驱动的智能优化 ———
+  - id: "rule-monitor-optimize"
+    label: "效果不达标 → 触发内容迭代优化"
+    targetServiceId: "svc-geo-store-ops"
+    serviceId: "svc-geo-monitor"
+    eventId: "evt-needs-optimization"
+    instructionId: "instr-start"
+    operandServiceId: "svc-content-optimize"
+    order: 90
