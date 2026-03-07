@@ -208,7 +208,17 @@ app.get('/api/entities', (c) => {
     if (lifecycle) opts.lifecycle = lifecycle
     if (limit) opts.limit = Number(limit)
     if (offset) opts.offset = Number(offset)
-    return c.json(engine.dossierStore.search(opts))
+    const results = engine.dossierStore.search(opts)
+    return c.json(results.map(r => ({
+      entityType: r.dossier.entityType,
+      entityId: r.dossier.entityId,
+      lifecycle: r.dossier.lifecycle,
+      currentVersion: r.dossier.currentVersion,
+      createdAt: r.dossier.createdAt,
+      updatedAt: r.dossier.updatedAt,
+      dossier: r.dossier,
+      data: r.data,
+    })))
   } catch (err) {
     return c.json({ error: String(err) }, 500)
   }

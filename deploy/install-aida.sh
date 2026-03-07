@@ -177,6 +177,30 @@ if [ -L "$BPS_EXT" ]; then
   warn "  移除旧手动 symlink"
 fi
 
+# 清理 openclaw.json 中残留的旧 plugin 路径（如 packages/bps-engine）
+OC_CONFIG_CLEAN="$OC_HOME/openclaw.json"
+if [ -f "$OC_CONFIG_CLEAN" ]; then
+  node -e '
+    const fs = require("fs");
+    const p = process.argv[1];
+    const c = JSON.parse(fs.readFileSync(p, "utf-8"));
+    let cleaned = false;
+    if (c.plugins?.load?.paths && Array.isArray(c.plugins.load.paths)) {
+      const before = c.plugins.load.paths.length;
+      c.plugins.load.paths = c.plugins.load.paths.filter(p => !p.includes("packages/bps-engine") && !p.includes("packages\\\\bps-engine"));
+      if (c.plugins.load.paths.length < before) {
+        cleaned = true;
+        if (c.plugins.load.paths.length === 0) delete c.plugins.load.paths;
+        if (c.plugins.load && Object.keys(c.plugins.load).length === 0) delete c.plugins.load;
+      }
+    }
+    if (cleaned) {
+      fs.writeFileSync(p, JSON.stringify(c, null, 2) + "\n");
+      console.error("cleaned stale plugin paths");
+    }
+  ' "$OC_CONFIG_CLEAN" 2>&1 && log "  清理旧 plugin 路径完成" || true
+fi
+
 if command -v openclaw >/dev/null 2>&1; then
   openclaw plugins install --link "$ENGINE_DIR" 2>&1 && log "openclaw plugins install --link 成功" || {
     warn "  已安装，尝试重新安装..."
