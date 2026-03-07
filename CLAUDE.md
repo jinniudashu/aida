@@ -381,6 +381,18 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **Bootstrap 文件完整性**：7/7（AGENTS + SOUL + IDENTITY + HEARTBEAT + USER + TOOLS + MEMORY 运行时生成）+ BOOT.md
 - **Workspace 文件行数**：SOUL 32 行, AGENTS 119 行, IDENTITY 4 行, HEARTBEAT 8 行, USER 3 行, TOOLS 38 行, BOOT 4 行
 
+### IdleX GEO E2E v3 业务场景验证（2026-03-07）
+- 评估报告：`test/e2e/IdleX-GEO-E2E-v3-评估报告 (2026-03-07).md`
+- 测试方案：`test/e2e/idlex-geo-v3.md`，自动化脚本：`test/e2e/idlex-geo-v3.sh`
+- **v3 新增测试点**：USER.md/TOOLS.md 部署、Two-Layer 合并（SOUL→AGENTS）、Skill user-invocable、目标陈述式对话、干净 memory（无先验上下文）
+- **加权总分：60/100**（部署 100, 业务理解 95, Two-Layer 路由 85, 建模执行 25, 内容质量 90, 治理闭环 15, 自我进化 10）
+- **自动化测试**：34 PASS / 1 FAIL / 8 WARN / 35 TOTAL
+- **基础设施层 100% 验证通过**：14/14 安装检查 PASS，新增 USER.md/TOOLS.md 一次通过，Two-Layer 合并生效
+- **核心问题：「说而不做」**：Aida 自然语言输出质量极高（一模一策差异化精准），但实际工具调用率极低——描述了完美的建模方案但未调用 BPS 工具执行
+- **v2→v3 对比**：v2 (87分) 保留了前次测试 MEMORY.md，v3 清除所有 memory 后暴露无先验上下文时工具调用能力严重不足
+- **结论**：AIDA 基础设施层完全就绪，LLM 工具调用行为是唯一瓶颈
+- **改进方向**：强化 AGENTS.md "Act, don't describe" 指令 / 测试 Claude/GPT 作为 primary 模型 / MEMORY.md 预置工具调用模式引导
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
