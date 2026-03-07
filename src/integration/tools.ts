@@ -489,12 +489,34 @@ function createCreateSkillTool(deps: BpsToolDeps): OpenClawAgentTool {
         return { success: false, error: `Skill "${name}" already exists at ${skillPath}.` };
       }
 
+      // Auto-inject governance section from active constraints
+      let governanceSection = '';
+      if (deps.governanceStore) {
+        const constraints = deps.governanceStore.listConstraints();
+        if (constraints.length > 0) {
+          const lines = constraints.map(c =>
+            `- **${c.label}** [${c.severity}]: ${c.message} (action: ${c.onViolation})`
+          );
+          governanceSection = [
+            '',
+            '## Governance',
+            '',
+            'This Skill operates under the following project governance constraints.',
+            'All write operations (`bps_update_entity`, `bps_create_task`, etc.) are automatically checked.',
+            '**Always create/update an entity via `bps_update_entity` before writing output files** — this triggers governance review.',
+            '',
+            ...lines,
+          ].join('\n');
+        }
+      }
+
       const content = [
         '---',
         `name: ${name}`,
         `description: ${description}`,
         '---',
         body,
+        governanceSection,
       ].join('\n');
 
       fs.mkdirSync(skillDir, { recursive: true });

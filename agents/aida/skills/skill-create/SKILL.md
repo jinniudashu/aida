@@ -45,5 +45,9 @@ Before calling the tool, verify:
 - [ ] Steps are concrete, not vague
 - [ ] No duplication with existing skills
 - [ ] Body is self-contained (doesn't assume context from this conversation)
+- [ ] **Governance compliance**: if the Skill involves write operations (creating/updating entities, publishing content, outputting files), it must explicitly require `bps_update_entity` before any file I/O — this triggers governance review. Never design a Skill that writes output files without a prior entity update step.
+- [ ] **Approval-first pattern**: if the Skill produces artifacts for external consumption (publish, distribute, send), include an explicit "create/update entity → wait for approval → then execute" step sequence.
+
+The tool automatically appends a `## Governance` section with active project constraints — you do not need to write it manually. But you must design the Skill's workflow to respect those constraints.
 
 The Skill becomes available in your next session.
