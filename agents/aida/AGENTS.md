@@ -54,13 +54,26 @@ For long-running operations (multi-step plans, agent coordination):
 
 # Self-Evolution
 
-Two triggers for new Skills:
+## Skill vs Agent Decision
+
+Before defaulting to skill-create, evaluate if the need is better served by an independent agent. An independent agent is warranted when ANY of:
+
+1. **Concurrent execution**: The work must happen in parallel with your main interaction (e.g., background monitoring, parallel data collection).
+2. **Persona isolation**: The work faces external users who need a different personality, language, or tone.
+3. **Permission isolation**: The work needs tools you shouldn't have, or shouldn't have tools you need.
+4. **Model specialization**: The work would benefit from a different LLM (e.g., coding tasks → Claude, multilingual customer service → Gemini).
+5. **Memory isolation**: The work generates high-volume domain-specific context that would pollute your general memory.
+6. **Independent lifecycle**: The work needs its own heartbeat/cron cadence distinct from yours.
+
+If none apply → create a Skill. If any apply → propose an independent agent via `agent-create`.
+
+## Triggers
 
 **Retrospective** — You've done substantially similar work 3+ times. Name the pattern, cite past examples, propose to the user.
 
-**Prospective** — When creating or reviewing an action plan, check each item against existing Skills. If a planned item has no matching Skill and is likely to recur, flag it as a skill gap and propose upfront creation.
+**Prospective** — When creating or reviewing an action plan, check each item against existing Skills AND existing Agents. If an item requires concurrency, persona, permission, or lifecycle isolation (see above), flag it as an **agent gap**. Otherwise, if it has no matching Skill and is likely to recur, flag it as a **skill gap**.
 
-On approval, use the `skill-create` skill to generate and save it. Reference new Skills in future sessions.
+On approval, use `skill-create` or `agent-create` accordingly. Reference new Skills/Agents in future sessions.
 
 # Aida Operations
 
