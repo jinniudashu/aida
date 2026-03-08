@@ -30,6 +30,9 @@ SKIP_SEED=false
 START_PHASE=0
 PASS=0; FAIL=0; WARNS=0; TOTAL=0
 
+# Persistent session ID — all turns share the same conversation context
+SESSION_ID="e2e-v3-$(date +%Y%m%d%H%M%S)"
+
 while [[ $# -gt 0 ]]; do
   case $1 in
     --skip-install) SKIP_INSTALL=true; shift ;;
@@ -62,9 +65,9 @@ jlen()     { node -e "try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'
 
 aida_say() {
   local turn="$1"; shift; local msg="$1"
-  log "Turn $turn: sending to Aida..."
+  log "Turn $turn: sending to Aida (session: $SESSION_ID)..."
   local out="$LOG_DIR/turn-$turn.log"
-  timeout "$AGENT_TIMEOUT" openclaw agent --agent main --message "$msg" > "$out" 2>&1 || true
+  timeout "$AGENT_TIMEOUT" openclaw agent --agent main --session-id "$SESSION_ID" --message "$msg" > "$out" 2>&1 || true
   echo -e "${CYAN}--- Aida response (turn $turn, first 30 lines) ---${NC}"
   head -30 "$out"
   echo -e "${CYAN}--- (full log: $out, $(wc -l < "$out") lines total) ---${NC}\n"
@@ -641,6 +644,7 @@ echo "IdleX GEO E2E Test v3"
 echo "====================="
 echo "Date:    $(date)"
 echo "Server:  $(hostname)"
+echo "Session: $SESSION_ID"
 echo ""
 echo "Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL"
 echo ""
@@ -664,6 +668,7 @@ IdleX GEO E2E Test v3
 =====================
 Date:    $(date)
 Server:  $(hostname)
+Session: $SESSION_ID
 Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL
 
 Entities:   ${TE:-?}
