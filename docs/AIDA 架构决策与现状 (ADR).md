@@ -65,7 +65,7 @@
 │       ▼                                              │
 │  governance/ (4)           integration/ (5)          │
 │    governance-store.ts       event-bridge.ts         │
-│    action-gate.ts            tools.ts (13 tools)     │
+│    action-gate.ts            tools.ts (14 tools)     │
 │    governance-loader.ts      plugin.ts               │
 │    types.ts                  openclaw-types.ts       │
 │                              index.ts                │
@@ -216,13 +216,13 @@
 | `store/` | 6 | `createDatabase()` | ✅ 完成 | SQLite 持久化、蓝图/进程/Dossier/统计/Dashboard 查询 |
 | `governance/` | 4 | `ActionGate` | ✅ 完成 | 治理层：约束加载 + 前置拦截 + 熔断器 + 审批 |
 | `knowledge/` | 3 | `KnowledgeStore` | ✅ 完成 | 知识存储 + 系统知识 |
-| `loader/` | 3 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml + governance.yaml 解析 |
+| `loader/` | 4 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml + governance.yaml 解析、Blueprint 编译器 |
 | `integration/` | 5 | `registerBpsPlugin()` | ✅ 完成 | OpenClaw 桥接：EventBridge + Tools + Plugin |
 | `system/` | 1 | `project-init.ts` | ✅ 完成 | 项目初始化步骤定义 |
 
 ### 3.2 OpenClaw 插件
 
-**13 tools**（通过 `registerBpsPlugin()` 注册，其中 5 个写操作工具受治理层拦截）:
+**14 tools**（通过 `registerBpsPlugin()` 注册，其中 5 个写操作工具受治理层拦截）:
 
 | # | Tool | 说明 | 治理层拦截 |
 |---|------|------|-----------|
@@ -238,7 +238,8 @@
 | 10 | `bps_next_steps` | 下游服务建议器 | 否（只读） |
 | 11 | `bps_scan_work` | 工作全景扫描 | 否（只读） |
 | 12 | `bps_create_skill` | 动态 Skill 创建 | **是** |
-| 13 | `bps_governance_status` | 治理状态查询 | 否（只读） |
+| 13 | `bps_load_blueprint` | 提交 YAML → 编译 → 加载 → 持久化 | 否（设计时） |
+| 14 | `bps_governance_status` | 治理状态查询 | 否（只读） |
 
 ### 3.3 Agent 架构
 

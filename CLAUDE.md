@@ -43,7 +43,7 @@ aida/
 │   ├── engine/               ← 任务追踪 + 状态机（2 文件）
 │   ├── governance/           ← 治理层（4 文件）
 │   ├── knowledge/            ← BKM 知识管理（3 文件）
-│   ├── loader/               ← 项目装载（3 文件）
+│   ├── loader/               ← 项目装载（4 文件）
 │   ├── integration/          ← OpenClaw 桥接（5 文件）
 │   ├── mcp/                  ← MCP Server（1 文件）
 │   ├── schema/               ← TypeBox 类型定义（8 文件）
