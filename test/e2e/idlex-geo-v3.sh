@@ -440,7 +440,7 @@ if [ "$START_PHASE" -le 2 ]; then
   section "2: Business Requirements (Turn 1)"
 
   ENTITY_BEFORE=$(api_get "/api/entities" | jlen)
-  find "$OPENCLAW_HOME/workspace/skills/" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort > "$LOG_DIR/skills-before.txt"
+  (find "$OPENCLAW_HOME/workspace/skills/" -maxdepth 1 -mindepth 1 -type d 2>/dev/null || true) | sort > "$LOG_DIR/skills-before.txt"
   log "Baseline: $ENTITY_BEFORE entities, $(wc -l < "$LOG_DIR/skills-before.txt") skills"
 
   aida_say 1 '我是闲氪的GEO负责人。闲氪帮合作门店在AI时代"被看见"。
