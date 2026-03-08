@@ -393,6 +393,17 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **结论**：AIDA 基础设施层完全就绪，LLM 工具调用行为是唯一瓶颈
 - **改进方向**：强化 AGENTS.md "Act, don't describe" 指令 / 测试 Claude/GPT 作为 primary 模型 / MEMORY.md 预置工具调用模式引导
 
+### IdleX GEO E2E v3.1 模型切换测试（2026-03-08）
+- 评估报告：`test/e2e/IdleX-GEO-E2E-v3.1-评估报告 (2026-03-08).md`
+- **变更**: 模型 → `openai/gpt-5.4` (OpenRouter), Session 持久化 (`--session-id`), Fallback → `claude-sonnet-4-6 → gemini-3.1-pro`
+- **测试 Turn 加权总分：32/100** — GPT-5.4 反复超时（12 次 retry），Fallback 模型产出低质量重复响应
+- **Cron 自治系统评分：80/100** — 意外发现：之前注册的 9 个 Cron 任务在 Gateway 重启后依然存活并自动执行
+  - 61 次工具调用 0 错误（bps_update_entity ×5, bps_create_task ×7, write ×7 等）
+  - geo-report 实体完整生命周期（started → Analyzed → Pending Approval → Published → Completed）
+  - 一模一策差异化内容自动生成到 mock-publish/（doubao/qianwen/yuanbao 各 2.4KB）
+- **持续问题**：治理绕过（连续 3 次测试 — write 工具直接写文件，不经 bps_update_entity）
+- **结论**：GPT-5.4 当前不适合作为 primary 模型；**Cron + 持久 Session 是 Aida 自治运营的核心路径**
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
