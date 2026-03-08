@@ -380,6 +380,39 @@ fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
 }
 
 # ============================================================
+# Section 5b: Gateway Auth (OpenRouter API key → auth-profiles.json)
+# ============================================================
+# The Gateway resolves API keys from auth-profiles.json, not from env vars.
+# Without this, Gateway mode fails and falls back to embedded CLI mode.
+AGENT_AUTH_DIR="$OC_HOME/agents/main/agent"
+AUTH_PROFILES="$AGENT_AUTH_DIR/auth-profiles.json"
+
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  mkdir -p "$AGENT_AUTH_DIR"
+  # Merge OpenRouter profile into existing auth-profiles.json (or create new)
+  node -e '
+const fs = require("fs");
+const path = process.argv[1];
+const key = process.argv[2];
+let data = { version: 1, profiles: {}, lastGood: {}, usageStats: {} };
+if (fs.existsSync(path)) {
+  try { data = JSON.parse(fs.readFileSync(path, "utf-8")); } catch {}
+}
+data.profiles["openrouter:manual"] = {
+  type: "api_key",
+  provider: "openrouter",
+  key: key
+};
+data.lastGood.openrouter = "openrouter:manual";
+fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
+' "$AUTH_PROFILES" "$OPENROUTER_API_KEY" && log "Gateway auth: OpenRouter API key → auth-profiles.json" || \
+    warn "auth-profiles.json 写入失败"
+else
+  info "OPENROUTER_API_KEY 未设置，跳过 Gateway auth 配置"
+  info "  设置方法: export OPENROUTER_API_KEY=sk-or-v1-... && bash deploy/install-aida.sh"
+fi
+
+# ============================================================
 # Section 6: 验证
 # ============================================================
 echo ""

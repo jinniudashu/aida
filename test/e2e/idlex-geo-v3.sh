@@ -104,17 +104,9 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   done
   log "  State wiped (plugins, config, and auth preserved)"
 
-  log "Updating repo..."
-  cd "$AIDA_REPO"
-  git pull --recurse-submodules 2>&1 | tail -3 || true
-
-  log "Running install-aida.sh..."
-  bash deploy/install-aida.sh
-
-  # Ensure OpenRouter API key is in environment for Gateway
+  # Load API keys before install so install-aida.sh can write auth-profiles.json
   log "Loading API keys..."
   if [ -f /etc/environment ]; then
-    # Source any OPENROUTER keys from /etc/environment
     eval "$(grep OPENROUTER /etc/environment 2>/dev/null)" || true
   fi
   if [ -f "$HOME/aida/.dev/openrouter-api.env" ]; then
@@ -126,6 +118,13 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   else
     warn_ "OPENROUTER_API_KEY not found — GPT-5.4 will fail, fallback models will be used"
   fi
+
+  log "Updating repo..."
+  cd "$AIDA_REPO"
+  git pull --recurse-submodules 2>&1 | tail -3 || true
+
+  log "Running install-aida.sh (includes Gateway auth setup)..."
+  bash deploy/install-aida.sh
 
   log "Starting OpenClaw gateway..."
   openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero"
@@ -174,6 +173,10 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   # Verify USER.md content
   soft "V0.12 USER.md has timezone" "grep -q 'Asia/Shanghai' $OPENCLAW_HOME/workspace/USER.md"
   soft "V0.13 TOOLS.md has BPS tools" "grep -q 'bps_update_entity' $OPENCLAW_HOME/workspace/TOOLS.md"
+
+  # Verify Gateway auth (P0 fix: auth-profiles.json must have OpenRouter key)
+  check "V0.15 Gateway auth-profiles.json" "test -f $OPENCLAW_HOME/agents/main/agent/auth-profiles.json"
+  soft  "V0.16 OpenRouter auth configured" "grep -q 'openrouter' $OPENCLAW_HOME/agents/main/agent/auth-profiles.json"
 
   # Verify SOUL.md Two-Layer is condensed (not full routing table)
   soft "V0.14 SOUL.md Two-Layer condensed" "grep -q 'See AGENTS.md' $OPENCLAW_HOME/workspace/SOUL.md"
