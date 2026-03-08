@@ -30,8 +30,8 @@ SKIP_SEED=false
 START_PHASE=0
 PASS=0; FAIL=0; WARNS=0; TOTAL=0
 
-# Persistent session ID — all turns share the same conversation context
-SESSION_ID="e2e-v3-$(date +%Y%m%d%H%M%S)"
+# Session continuity: dmScope=main routes ALL turns to agent:main:main automatically.
+# No --session-id needed. Clean session files before test to get fresh context + model.
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -65,9 +65,9 @@ jlen()     { node -e "try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'
 
 aida_say() {
   local turn="$1"; shift; local msg="$1"
-  log "Turn $turn: sending to Aida (session: $SESSION_ID)..."
+  log "Turn $turn: sending to Aida (dmScope=main, shared session)..."
   local out="$LOG_DIR/turn-$turn.log"
-  timeout "$AGENT_TIMEOUT" openclaw agent --agent main --session-id "$SESSION_ID" --message "$msg" > "$out" 2>&1 || true
+  timeout "$AGENT_TIMEOUT" openclaw agent --agent main --message "$msg" > "$out" 2>&1 || true
   echo -e "${CYAN}--- Aida response (turn $turn, first 30 lines) ---${NC}"
   head -30 "$out"
   echo -e "${CYAN}--- (full log: $out, $(wc -l < "$out") lines total) ---${NC}\n"
@@ -82,30 +82,25 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
 
   log "Stopping existing services..."
   systemctl stop bps-dashboard 2>/dev/null || true
+  systemctl stop openclaw-gateway 2>/dev/null || true
+  # Fallback: kill any orphan gateway processes
   pkill -f "openclaw gateway" 2>/dev/null || true
-  sleep 2
+  sleep 3
 
   log "Backing up ~/.aida/ ..."
   [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
 
-  log "Cleaning workspace (clean slate — no memory, no sessions, no cron)..."
-  rm -rf "$OPENCLAW_HOME/workspace/skills/" 2>/dev/null || true
-  rm -rf "$OPENCLAW_HOME/workspace/MEMORY.md" 2>/dev/null || true
-  rm -rf "$OPENCLAW_HOME/workspace/memory/" 2>/dev/null || true
+  # Full OpenClaw state wipe — start from clean slate
+  log "Wiping all OpenClaw state (agents, workspace, sessions, cron, memory)..."
+  rm -rf "$OPENCLAW_HOME/agents/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
-  rm -rf "$OPENCLAW_HOME/agents/main/sessions/"* 2>/dev/null || true
-  log "  Cleared session history"
-
-  # Clear all cron jobs from previous tests
-  if command -v openclaw >/dev/null 2>&1; then
-    openclaw cron list --json 2>/dev/null | node -e "
-      try { const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
-        if(Array.isArray(d)) d.forEach(c=>console.log(c.id));
-      } catch{}
-    " 2>/dev/null | while read -r cid; do
-      openclaw cron delete "$cid" 2>/dev/null && log "  Deleted cron: $cid" || true
-    done
-  fi
+  # Remove cron, session, and any other state files
+  find "$OPENCLAW_HOME" -name "cron*.json" -o -name "cron*.jsonl" \
+    -o -name "sessions.json" -o -name "*.session" 2>/dev/null | while read -r sf; do
+    rm -f "$sf"
+  done
+  log "  OpenClaw state wiped (plugins and config preserved for install-aida.sh)"
 
   log "Updating repo..."
   cd "$AIDA_REPO"
@@ -114,9 +109,50 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   log "Running install-aida.sh..."
   bash deploy/install-aida.sh
 
+  # Ensure OpenRouter API key is in environment for Gateway
+  log "Loading API keys..."
+  if [ -f /etc/environment ]; then
+    # Source any OPENROUTER keys from /etc/environment
+    eval "$(grep OPENROUTER /etc/environment 2>/dev/null)" || true
+  fi
+  if [ -f "$HOME/aida/.dev/openrouter-api.env" ]; then
+    source "$HOME/aida/.dev/openrouter-api.env" 2>/dev/null || true
+  fi
+  if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+    export OPENROUTER_API_KEY
+    log "  OPENROUTER_API_KEY loaded (${#OPENROUTER_API_KEY} chars)"
+  else
+    warn_ "OPENROUTER_API_KEY not found — GPT-5.4 will fail, fallback models will be used"
+  fi
+
   log "Starting OpenClaw gateway..."
-  openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero (may already be running)"
-  sleep 5
+  openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero"
+
+  # Wait for gateway health with polling
+  log "Waiting for gateway health..."
+  for i in $(seq 1 12); do
+    if openclaw gateway status 2>/dev/null | grep -qi "running\|healthy\|active"; then
+      log "  Gateway healthy after ${i}x5s"
+      break
+    fi
+    sleep 5
+  done
+
+  # Verify model config
+  log "Verifying model config..."
+  if [ -f "$OPENCLAW_HOME/openclaw.json" ]; then
+    node -e "const c=JSON.parse(require('fs').readFileSync('$OPENCLAW_HOME/openclaw.json','utf8'));
+    console.log('  Primary model:', c.agents?.defaults?.model?.primary || 'not set');
+    console.log('  Fallbacks:', JSON.stringify(c.agents?.defaults?.model?.fallbacks || []))" 2>/dev/null || true
+  fi
+
+  # Verify no stale sessions exist
+  SESSION_FILES=$(find "$OPENCLAW_HOME" -name "*.jsonl" -path "*/sessions/*" 2>/dev/null | wc -l)
+  if [ "$SESSION_FILES" -eq 0 ]; then
+    log "  No stale session files — clean start confirmed"
+  else
+    warn_ "Found $SESSION_FILES stale session files after cleanup"
+  fi
 
   log "V0: Post-install checks"
   check "V0.1 ~/.aida/blueprints/"  "test -d $AIDA_HOME/blueprints"
@@ -657,7 +693,7 @@ echo "IdleX GEO E2E Test v3"
 echo "====================="
 echo "Date:    $(date)"
 echo "Server:  $(hostname)"
-echo "Session: $SESSION_ID"
+echo "Session: agent:main:main (dmScope=main)"
 echo ""
 echo "Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL"
 echo ""
@@ -681,7 +717,7 @@ IdleX GEO E2E Test v3
 =====================
 Date:    $(date)
 Server:  $(hostname)
-Session: $SESSION_ID
+Session: agent:main:main (dmScope=main)
 Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL
 
 Entities:   ${TE:-?}
