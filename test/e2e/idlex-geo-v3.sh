@@ -88,11 +88,24 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   log "Backing up ~/.aida/ ..."
   [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
 
-  log "Cleaning workspace (clean slate — no memory preservation)..."
+  log "Cleaning workspace (clean slate — no memory, no sessions, no cron)..."
   rm -rf "$OPENCLAW_HOME/workspace/skills/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME/workspace/MEMORY.md" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME/workspace/memory/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/"* 2>/dev/null || true
+  log "  Cleared session history"
+
+  # Clear all cron jobs from previous tests
+  if command -v openclaw >/dev/null 2>&1; then
+    openclaw cron list --json 2>/dev/null | node -e "
+      try { const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+        if(Array.isArray(d)) d.forEach(c=>console.log(c.id));
+      } catch{}
+    " 2>/dev/null | while read -r cid; do
+      openclaw cron delete "$cid" 2>/dev/null && log "  Deleted cron: $cid" || true
+    done
+  fi
 
   log "Updating repo..."
   cd "$AIDA_REPO"
