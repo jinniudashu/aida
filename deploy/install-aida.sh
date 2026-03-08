@@ -276,10 +276,8 @@ const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 // 1. agents.defaults — set default model + compaction
 if (!config.agents) config.agents = {};
 if (!config.agents.defaults) config.agents.defaults = {};
-if (!config.agents.defaults.model) {
-  config.agents.defaults.model = { primary: "google/gemini-3.1-pro-preview" };
-  config.agents.defaults.models = { "google/gemini-3.1-pro-preview": { alias: "Gemini" } };
-}
+config.agents.defaults.model = { primary: "openai/gpt-5.4" };
+config.agents.defaults.models = { "openai/gpt-5.4": { alias: "GPT-5.4" } };
 
 // 2. agents.list — upsert Aida (main agent only)
 if (!Array.isArray(config.agents.list)) config.agents.list = [];
@@ -351,12 +349,10 @@ if (feishuAppId && feishuAppSecret) {
 if (typeof config.agents.defaults.model === "string") {
   config.agents.defaults.model = { primary: config.agents.defaults.model };
 }
-if (!config.agents.defaults.model.fallbacks) {
-  config.agents.defaults.model.fallbacks = [
-    "anthropic/claude-sonnet-4-6",
-    "openai/gpt-4.1"
-  ];
-}
+config.agents.defaults.model.fallbacks = [
+  "anthropic/claude-sonnet-4-6",
+  "google/gemini-3.1-pro-preview"
+];
 
 // 7. Hooks — enable internal hooks so BOOT.md executes on Gateway restart (P1)
 if (!config.hooks) config.hooks = {};
