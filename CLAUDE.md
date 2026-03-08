@@ -404,6 +404,25 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **持续问题**：治理绕过（连续 3 次测试 — write 工具直接写文件，不经 bps_update_entity）
 - **结论**：GPT-5.4 当前不适合作为 primary 模型；**Cron + 持久 Session 是 Aida 自治运营的核心路径**
 
+### IdleX GEO E2E v3.2 清洁环境测试（2026-03-08）
+- 评估报告：`test/e2e/IdleX-GEO-E2E-v3.2-评估报告 (2026-03-08).md`
+- **变更**: 模型路由修复 `openrouter/openai/gpt-5.4`（非 `openai/gpt-5.4`），移除无效 `--session-id`，全面 OpenClaw 状态清理
+- **加权总分：89/100** — AIDA 项目迄今最佳端到端测试
+- **自动化测试**: 39 PASS / 0 FAIL / 4 WARN / 39 TOTAL
+- **从清洁环境一次性完成**：
+  - 42 个实体（20 新建 + 15 探测记录 + 7 种子）
+  - 1 个 Blueprint（idlex-geo-governance，编译通过，flow DSL 正确）
+  - 1 个 Agent workspace（小闲店铺顾问，独立人格）
+  - 3 个 Cron（监测 10:00 / 小结 19:00 / 复盘周一 11:00）
+  - 20 个 mock-publish 文件（15 份内容 + 5 份报告/模板）
+- **关键突破**：
+  - Two-Layer 路由正确：Governance Blueprint + Operations Entity 分层明确
+  - 一模一策差异化精准：doubao(情绪) / qianwen(结构) / yuanbao(务实)
+  - Blueprint 编译器首次由 Agent 自主使用并通过验证
+  - GPT-5.4 via OpenRouter（embedded 模式）工具调用能力和业务理解均显著优于 Gemini 3.1 Pro
+- **持续问题**：Gateway auth-profiles.json 缺失导致每轮降级 embedded 模式；治理绕过（第 4 次复现，Aida 自建文件级审批流替代）
+- **LLM 模型结论**：`openrouter/openai/gpt-5.4` 确认可用且效果最佳；注意 `openai/` 前缀路由到原生 OpenAI（不兼容），必须用 `openrouter/` 前缀
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
