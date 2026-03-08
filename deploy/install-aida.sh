@@ -276,8 +276,8 @@ const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 // 1. agents.defaults — set default model + compaction
 if (!config.agents) config.agents = {};
 if (!config.agents.defaults) config.agents.defaults = {};
-config.agents.defaults.model = { primary: "openrouter/openai/gpt-5.4" };
-config.agents.defaults.models = { "openrouter/openai/gpt-5.4": { alias: "GPT-5.4 via OpenRouter" } };
+config.agents.defaults.model = { primary: "dashscope/qwen3.5-plus" };
+config.agents.defaults.models = { "dashscope/qwen3.5-plus": { alias: "Qwen3.5-Plus via DashScope" } };
 
 // 2. agents.list — upsert Aida (main agent only)
 if (!Array.isArray(config.agents.list)) config.agents.list = [];
@@ -350,8 +350,7 @@ if (typeof config.agents.defaults.model === "string") {
   config.agents.defaults.model = { primary: config.agents.defaults.model };
 }
 config.agents.defaults.model.fallbacks = [
-  "openrouter/anthropic/claude-sonnet-4.6",
-  "openrouter/google/gemini-3.1-pro-preview"
+  "moonshot/kimi-k2.5"
 ];
 
 // 7. Hooks — enable internal hooks so BOOT.md executes on Gateway restart (P1)
@@ -380,16 +379,85 @@ fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
 }
 
 # ============================================================
-# Section 5b: Gateway Auth (OpenRouter API key → auth-profiles.json)
+# Section 5b: Custom Model Providers (models.json)
 # ============================================================
-# The Gateway resolves API keys from auth-profiles.json, not from env vars.
-# Without this, Gateway mode fails and falls back to embedded CLI mode.
+# Default models (dashscope/qwen3.5-plus, moonshot/kimi-k2.5) are custom providers
+# not built into OpenClaw. models.json defines baseUrl, API format, and model specs.
+# API keys are read from env vars: DASHSCOPE_API_KEY, MOONSHOT_API_KEY
 AGENT_AUTH_DIR="$OC_HOME/agents/main/agent"
+MODELS_JSON="$AGENT_AUTH_DIR/models.json"
+
+mkdir -p "$AGENT_AUTH_DIR"
+node -e '
+const fs = require("fs");
+const modelsPath = process.argv[1];
+const dashscopeKey = process.argv[2] || "";
+const moonshotKey = process.argv[3] || "";
+
+let data = {};
+if (fs.existsSync(modelsPath)) {
+  try { data = JSON.parse(fs.readFileSync(modelsPath, "utf-8")); } catch {}
+}
+if (!data.providers) data.providers = {};
+
+// DashScope (Qwen) — primary model
+if (dashscopeKey) {
+  data.providers.dashscope = {
+    baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    api: "openai-completions",
+    models: [{
+      id: "qwen3.5-plus",
+      name: "Qwen3.5 Plus",
+      reasoning: true,
+      input: ["text"],
+      cost: { input: 3, output: 12, cacheRead: 1, cacheWrite: 2 },
+      contextWindow: 131072,
+      maxTokens: 8192
+    }],
+    apiKey: dashscopeKey
+  };
+  console.error("[models] dashscope provider configured (qwen3.5-plus)");
+} else {
+  console.error("[models] DASHSCOPE_API_KEY not set, skipping dashscope provider");
+}
+
+// Moonshot (Kimi) — fallback model
+if (moonshotKey) {
+  data.providers.moonshot = {
+    baseUrl: "https://api.moonshot.ai/v1",
+    api: "openai-completions",
+    models: [{
+      id: "kimi-k2.5",
+      name: "Kimi K2.5",
+      reasoning: false,
+      input: ["text", "image"],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 256000,
+      maxTokens: 8192
+    }],
+    apiKey: moonshotKey
+  };
+  console.error("[models] moonshot provider configured (kimi-k2.5)");
+} else {
+  console.error("[models] MOONSHOT_API_KEY not set, skipping moonshot provider");
+}
+
+fs.writeFileSync(modelsPath, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
+' "$MODELS_JSON" "${DASHSCOPE_API_KEY:-}" "${MOONSHOT_API_KEY:-}" && \
+  log "models.json 已更新" || warn "models.json 写入失败"
+
+if [ -z "${DASHSCOPE_API_KEY:-}" ] && [ -z "${MOONSHOT_API_KEY:-}" ]; then
+  warn "DASHSCOPE_API_KEY 和 MOONSHOT_API_KEY 均未设置"
+  info "  设置方法: export DASHSCOPE_API_KEY=sk-... MOONSHOT_API_KEY=sk-... && bash deploy/install-aida.sh"
+fi
+
+# ============================================================
+# Section 5c: Gateway Auth (auth-profiles.json)
+# ============================================================
+# Optional: OpenRouter auth for fallback or alternative models.
 AUTH_PROFILES="$AGENT_AUTH_DIR/auth-profiles.json"
 
 if [ -n "${OPENROUTER_API_KEY:-}" ]; then
-  mkdir -p "$AGENT_AUTH_DIR"
-  # Merge OpenRouter profile into existing auth-profiles.json (or create new)
   node -e '
 const fs = require("fs");
 const path = process.argv[1];
@@ -407,9 +475,6 @@ data.lastGood.openrouter = "openrouter:manual";
 fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
 ' "$AUTH_PROFILES" "$OPENROUTER_API_KEY" && log "Gateway auth: OpenRouter API key → auth-profiles.json" || \
     warn "auth-profiles.json 写入失败"
-else
-  info "OPENROUTER_API_KEY 未设置，跳过 Gateway auth 配置"
-  info "  设置方法: export OPENROUTER_API_KEY=sk-or-v1-... && bash deploy/install-aida.sh"
 fi
 
 # ============================================================
