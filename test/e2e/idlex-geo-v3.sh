@@ -91,16 +91,18 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
 
   # Full OpenClaw state wipe — start from clean slate
-  log "Wiping all OpenClaw state (agents, workspace, sessions, cron, memory)..."
-  rm -rf "$OPENCLAW_HOME/agents/" 2>/dev/null || true
+  # Keep agents/main/agent/models.json (auth + model routing) but wipe sessions
+  log "Wiping OpenClaw state (workspace, sessions, cron, memory)..."
   rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
-  # Remove cron, session, and any other state files
+  # Wipe session data (but keep agent auth/models config)
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+  # Remove cron and other state files
   find "$OPENCLAW_HOME" -name "cron*.json" -o -name "cron*.jsonl" \
     -o -name "sessions.json" -o -name "*.session" 2>/dev/null | while read -r sf; do
     rm -f "$sf"
   done
-  log "  OpenClaw state wiped (plugins and config preserved for install-aida.sh)"
+  log "  State wiped (plugins, config, and auth preserved)"
 
   log "Updating repo..."
   cd "$AIDA_REPO"
