@@ -1,0 +1,458 @@
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 0: Clean Environment + Install[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:45:46][0m Stopping existing services...
+[0;36m[23:45:49][0m Backing up ~/.aida/ ...
+[0;36m[23:45:49][0m Wiping OpenClaw state (workspace, sessions, cron, memory)...
+[0;36m[23:45:49][0m   State wiped (plugins, config, and auth preserved)
+[0;36m[23:45:49][0m Loading API keys...
+[0;36m[23:45:49][0m   OPENROUTER_API_KEY loaded (73 chars)
+[0;36m[23:45:49][0m Updating repo...
+Fetching submodule erpsys
+Already up to date.
+[0;36m[23:45:54][0m Running install-aida.sh (includes Gateway auth setup)...
+
+========================================
+  AIDA 一键部署
+========================================
+
+[0;36m[..][0m 预检查...
+[0;32m[OK][0m Node.js 24.13.0
+[0;32m[OK][0m 预检查通过
+[0;36m[..][0m 拉取最新代码...
+Already up to date.
+[0;32m[OK][0m git pull 成功
+[0;36m[..][0m 安装 npm 依赖...
+Run `npm audit` for details.
+[0;32m[OK][0m npm install 完成
+[0;36m[..][0m 编译 bps-engine...
+[0;32m[OK][0m bps-engine 编译完成
+[0;36m[..][0m 初始化 AIDA 项目目录: /root/.aida
+[0;32m[OK][0m 目录结构就绪（项目初始化由 Aida 引导完成）
+[0;36m[..][0m 合并 Aida → 主 Agent workspace: /root/.openclaw/workspace
+[0;32m[OK][0m   Aida/IDENTITY.md
+[0;32m[OK][0m   Aida/SOUL.md
+[0;32m[OK][0m   Aida/AGENTS.md
+[0;32m[OK][0m   Aida/HEARTBEAT.md
+[0;32m[OK][0m   Aida/BOOT.md
+[0;32m[OK][0m   Aida/USER.md
+[0;32m[OK][0m   Aida/TOOLS.md
+[0;36m[..][0m 安装 Aida skills → /root/.openclaw/workspace/skills/
+[0;32m[OK][0m   skill/action-plan
+[0;32m[OK][0m   skill/agent-create
+[0;32m[OK][0m   skill/blueprint-modeling
+[0;32m[OK][0m   skill/business-execution
+[0;32m[OK][0m   skill/dashboard-guide
+[0;32m[OK][0m   skill/project-init
+[0;32m[OK][0m   skill/skill-create
+[0;32m[OK][0m 7 skill(s) 已安装
+[0;36m[..][0m 安装 BPS 引擎扩展...
+[0;32m[OK][0m   清理旧 plugin 路径完成
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] System knowledge: 2 loaded, 0 skipped
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+│
+◇  Config warnings ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch  │
+│    (manifest uses "bps-engine", entry hints "aida")                   │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:
+- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config overwrite: /root/.openclaw/openclaw.json (sha256 2f138d8347ee081766428ea39c8ba98ccc5ecb61743ab3d935c575ed472a799a -> 67d1d1f8680e94c1362a5fe4a10e73cb17164eee7b25d23313023b8d370d69e5, backup=/root/.openclaw/openclaw.json.bak)
+Linked plugin path: ~/aida
+Restart the gateway to load plugins.
+[0;32m[OK][0m openclaw plugins install --link 成功
+[0;36m[..][0m 构建 Dashboard...
+✓ built in 12.02s
+[0;32m[OK][0m Dashboard 构建完成
+[0;32m[OK][0m bps-dashboard systemd 服务已启动
+[0;36m[..][0m 合并 Agent 配置到 /root/.openclaw/openclaw.json
+[feishu] FEISHU_APP_ID / FEISHU_APP_SECRET not set, skipping feishu config
+[0;32m[OK][0m openclaw.json 配置已自动合并
+[models] DASHSCOPE_API_KEY not set, skipping dashscope provider
+[models] MOONSHOT_API_KEY not set, skipping moonshot provider
+[0;32m[OK][0m models.json 已更新
+[1;33m[!!][0m DASHSCOPE_API_KEY 和 MOONSHOT_API_KEY 均未设置
+[0;36m[..][0m   设置方法: export DASHSCOPE_API_KEY=sk-... MOONSHOT_API_KEY=sk-... && bash deploy/install-aida.sh
+[0;32m[OK][0m Gateway auth: OpenRouter API key → auth-profiles.json
+
+[0;36m[..][0m 部署验证...
+[0;32m[OK][0m ~/.aida/project.yaml 尚未创建（首次启动时由 Aida 引导生成）
+[0;32m[OK][0m Aida 主 workspace 完整
+[0;32m[OK][0m Aida skills 完整 (7 skill(s))
+[0;32m[OK][0m Dashboard 构建产物完整
+[0;32m[OK][0m Dashboard 服务运行中
+[0;32m[OK][0m BPS 引擎扩展已注册
+[0;32m[OK][0m openclaw.json 配置正确
+[1;33m[!!][0m 飞书 Channel 未配置（设置 FEISHU_APP_ID + FEISHU_APP_SECRET 后重新运行）
+
+========================================
+  [0;32m部署完成[0m
+========================================
+
+[0;32m[OK][0m 已部署：
+  ~/.aida/                   ← 业务项目数据
+  Aida（主 Agent + skills）  ← /root/.openclaw/workspace
+  BPS 引擎扩展              ← openclaw plugins
+  openclaw.json              ← 配置已自动合并
+  Dashboard                  ← /root/aida/dashboard (port 3456)
+
+[0;32m[OK][0m 重启 OpenClaw 实例即可生效
+  验证：发送 '你是谁？' 确认 Aida 已激活
+
+[0;36m[23:46:25][0m Starting OpenClaw gateway...
+│
+◇  Config warnings ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch  │
+│    (manifest uses "bps-engine", entry hints "aida")                   │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+Restarted systemd service: openclaw-gateway.service
+[0;36m[23:46:27][0m Waiting for gateway health...
+[0;36m[23:46:31][0m   Gateway healthy after 1x5s
+[0;36m[23:46:31][0m Verifying model config...
+  Primary model: zhipu/glm-5
+  Fallbacks: ["moonshot/kimi-k2.5"]
+[0;36m[23:46:31][0m   No stale session files — clean start confirmed
+[0;36m[23:46:31][0m V0: Post-install checks
+  [0;32mPASS[0m V0.1 ~/.aida/blueprints/
+  [0;32mPASS[0m V0.2 ~/.aida/data/
+  [0;32mPASS[0m V0.3 ~/.aida/context/
+  [0;32mPASS[0m V0.4 SOUL.md
+  [0;32mPASS[0m V0.5 AGENTS.md
+  [0;32mPASS[0m V0.6 HEARTBEAT.md
+  [0;32mPASS[0m V0.7 BOOT.md
+  [0;32mPASS[0m V0.8 USER.md
+  [0;32mPASS[0m V0.9 TOOLS.md
+  [0;32mPASS[0m V0.10 Skills >= 7 (found 7)
+  [0;32mPASS[0m V0.11 Dashboard /api/overview
+  [0;32mPASS[0m V0.12 USER.md has timezone
+  [0;32mPASS[0m V0.13 TOOLS.md has BPS tools
+  [0;32mPASS[0m V0.15 Gateway auth-profiles.json
+  [0;32mPASS[0m V0.16 OpenRouter auth configured
+  [0;32mPASS[0m V0.14 SOUL.md Two-Layer condensed
+[0;36m[23:46:31][0m Phase 0 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 1: Data Seeding[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:46:31][0m Creating project.yaml...
+[0;36m[23:46:31][0m Creating governance.yaml...
+[0;36m[23:46:31][0m Copying business context docs...
+[0;36m[23:46:31][0m   Copied 7 docs from /root/idlekr/docs
+[0;36m[23:46:31][0m Creating mock-publish directories...
+[0;36m[23:46:31][0m Seeding 5 store entities + governance via TypeScript...
+[seed] DB: /root/.aida/data/bps.db
+[seed] + 声临其境KTV-五一广场店 (store-cs-ktv-01)
+[seed] + 悠然茶室-芙蓉广场店 (store-cs-tea-01)
+[seed] + 棋乐无穷-岳麓山店 (store-cs-mj-01)
+[seed] + 音乐盒KTV-江汉路店 (store-wh-ktv-01)
+[seed] + 静享茶空间-楚河汉街店 (store-wh-tea-01)
+[seed] + 3 governance constraints
+[seed] Done: 7 entities total
+(node:490420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[0;36m[23:46:32][0m Restarting Dashboard...
+[0;36m[23:46:35][0m V1: Post-seed checks
+  [0;32mPASS[0m V1.1 5 store entities (got 5)
+  [0;32mPASS[0m V1.2 >= 3 governance constraints (got 3)
+  [0;32mPASS[0m V1.3 Context docs present (got 7)
+  [0;32mPASS[0m V1.4 Mock-publish dirs
+  [0;32mPASS[0m V1.5 project.yaml
+[0;36m[23:46:35][0m Phase 1 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 2: Business Requirements (Turn 1)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:46:35][0m Baseline: 7 entities, 7 skills
+[0;36m[23:46:35][0m Turn 1: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 1, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+抱歉，我没有找到任何之前的上下文来继续。
+
+查看结果显示：
+- 当前会话是新的，没有历史记录
+- 没有正在进行的任务或子代理
+- 没有活跃的行动计划
+
+**可能的情况：**
+1. 之前的会话已结束或超时被清理了
+2. 这是一个全新的实例
+
+能否告诉我：
+- 你之前在进行什么任务？
+- 或者描述一下你想要完成的目标？
+
+这样我可以直接帮你继续。
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-1.log, 18 lines total) ---[0m
+
+  [0;32mPASS[0m V2.1 Aida produced response
+  [0;32mPASS[0m V2.2 Mentions plan/strategy
+  [1;33mWARN[0m V2.3 Identifies skill/agent gap (non-critical)
+  [1;33mWARN[0m V2.4 Two-Layer: governance vs operations (non-critical)
+[0;36m[23:46:53][0m Phase 2 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 3: Modeling (Turn 2)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:46:53][0m Turn 2: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 2, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+查看完整会话记录后，我发现：
+
+**当前会话是全新的**，没有任何之前的任务在进行。这个会话只包含：
+1. 你第一次说 "Continue where you left off"
+2. 我查询系统状态（没有任务、没有子代理、没有活跃计划）
+3. 你第二次说同样的话
+4. 我读取了会话记录
+
+**没有可继续的工作。**
+
+如果你是在某个特定的工作流程中遇到模型超时，可能的情况是：
+- 之前的会话已经结束了
+- 或者你需要通过其他方式引用之前的工作（比如任务ID、文件名等）
+
+能否提供更多信息？比如：
+- 你之前在做什么具体任务？
+- 是否有相关文件或任务ID？
+- 或者你想从零开始什么新任务？
+
+这样我才能帮助你。
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-2.log, 22 lines total) ---[0m
+
+[0;36m[23:47:15][0m V3: Post-modeling checks
+  [0;31mFAIL[0m V3.1 New entities created >= 2 (got 0)
+  [1;33mWARN[0m V3.2 Action plan entity (got 0) (non-critical)
+  [1;33mWARN[0m V3.3 Strategy entity (got 0) (non-critical)
+[0;36m[23:47:15][0m Entity breakdown:
+  knowledge: 2
+  store: 5
+  [1;33mWARN[0m V3.4 No new Skills created (non-critical)
+  [1;33mWARN[0m V3.5 No Agent workspace created (non-critical)
+  [1;33mWARN[0m V3.6 No blueprints created (Entity+Skill path preferred)
+[0;36m[23:47:15][0m Phase 3 complete. Entities: +0
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 4: Review (Turn 3)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:47:15][0m Turn 3: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 3, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我仔细检查了所有可能的上下文来源，结果如下：
+
+**会话状态：**
+- 当前只有一个会话（`agent:main:main`），就是你现在的这个
+- 这个会话的第一条消息就是你说的 "Continue where you left off"
+- 没有其他会话、没有子代理、没有进行中的任务
+
+**项目状态：**
+- 项目名：**IdleX GEO Operations**（闲氪GEO运营）
+- 已录入 5 家门店（武汉和长沙的茶室、KTV、棋牌室）
+- mock-publish 目录为空（没有为豆包/千问/元宝等模型生成内容）
+- 没有活跃的行动计划
+
+**结论：**
+没有"之前中断的工作"可以恢复。
+
+---
+
+如果你是从某个特定场景过来的（比如之前用 Codex / Claude Code / 其他工具在工作），那可能是：
+
+1. **不同的实例/环境** — 之前的工作在另一个机器/容器上
+2. **会话已过期被清理** — OpenClaw 会话有生命周期
+3. **你需要开始新任务** — 也许现在是时候为闲氪项目创建行动计划了？
+
+能否告诉我：
+- 你**期望**我继续在做什么？
+- 或者你想让我为闲氪GEO运营启动什么具体工作？
+
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-3.log, 31 lines total) ---[0m
+
+  [0;32mPASS[0m V4.1 Aida produced review
+  [1;33mWARN[0m V4.2 Mentions Dashboard (non-critical)
+[0;36m[23:48:00][0m Phase 4 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 5: GEO Execution (Turn 4)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:48:00][0m Turn 4: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 4, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我理解你可能是在某种特定上下文中（比如 Codex、Claude Code 或其他 IDE 集成），但从 OpenClaw 这边来看，我找不到任何可恢复的"之前的工作"。
+
+**已检查的所有来源：**
+- ✅ 当前会话：只有你的 5 条 "Continue where you left off" 消息
+- ✅ BPS 任务：没有进行中的任务
+- ✅ 子代理：没有运行中的子代理
+- ✅ Cron 任务：最后一个在 22:00 运行并完成（虽然投递失败）
+- ✅ 文件系统：没有 pending-approval 或 daily 目录
+- ✅ 技能目录：没有 geo-monitoring 技能
+
+**Cron 任务显示：**
+系统配置了 5 个 GEO 相关定时任务（每日监测、日报、周报），最后一个日报任务在 22:00 生成了一份完整的报告，但因"未配置 channel"而投递失败。
+
+---
+
+**如果你确定有之前的工作：**
+1. 你是在哪个工具/IDE 中工作的？（Codex? Claude Code? Cursor?）
+2. 能否描述一下那个任务的**目标**是什么？
+3. 或者你想让我**手动触发 GEO 每日监测流程**？
+
+请告诉我具体想做什么，我可以直接开始，不必继续找"不存在的工作"。
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-4.log, 23 lines total) ---[0m
+
+[0;36m[23:48:48][0m V5: Post-execution checks
+  [1;33mWARN[0m V5.1 No governance trigger (Aida may not have attempted publish)
+  [0;32mPASS[0m V5.2 Aida reported governance interception
+[0;36m[23:48:48][0m GEO entity scan:
+[0;36m[23:48:48][0m Phase 5 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 6: Dashboard Approval[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:48:48][0m Turn 5: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 5, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我彻底检查了所有可能的来源，**确认没有可恢复的工作**。
+
+唯一一个包含"全权交给你落地"的进程记录，是我自己（之前的模型实例）在查找系统状态时发现的，**不是用户之前的指令**。
+
+---
+
+**当前状态总结：**
+
+| 检查项 | 结果 |
+|--------|------|
+| 本会话历史 | 只有 6 条"Continue where you left off" |
+| 其他会话 | 无 |
+| BPS 任务 | 无进行中 |
+| 子代理 | 无运行中 |
+| Cron 运行记录 | 最后一个在 22:00 完成（日报，投递失败） |
+| 文件系统 | mock-publish/pending/ 为空 |
+| 内存/Memory | 无记忆文件 |
+
+---
+
+**用户，我需要你直接告诉我：**
+
+你现在到底想让我做什么？
+
+比如：
+1. **启动 GEO 每日监测** → 我现在可以手动触发
+2. **创建某项技能/代理/蓝图** → 告诉我具体需求
+3. **查看昨天的日报** → 我可以读取 22:00 生成的报告
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-5.log, 33 lines total) ---[0m
+
+  [1;33mWARN[0m V6.1 No pending approvals to process
+[0;36m[23:49:25][0m Phase 6 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 7: Daily Summary (Turn 6)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:49:25][0m Turn 6: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 6, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我理解你可能是在测试，或者遇到了某种技术问题。
+
+**直接说结论：**
+
+我已经检查了 7 次，所有可能的来源都显示 **没有任何之前的工作**。
+
+- 会话记录：只有你说"Continue where you left off"的历史
+- 任务系统：空
+- 子代理：无
+- 定时任务：最后一条已完成
+- 文件系统：没有待处理的内容
+
+**如果你是在其他工具中工作（如 Codex、Claude Code、Cursor）：**
+- 那些是**独立的系统**，我无法访问
+- 你需要在那个工具里继续，或者告诉我具体想做什么，我可以在这里重新做
+
+**如果这是一个测试：**
+测试通过。我不会编造不存在的工作。
+
+---
+
+**现在请告诉我：**
+1. 你想让我**实际做什么**？
+2. 或者你是在测试/调试什么？
+
+我不会再对"Continue where you left off"做更多调查了——答案已经确定：**没有可继续的工作**。
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-6.log, 28 lines total) ---[0m
+
+  [0;32mPASS[0m V7.1 Aida produced summary
+  [0;32mPASS[0m V7.2 Summary has business content
+[0;36m[23:49:44][0m Phase 7 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 8: Final Verification[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:49:44][0m Comprehensive checks...
+  [0;32mPASS[0m V8.1 Total entities >= 7 (got 7)
+[0;36m[23:49:44][0m Entity breakdown:
+  Total: 7
+  knowledge: 2
+  store: 5
+[0;36m[23:49:44][0m   Violations: 0, Approved: 0
+  [0;32mPASS[0m V8.2 Dashboard /
+  [0;32mPASS[0m V8.2 Dashboard /business-goals
+  [0;32mPASS[0m V8.2 Dashboard /approvals
+  [0;32mPASS[0m V8.2 Dashboard /governance
+  [0;32mPASS[0m V8.2 Dashboard /agent-log
+  [0;32mPASS[0m V8.3 Skills >= 7 (got 7)
+[0;36m[23:49:44][0m Skills:
+  blueprint-modeling
+  business-execution
+  dashboard-guide
+  action-plan
+  agent-create
+  skill-create
+  project-init
+[0;36m[23:49:44][0m Agent workspaces:
+  workspace
+[0;36m[23:49:44][0m   Blueprints: 0, Mock-publish files: 0
+[0;36m[23:49:44][0m Phase 8 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase Test Report[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+IdleX GEO E2E Test v3
+=====================
+Date:    Monday, 09 March, 2026 11:49:44 PM CST
+Server:  iZt4n7qaa80fqgnql0diggZ
+Session: agent:main:main (dmScope=main)
+
+Results: 34 PASS / 1 FAIL / 10 WARN / 35 TOTAL
+
+[1;33mMOSTLY PASSED (1 minor failures)[0m
+
+Logs:      /tmp/idlex-geo-e2e-v3/turn-{1..6}.log
+Dashboard: http://localhost:3456
+
+[0;36m[23:49:44][0m Report saved: /tmp/idlex-geo-e2e-v3/report.txt
+[0;36m[23:49:44][0m Combined logs: /tmp/idlex-geo-e2e-v3/all-turns.log
