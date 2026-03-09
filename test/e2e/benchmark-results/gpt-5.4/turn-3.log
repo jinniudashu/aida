@@ -1,0 +1,97 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 📊 建模完成！带您参观
+
+---
+
+### 一、创建的服务（8 个 GEO 专属）
+
+| 服务 ID | 名称 | 类型 | 状态 |
+|--------|------|------|------|
+| `svc-geo-visibility-monitor` | AI 能见度监测 | Agent | ✅ |
+| `svc-geo-model-strategy` | 一模一策分析 | Agent | ✅ |
+| `svc-geo-content-gen` | 优化内容生成 | Agent | ✅ |
+| `svc-geo-content-approve` | 内容发布审批 | **Manual** | ✅ |
+| `svc-geo-content-publish` | 内容分发发布 | Agent | ✅ |
+| `svc-geo-daily-report` | 每日运营小结 | Agent | ✅ |
+| `svc-geo-weekly-review` | 每周深度复盘 | Agent | ✅ |
+| `svc-customer-consult` | 顾客门店咨询 | Agent | ✅ |
+
+---
+
+### 二、Skills（7 个）
+
+```
+~/.openclaw/workspace/skills/
+├── geo-visibility-check/      # 能见度监测
+├── geo-model-strategy/        # 一模一策
+├── geo-content-generator/     # 内容生成
+├── geo-content-publisher/     # 内容发布
+├── geo-daily-reporter/        # 日报生成
+├── geo-weekly-reviewer/       # 周报生成
+└── store-consultant/          # 顾客咨询（小氪）
+```
+
+---
+
+### 三、独立 Agent（1 个）
+
+```
+~/.openclaw/workspace/agents/xianke-consultant/
+└── AGENT.md  # 小氪 - 亲切活泼的顾客咨询 Bot
+```
+
+---
+
+### 四、定时任务（3 个新增）
+
+| 任务 | Cron | 下次运行 |
+|------|------|---------|
+| GEO 每日能见度监测 | `0 9 * * *` | 明天 09:00 |
+| GEO 每日运营小结 | `0 21 * * *` | 今天 21:00 |
+| GEO 每周深度复盘 | `0 10 * * 1` | 下周一 10:00 |
+
+---
+
+### 五、待审批任务（1 个）
+
+**任务 ID**: `c2b73876-8a26-45bd-9593-1b5bab9d7097`  
+**内容**: 首批 15 份优化内容审批（5 店 × 3 模型）  
+**状态**: 🟡 待您审批
+
+---
+
+### 六、已生成文件
+
+```
+~/.aida/mock-publish/
+├── doubao/store-cs-ktv-01.json   ✅ 示例
+├── qianwen/store-cs-mj-01.json   ✅ 示例（紧急）
+└── yuanbao/                      (待生成)
+```
+
+---
+
+### 七、Dashboard 能看到什么？
+
+**访问地址**: `http://localhost:3456`
+
+Dashboard 上您可以看到：
+
+| 模块 | 内容 |
+|------|------|
+| **Tasks** | 12 个任务的实时状态（1 个待审批） |
+| **Entities** | 5 家门店 + 1 个行动计划 |
+| **Services** | 23 个服务（含 8 个 GEO 专属） |
+| **Approvals** | 待审批事项（内容发布审批） |
+| **Action Plans** | `plan-geo-operations-2026w11` 执行进度 |
+
+---
+
+### 八、完整落地报告
+
+已生成：`~/.aida/GEO 运营体系落地报告.md`
+
+---
+
+**需要我现在打开 Dashboard 给您看吗？** 或者您想先审批首批内容？

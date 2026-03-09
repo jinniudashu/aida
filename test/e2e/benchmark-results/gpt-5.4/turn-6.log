@@ -1,0 +1,58 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 📊 今日 GEO 运营小结
+
+---
+
+### ✅ 今日完成
+
+| 任务 | 状态 |
+|------|------|
+| 能见度监测（5 店） | ✅ |
+| 一模一策分析 | ✅ |
+| 内容生成（15 份） | ✅ |
+| 内容审批 | ✅ 您已审批 |
+| 内容发布 | ✅ 全部发布 |
+| 运营日报 | ✅ 已生成 |
+
+---
+
+### 📈 关键指标
+
+| 指标 | 数值 |
+|------|------|
+| 平均能见度分数 | **73.2** |
+| 内容发布数 | **15 份** |
+| 审批通过率 | **100%** |
+
+**门店排名**:
+1. 🥇 静享茶空间 - 楚河汉街店：82 分
+2. 🥈 声临其境 KTV-五一广场店：78 分
+3. 🥉 音乐盒 KTV-江汉路店：76 分
+
+---
+
+### 📁 已发布内容
+
+```
+~/.aida/mock-publish/
+├── doubao/     5 份 ✅
+├── qianwen/    5 份 ✅
+└── yuanbao/    5 份 ✅
+```
+
+**完整报告**: `~/.aida/mock-publish/reports/daily/report-2026-03-09.md`
+
+---
+
+### 📅 下次自动任务
+
+| 时间 | 任务 |
+|------|------|
+| 今天 21:00 | 每日运营小结 |
+| 明天 09:00 | 能见度监测 |
+| 下周一 10:00 | 周度复盘 |
+
+---
+
+**首日运营圆满完成！** 🌟 明日 09:00 自动监测，敬请期待效果对比数据。

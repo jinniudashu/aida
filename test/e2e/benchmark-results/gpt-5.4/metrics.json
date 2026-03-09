@@ -1,0 +1,13 @@
+{
+  "modelId": "gpt-5.4",
+  "primary": "openrouter/openai/gpt-5.4",
+  "timestamp": "2026-03-09T19:31:12+08:00",
+  "pass": 40,
+  "fail": 0,
+  "warn": 5,
+  "entities": 10,
+  "skills": 14,
+  "violations": 0,
+  "approvals": 0,
+  "testExit": 0
+}

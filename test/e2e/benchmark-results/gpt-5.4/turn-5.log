@@ -1,0 +1,31 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的！您在 Dashboard 处理审批，我随时待命。
+
+---
+
+### 📌 审批位置
+
+**Dashboard**: `http://localhost:3456`
+
+**待审批任务**:
+- 任务 ID: `c2b73876-8a26-45bd-9593-1b5bab9d7097`
+- 服务：内容发布审批 (`svc-geo-content-approve`)
+- 内容：15 份优化内容（5 店 × 3 模型）
+
+**示例文件预览**:
+- `~/.aida/mock-publish/qianwen/store-cs-mj-01.json`（紧急 - 棋乐无穷）
+- `~/.aida/mock-publish/doubao/store-cs-ktv-01.json`（声临其境）
+
+---
+
+### ✅ 审批通过后
+
+我将自动执行：
+1. 内容分发到 `~/.aida/mock-publish/` 对应目录
+2. 更新任务状态
+3. 记录发布日志
+
+---
+
+有任何问题随时叫我！ 🌟
