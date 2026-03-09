@@ -26,7 +26,7 @@ git clone --recurse-submodules https://github.com/jinniudashu/aida.git
 cd aida
 npm install
 
-# 运行全部测试（引擎 255 + Dashboard 112 = 367）
+# 运行全部测试（引擎 266 + Dashboard 125 = 391）
 npx vitest run
 
 # 启动 Dashboard 开发服务器

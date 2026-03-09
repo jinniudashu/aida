@@ -119,7 +119,7 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - Dashboard 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
 - Dashboard 后端：Hono, @hono/node-server, SSE 实时推送
 - 构建：tsc (引擎 src/ → dist/), Vite (dashboard/)
-- Vitest（测试框架）, 367 tests（255 引擎 + 112 Dashboard）
+- Vitest（测试框架）, 391 tests（266 引擎 + 125 Dashboard）
 
 ### erpsys（BPS 引擎 Django 版，仅供借鉴）
 - Django 4.2.7, DRF, PostgreSQL/SQLite, Redis, Celery, Django Channels
