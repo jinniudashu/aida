@@ -1,0 +1,12 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的，Dashboard上可以看到：
+
+- **待审批内容**：3份模型优化内容 + 1份日报
+- **人工审批节点**：svc-geo-content-approval、svc-geo-strategy-approval
+
+审批通过后内容会自动归档到 `approved/` 目录。
+
+明天09:00首次定时监测任务将自动执行，届时会生成新的日报和内容。
+
+有其他需要调整的吗？

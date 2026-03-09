@@ -1,0 +1,97 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+建模已完成！以下是完整的创建清单和Dashboard可见内容：
+
+---
+
+## 📊 已创建的实体和组件
+
+### 1. 业务实体 (DossierStore)
+
+| 实体类型 | 实体ID | 核心数据 |
+|---------|--------|---------|
+| **geo-operation** | xiange-geo-main | 5家门店、3个监测模型、关键词体系、审批配置 |
+| **geo-monitoring-config** | xiange-geo-config | 定时配置、告警阈值、数据保留策略 |
+| **chatbot** | xiange-store-assistant | Bot人格、知识库、对话示例 |
+
+### 2. Skill (3个)
+
+| Skill | 路径 | 功能 |
+|-------|------|------|
+| geo-monitoring | `~/.openclaw/workspace/skills/geo-monitoring/` | 监测门店AI能见度 |
+| geo-content-generator | `~/.openclaw/workspace/skills/geo-content-generator/` | 一模一策内容生成 |
+| geo-reporting | `~/.openclaw/workspace/skills/geo-reporting/` | 日报/周报生成 |
+
+### 3. 蓝图服务 (6个)
+
+```
+svc-geo-daily-monitor      # GEO每日监测 (agent执行)
+svc-geo-content-generate   # GEO内容生成 (agent执行)
+svc-geo-daily-report       # GEO日报生成 (agent执行)
+svc-geo-weekly-report      # GEO周报生成 (agent执行)
+svc-geo-content-approval   # 内容审批节点 (人工审批)
+svc-geo-strategy-approval  # 战略审批节点 (人工审批)
+```
+
+### 4. 定时任务 (2个)
+
+| 任务 | 调度 | 下次执行 |
+|-----|------|---------|
+| GEO每日监测 | 每天09:00 | 明天09:00 |
+| GEO每周复盘 | 每周一10:00 | 下周一10:00 |
+
+### 5. 文件目录结构
+
+```
+~/.aida/mock-publish/
+├── pending/              # 待审批内容
+│   ├── daily/report-20260309.md    # 今日初始化日报
+│   ├── weekly/
+│   ├── monthly/
+│   └── content/
+├── approved/             # 已批准内容
+├── published/            # 已发布内容
+├── archive/              # 历史归档
+├── README.md             # 项目文档
+└── DEPLOYMENT.md         # 部署清单
+```
+
+---
+
+## 🖥️ Dashboard上能看到什么
+
+访问 `http://{server}:3456` 可以看到：
+
+### 实体视图
+- **geo-operation/xiange-geo-main** - 运营体系主实体
+- **chatbot/xiange-store-assistant** - 门店咨询Bot
+- **store/** - 5家合作门店实体
+
+### 服务目录
+- 6个GEO相关服务（带agentPrompt和agentSkills）
+
+### 任务状态
+- 当前无活跃任务（系统刚部署）
+- 明天09:00后会有每日监测任务
+
+### 定时任务
+- 2个已启用的cron任务，显示下次执行时间
+
+### 治理状态
+- 2个人工审批节点（内容审批、战略审批）
+
+---
+
+## 📈 当前系统状态
+
+| 指标 | 数值 |
+|------|------|
+| 活跃实体 | 3个 |
+| 蓝图服务 | 6个（4个agent执行 + 2个人工审批） |
+| Skill | 3个 |
+| 定时任务 | 2个 |
+| 待审批内容 | 1份（初始化日报） |
+| 门店覆盖 | 5家（长沙3 + 武汉2） |
+| 监测模型 | 3个（豆包/千问/元宝） |
+
+系统已就绪，明天早上09:00首次自动运行！

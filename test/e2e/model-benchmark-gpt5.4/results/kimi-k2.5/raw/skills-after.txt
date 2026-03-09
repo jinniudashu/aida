@@ -1,0 +1,10 @@
+/root/.openclaw/workspace/skills/action-plan
+/root/.openclaw/workspace/skills/agent-create
+/root/.openclaw/workspace/skills/blueprint-modeling
+/root/.openclaw/workspace/skills/business-execution
+/root/.openclaw/workspace/skills/dashboard-guide
+/root/.openclaw/workspace/skills/geo-content-generator
+/root/.openclaw/workspace/skills/geo-monitoring
+/root/.openclaw/workspace/skills/geo-reporting
+/root/.openclaw/workspace/skills/project-init
+/root/.openclaw/workspace/skills/skill-create

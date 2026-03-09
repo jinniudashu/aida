@@ -1,0 +1,18 @@
+{
+  "modelId": "kimi-k2.5",
+  "modelName": "Kimi K2.5",
+  "primary": "moonshot/kimi-k2.5",
+  "timestamp": "2026-03-09T23:23:45.703403",
+  "pass": 40,
+  "fail": 0,
+  "warn": 5,
+  "entities": 10,
+  "skills": 10,
+  "agentWorkspaces": 0,
+  "blueprints": 2,
+  "services": 0,
+  "rules": 0,
+  "violations": 0,
+  "approvals": 0,
+  "testExit": 0
+}
