@@ -1,26 +1,5 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
-Gateway target: ws://127.0.0.1:18789
-Source: local loopback
-Config: /root/.openclaw/openclaw.json
-Bind: loopback
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
-[plugins] [bps-engine] Initializing BPS Engine plugin...
-[plugins] [bps-engine] AIDA project loaded from /root/.aida
-[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
-[plugins] [bps-engine] Blueprints: 0, Seeds: 0
-[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
-[plugins] [bps-engine] Governance: 3 constraints loaded
-[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
-    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
-    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
-    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
-    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
-    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
-    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
-    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
-    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+收到！请移步 Dashboard (`http://127.0.0.1:3456`) 在实时进度图中找到闪烁的**“内容发布审批”**节点，点击确认通过。
+
+我在后台随时待命。等你点完审批，直接在这里和我打个招呼，我立刻执行最后的物理写入（推送到 `~/.aida/mock-publish/` 目录）并为你出具今日复盘！

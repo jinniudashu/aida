@@ -119,7 +119,7 @@ providers = data.setdefault('providers', {})
 
 providers['google'] = {
     'baseUrl': 'https://generativelanguage.googleapis.com/v1beta',
-    'api': 'google-generativeai',
+    'api': 'google-generative-ai',
     'models': [{
         'id': 'gemini-3.1-pro-preview',
         'name': 'Gemini 3.1 Pro Preview',

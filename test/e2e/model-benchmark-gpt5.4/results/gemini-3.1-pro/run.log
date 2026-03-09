@@ -41,7 +41,7 @@ Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mis
 [plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
 [plugins] [bps-engine] Initializing BPS Engine plugin...
 [plugins] [bps-engine] AIDA project loaded from /root/.aida
-[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] System knowledge: 2 loaded, 0 skipped
 [plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 │
@@ -54,12 +54,12 @@ Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mis
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:
 - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Config overwrite: /root/.openclaw/openclaw.json (sha256 55b45035da82efeb178f443c3388654ed7bc88357d66a8be1e11bb5be2587f35 -> d741ef3a0aeeabec7e66d2ee28fde05b26f8feee22cbcf6ef7e6daf08959c254, backup=/root/.openclaw/openclaw.json.bak)
+Config overwrite: /root/.openclaw/openclaw.json (sha256 de45b65de297541f48edfbcb31f866e2eb438a679dba7543abe79143f8401c41 -> d9a0f75cb0fc2d7813c77eb069428f5a983d88289bc0138df82fb7653d1b98e3, backup=/root/.openclaw/openclaw.json.bak)
 Linked plugin path: ~/aida
 Restart the gateway to load plugins.
 [0;32m[OK][0m openclaw plugins install --link 成功
 [0;36m[..][0m 构建 Dashboard...
-✓ built in 13.78s
+✓ built in 12.11s
 [0;32m[OK][0m Dashboard 构建完成
 [0;32m[OK][0m bps-dashboard systemd 服务已启动
 [0;36m[..][0m 合并 Agent 配置到 /root/.openclaw/openclaw.json
