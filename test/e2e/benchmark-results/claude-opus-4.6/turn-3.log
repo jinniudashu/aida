@@ -1,128 +1,154 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-# 📊 建模完成！带您看看创建了什么
-
-## ✅ 实体层（9个实体）
-
-### 5家门店实体
-| 门店ID | 名称 | 城市 | 业态 | 包间数 | 状态 |
-|--------|------|------|------|--------|------|
-| store-cs-ktv-01 | 声临其境KTV-五一广场店 | 长沙 | KTV | 8间 | ✅ active |
-| store-cs-tea-01 | 悠然茶室-芙蓉广场店 | 长沙 | 茶室 | 6间 | ✅ active |
-| store-cs-mj-01 | 棋乐无穷-岳麓山店 | 长沙 | 棋牌 | 10间 | ✅ active |
-| store-wh-ktv-01 | 音乐盒KTV-江汉路店 | 武汉 | KTV | 12间 | ✅ active |
-| store-wh-tea-01 | 静享茶空间-楚河汉街店 | 武汉 | 茶室 | 8间 | ✅ active |
-
-### 运营实体
-| 实体ID | 类型 | 名称 | 状态 |
-|--------|------|------|------|
-| geo-operation-main | geo-operation | GEO运营主实体 | ✅ active |
-| content-batch-2026-03-08 | content-batch | 今日内容批次 | ⏳ pending |
+## 🎯 建模完成！带您查看全部成果
 
 ---
 
-## ⚙️ 服务层（32个服务）
+## 一、Dashboard 总览
 
-### GEO核心服务（10个）
-| 服务ID | 名称 | 类型 | 执行者 |
-|--------|------|------|--------|
-| svc-geo-daily | GEO日常运营 | composite | agent |
-| svc-visibility-monitor | 能见度监测 | atomic | agent |
-| svc-strategy-analyze | 策略分析 | atomic | agent |
-| svc-content-generate | 内容生成 | atomic | agent |
-| svc-content-approval | 内容审批 | atomic | **manual** |
-| svc-content-publish | 内容发布 | atomic | agent |
-| svc-daily-report | 日报生成 | atomic | agent |
-| svc-geo-weekly | GEO周度复盘 | composite | agent |
-| svc-weekly-review | 周度策略评审 | atomic | **manual** |
-| svc-strategy-approval | 战略调整审批 | atomic | **manual** |
+**访问地址**: http://127.0.0.1:18789/
 
-### 顾客咨询服务（4个）
-| 服务ID | 名称 | 类型 |
-|--------|------|------|
-| svc-customer-inquiry | 顾客在线咨询 | composite |
-| svc-inquiry-store-info | 门店信息查询 | atomic |
-| svc-inquiry-booking | 预订指导 | atomic |
-| svc-inquiry-faq | 常见问题解答 | atomic |
+Dashboard 上您能看到：
+
+### 📊 服务目录（23 个服务）
+其中 **GEO 专属服务 8 个**：
+| 服务 ID | 名称 | 执行类型 |
+|---------|------|----------|
+| `svc-geo-visibility-monitor` | GEO 能见度监测 | Agent |
+| `svc-geo-analysis-strategy` | GEO 分析与战略制定 | Agent |
+| `svc-geo-content-generate` | GEO 内容生成 | Agent |
+| `svc-geo-content-approval` | GEO 内容审批 | **Manual（您审批）** |
+| `svc-geo-content-publish` | GEO 内容发布 | Agent |
+| `svc-geo-daily-report` | GEO 日报生成 | Agent |
+| `svc-geo-weekly-review` | GEO 周报复盘 | Agent |
+| `svc-geo-strategy-approval` | GEO 战略调整审批 | **Manual（您审批）** |
 
 ---
 
-## 📁 文件层
+## 二、实体数据（已创建）
+
+### 📈 能见度监测记录（5 条）
+
+| 门店 | 豆包 | 千问 | 元宝 | 平均分 | 状态 |
+|------|------|------|------|--------|------|
+| 🎤 声临其境 KTV-五一广场店 | 75 | 62 | 45 | 61 | ✅ |
+| 🍵 悠然茶室 - 芙蓉广场店 | 68 | 71 | 52 | 64 | ✅ |
+| 🀄 棋乐无穷 - 岳麓山店 | 58 | 55 | 41 | 51 | ⚠️ 最低 |
+| 🎤 音乐盒 KTV-江汉路店 | 72 | 65 | 48 | 62 | ✅ |
+| 🍵 静享茶空间 - 楚河汉街店 | 65 | 69 | 50 | 61 | ✅ |
+
+### 📋 战略分析（1 条）
+**声临其境 KTV-五一广场店** - 一模一策：
+- **豆包**（75 分→85 分）：增加网红装修描述、强调打卡属性
+- **千问**（62 分→80 分）：补充价格明细、添加交通指引
+- **元宝**（45 分→70 分）🔴：增加微信群活动描述、强调聚会套餐
+
+### 📝 优化内容（1 组，待审批）
+**声临其境 KTV-五一广场店** - 3 份内容：
+- ✅ `doubao.md` - 豆包版（网红打卡风格）
+- ✅ `qianwen.md` - 千问版（商务性价比风格）
+- ✅ `yuanbao.md` - 元宝版（社交聚会风格）
+- **状态**: `pending_approval` ⏳
+
+---
+
+## 三、待办任务（1 个）
+
+| 任务 ID | 服务 | 状态 | 实体 |
+|---------|------|------|------|
+| `38b69cb6` | GEO 内容审批 | 🟡 OPEN | 声临其境 KTV 优化内容 |
+
+**审批位置**: Dashboard → Tasks → 点击任务 → Approve/Reject
+
+---
+
+## 四、Skills（6 个）
 
 ```
-~/.aida/
-├── project.yaml              ✅ v2.0
-├── governance.yaml           ✅ 3条约束
-├── GEO-部署完成报告.md       ✅
-├── blueprints/
-│   ├── idlex-geo-ops.yaml    ✅ 17服务+16规则
-│   └── idlex-geo-governance.yaml ✅
-├── agents/
-│   └── idlex-customer-bot.md ✅
-└── data/
-    ├── bps.db                ✅ 运行中
-    └── stores.yaml           ✅ 5家门店
-```
-
----
-
-## 🖥️ Dashboard 访问
-
-**地址**: http://localhost:3456
-
-**Dashboard上您可以看到**:
-
-### 1. 实体视图
-- 5家门店的完整数据（房型/价格/特色）
-- GEO运营主实体状态
-- 内容批次审批状态
-
-### 2. 服务视图
-- 32个服务的执行状态
-- 人工审批节点高亮（内容审批、战略审批）
-- 服务间依赖关系图
-
-### 3. 任务视图
-- 每日自动任务执行记录
-- 审批任务待办列表
-- 任务成功率统计
-
-### 4. 流程视图
-- GEO日常运营流程（监测→分析→生成→审批→发布）
-- 周度复盘流程
-- 顾客咨询流程
-
----
-
-## 🔍 关键设计亮点
-
-### 1. 治理内嵌
-- **内容审批** = manual执行者 → 必须您审批
-- **战略审批** = manual执行者 → 必须您确认
-- 系统自动拦截，无法绕过
-
-### 2. 一模一策
-- 豆包/千问/元宝三模型差异化内容
-- 每家门店独立实体，可单独优化
-
-### 3. 审批流程可视化
-```
-内容生成 → pending/ → [您审批] → approved/ → published/
-                          ↑
-                    Dashboard显示待审批任务
+~/.openclaw/workspace/skills/
+├── geo-visibility-monitor/    # 能见度监测
+├── geo-analysis-strategy/     # 战略分析
+├── geo-content-generator/     # 内容生成
+├── geo-content-distributor/   # 内容分发
+├── geo-daily-report/          # 日报生成
+└── geo-weekly-review/         # 周报复盘
 ```
 
 ---
 
-## 🎯 现在可以做的
+## 五、Agent（小氪 🎉）
 
-1. **打开Dashboard**: http://localhost:3456
-2. **查看门店实体**: 点击Entities → 筛选store类型
-3. **查看待审批**: 点击Tasks → 筛选svc-content-approval
-4. **查看服务拓扑**: 点击Blueprints → 查看flow关系图
+| 属性 | 值 |
+|------|-----|
+| **ID** | `xianke-store-assistant` |
+| **名称** | 小氪 |
+| **定位** | 24h 门店咨询助手 |
+| **语气** | 亲切活泼（与 Aida 完全不同） |
+| **工作空间** | `~/.openclaw/workspace-xianke-store-assistant/` |
+| **状态** | ✅ 已激活 |
+
+**测试对话示例**:
+> "小氪，五一广场附近有什么 KTV 推荐？"
 
 ---
 
-**建模完成！所有实体、服务、规则已就绪，Dashboard已上线！** 🚀
+## 六、Blueprint 流程
 
-您想先看Dashboard的哪个部分？我可以帮您导航！ 🌟
+```
+能见度监测 → 战略分析 → 内容生成 → ⚠️审批 → 内容发布 → 日报
+                                              ↑
+                                   您在这里审批
+```
+
+**文件位置**: `/root/.aida/blueprints/blueprint.yaml`
+
+---
+
+## 七、定时任务（Cron）
+
+系统已有 **17 个** GEO 相关定时任务：
+
+| 时间 | 任务 |
+|------|------|
+| 每日 09:00 | 能见度监测 |
+| 每日 09:30 | 内容生成与分发 |
+| 每日 10:00 | GEO 日常运营 |
+| 每日 18:00 | 每日运营小结 |
+| 每周五 15:00 | 每周复盘 |
+| 每周日 18:00 | 深度复盘 |
+
+---
+
+## 八、文件产出
+
+```
+~/.aida/mock-publish/2026-03-09/
+├── store-cs-ktv-01/
+│   ├── doubao.md      ✅
+│   ├── qianwen.md     ✅
+│   └── yuanbao.md     ✅
+├── manifest.json      ✅
+└── daily-report.md    ✅
+```
+
+---
+
+## 🎯 您现在可以做什么
+
+1. **访问 Dashboard**: http://127.0.0.1:18789/
+   - 查看服务、实体、任务
+   - 审批待办任务
+
+2. **审批内容**:
+   - 回复我："批准声临其境 KTV 内容"
+   - 或在 Dashboard 上操作
+
+3. **测试小氪**:
+   - "小氪，茶室多少钱一小时？"
+
+4. **查看完整文档**:
+   - `~/.openclaw/workspace/GEO 运营体系落地报告.md`
+
+---
+
+需要我带您操作 Dashboard 吗？或者先审批声临其境 KTV 的内容？🌟

@@ -41,14 +41,15 @@ get_model_provider() {
   esac
 }
 
-get_model_id() {
+# Returns the full model string for OpenClaw config: "provider/model-id"
+get_model_config_string() {
   case "$1" in
-    claude-opus-4.6) echo "anthropic/claude-opus-4.6" ;;
-    gpt-5.4) echo "openai/gpt-5.4" ;;
-    gemini-3.1-pro) echo "gemini-3.1-pro-preview" ;;
-    kimi-k2.5) echo "kimi-k2.5" ;;
-    glm-5) echo "glm-5" ;;
-    qwen3.5-plus) echo "qwen3.5-plus" ;;
+    claude-opus-4.6) echo "openrouter/anthropic/claude-opus-4.6" ;;
+    gpt-5.4) echo "openrouter/openai/gpt-5.4" ;;
+    gemini-3.1-pro) echo "google/gemini-3.1-pro-preview" ;;
+    kimi-k2.5) echo "moonshot/kimi-k2.5" ;;
+    glm-5) echo "zhipu/glm-5" ;;
+    qwen3.5-plus) echo "dashscope/qwen3.5-plus" ;;
     *) echo "$1" ;;
   esac
 }
@@ -87,86 +88,27 @@ ssh_long() {
   ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=600 "$SSH_HOST" "bash -s"
 }
 
-# Generate openclaw.json model config
+# Generate openclaw.json model config (CORRECT FORMAT)
 generate_openclaw_json() {
   local model_id="$1"
-  local provider=$(get_model_provider "$model_id")
-  local full_model_id=$(get_model_id "$model_id")
+  local primary=$(get_model_config_string "$model_id")
+  
+  # Fallback models
+  local fb1="dashscope/qwen3.5-plus"
+  local fb2="moonshot/kimi-k2.5"
 
-  case "$provider" in
-    openrouter)
-      echo "{
-  \"agents\": {
-    \"defaults\": {
-      \"model\": {
-        \"primary\": {\"provider\": \"openrouter\", \"model\": \"$full_model_id\"},
-        \"fallbacks\": [
-          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"},
-          {\"provider\": \"moonshot\", \"model\": \"kimi-k2.5\"}
-        ]
+  cat << JSON
+{
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "$primary",
+        "fallbacks": ["$fb1", "$fb2"]
       }
     }
   }
-}"
-      ;;
-    google)
-      echo "{
-  \"agents\": {
-    \"defaults\": {
-      \"model\": {
-        \"primary\": {\"provider\": \"google\", \"model\": \"$full_model_id\"},
-        \"fallbacks\": [
-          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"},
-          {\"provider\": \"moonshot\", \"model\": \"kimi-k2.5\"}
-        ]
-      }
-    }
-  }
-}"
-      ;;
-    moonshot)
-      echo "{
-  \"agents\": {
-    \"defaults\": {
-      \"model\": {
-        \"primary\": {\"provider\": \"moonshot\", \"model\": \"$full_model_id\"},
-        \"fallbacks\": [
-          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"}
-        ]
-      }
-    }
-  }
-}"
-      ;;
-    zhipu)
-      echo "{
-  \"agents\": {
-    \"defaults\": {
-      \"model\": {
-        \"primary\": {\"provider\": \"zhipu\", \"model\": \"$full_model_id\"},
-        \"fallbacks\": [
-          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"}
-        ]
-      }
-    }
-  }
-}"
-      ;;
-    dashscope)
-      echo "{
-  \"agents\": {
-    \"defaults\": {
-      \"model\": {
-        \"primary\": {\"provider\": \"dashscope\", \"model\": \"$full_model_id\"},
-        \"fallbacks\": [
-          {\"provider\": \"moonshot\", \"model\": \"kimi-k2.5\"}
-        ]
-      }
-    }
-  }
-}"
-      ;;
-  esac
+}
+JSON
 }
 
 # Clean test environment on remote server
@@ -201,10 +143,32 @@ configure_model() {
 
   log "Configuring model: $model_id ($(get_model_name "$model_id"))"
 
-  openclaw_json=$(generate_openclaw_json "$model_id")
-  echo "$openclaw_json" | ssh_cmd "cat > /root/.openclaw/openclaw.json"
+  # Backup existing config
+  ssh_cmd "cp /root/.openclaw/openclaw.json /root/.openclaw/openclaw.json.bak 2>/dev/null || true"
   
-  log "Model config written"
+  # Read existing config and merge model settings
+  openclaw_json=$(generate_openclaw_json "$model_id")
+  
+  # Use node to merge configs
+  ssh_run << REMOTE
+set -e
+cat > /tmp/model-merge.js << 'NODESCRIPT'
+const fs = require('fs');
+const existing = JSON.parse(fs.readFileSync('/root/.openclaw/openclaw.json.bak', 'utf8'));
+const modelConfig = $openclaw_json;
+
+// Deep merge - only update model settings
+existing.agents = existing.agents || {};
+existing.agents.defaults = existing.agents.defaults || {};
+existing.agents.defaults.model = modelConfig.agents.defaults.model;
+
+fs.writeFileSync('/root/.openclaw/openclaw.json', JSON.stringify(existing, null, 2));
+console.log('Config merged successfully');
+NODESCRIPT
+node /tmp/model-merge.js
+REMOTE
+
+  log "Model config written: $(get_model_config_string "$model_id")"
 }
 
 # Run single model test
@@ -237,6 +201,10 @@ if [ -f "$HOME/aida/.dev/openrouter-api.env" ]; then
   source "$HOME/aida/.dev/openrouter-api.env" 2>/dev/null || true
   export OPENROUTER_API_KEY
 fi
+
+# Verify config
+echo "=== Current model config ==="
+node -e "const c=require('/root/.openclaw/openclaw.json');console.log('Primary:', c.agents?.defaults?.model?.primary || 'not set')"
 
 # Run install
 echo "=== Running install-aida.sh ==="
@@ -307,7 +275,7 @@ REMOTE_TEST
   "id": "$model_id",
   "name": "$(get_model_name "$model_id")",
   "provider": "$(get_model_provider "$model_id")",
-  "modelId": "$(get_model_id "$model_id")",
+  "modelConfig": "$(get_model_config_string "$model_id")",
   "timestamp": "$(date -Iseconds)"
 }
 INFO

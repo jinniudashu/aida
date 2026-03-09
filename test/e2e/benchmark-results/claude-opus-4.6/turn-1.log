@@ -1,142 +1,136 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-# 闲氪GEO日常运营体系规划方案
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] Skill created: geo-visibility-monitor
+[plugins] Skill created: geo-analysis-strategy
+[plugins] Skill created: geo-content-generator
+[plugins] Skill created: geo-content-distributor
+[plugins] Skill created: geo-daily-report
+[plugins] Skill created: geo-weekly-review
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[tools] gateway failed: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+---
 
-## 📋 现状评估
+## 🌟 闲氪 GEO 运营体系规划完成
 
-已为您读取业务资料并检查系统现状。好消息是：**您的GEO运营体系已经基本建成并正常运行**！
-
-### 现有基础设施 ✅
-
-| 模块 | 状态 | 说明 |
-|------|------|------|
-| **5家门店数据** | ✅ 就绪 | 长沙3家（声临其境KTV、悠然茶室、棋乐无穷）+ 武汉2家（音乐盒KTV、静享茶空间） |
-| **能见度监测** | ✅ 就绪 | `idlex-geo-visibility` skill，豆包/千问/元宝三模型模拟探测 |
-| **内容生成** | ✅ 就绪 | `idlex-geo-content` skill，一模一策差异化输出 |
-| **日常运营** | ✅ 就绪 | `idlex-geo-daily` skill，完整日报流程 |
-| **周度复盘** | ✅ 就绪 | `idlex-geo-weekly` skill，趋势分析与战略建议 |
-| **内容审批** | ✅ 就绪 | governance.yaml已配置，pending/approved目录分离 |
-| **定时任务** | ✅ 就绪 | 17个cron任务覆盖每日/每周运营节点 |
-
-### 今日运营数据（3月8日）
-
-```
-门店能见度排名：
-🥇 声临其境KTV-五一广场店  84分 ↑
-🥈 悠然茶室-芙蓉广场店      83分 ↑
-🥉 音乐盒KTV-江汉路店       81分 →
-4️⃣ 静享茶空间-楚河汉街店    74分 ↓
-5️⃣ 棋乐无穷-岳麓山店        65分 ↓
-
-待审批内容：15份（5店×3模型）
-存放位置：~/.aida/mock-publish/pending/
-```
+您好！已完成整套 GEO 日常运营体系的规划和搭建。以下是详细总结：
 
 ---
 
-## 🎯 您的6项需求对照
+### ✅ 已完成的工作
 
-| 需求 | 实现方案 | 状态 |
-|------|----------|------|
-| 1. 每天监测AI能见度 | `idlex-geo-visibility` + 每日9:00 cron | ✅ 已就绪 |
-| 2. 一模一策战略分析 | `idlex-geo-content` + 策略引擎 | ✅ 已就绪 |
-| 3. 生成优化内容 | 豆包/千问/元宝差异化输出 | ✅ 已就绪 |
-| 4. 内容分发测试环境 | `~/.aida/mock-publish/` 目录体系 | ✅ 已就绪 |
-| 5. 日报+周报 | `idlex-geo-daily` + `idlex-geo-weekly` | ✅ 已就绪 |
-| 6. 24h顾客咨询bot | **需新建独立Agent** | ⏳ 待创建 |
+#### 1. 六大核心技能（Skills）
+| 技能 | 功能 |
+|------|------|
+| `geo-visibility-monitor` | 每日监测 5 家门店在豆包/千问/元宝中的能见度 |
+| `geo-analysis-strategy` | 分析数据，制定"一模一策"优化战略 |
+| `geo-content-generator` | 针对每家门店、每个模型生成优化内容 |
+| `geo-content-distributor` | 将审批通过的内容分发到 `~/.aida/mock-publish/` |
+| `geo-daily-report` | 每日 22:00 生成运营小结 |
+| `geo-weekly-review` | 每周日 20:00 生成深度复盘 |
 
----
+#### 2. 审批流程 Blueprint
+已加载审批规则，确保您的两条规矩得到系统级保障：
+- ✅ **内容发布审批**：所有对外内容必须经过您审批后才能分发
+- ✅ **战略调整审批**：重大战略方向调整需您确认
 
-## 🤖 24h顾客咨询bot规划
+#### 3. 顾客咨询 Bot：小氪 🎉
+已创建独立 Agent，与我的管理风格完全不同：
+- **语气**：亲切活泼，像朋友聊天（"哇！您想找聚会的地方呀～🎉"）
+- **定位**：24h 在线门店咨询助手
+- **能力**：地址、价格、营业时间、场景推荐、交通指引
+- **边界**：不涉及内部管理数据，不承诺未授权服务
+- **工作空间**：`~/.openclaw/workspace-xianke-store-assistant/`
 
-根据AGENTS.md的**Skill vs Agent Decision**，咨询bot需要独立Agent（而非Skill），因为：
+#### 4. Action Plan
+已创建 `plan-geo-operations-2026-q1`，包含：
+- 5 家门店（长沙 3 家 + 武汉 2 家）
+- 3 个 AI 模型（豆包、千问、元宝）
+- 每日/每周定时任务配置
 
-1. **Persona隔离**：需要亲切活泼语气，与管理助手风格完全不同
-2. **并发执行**：需24h在线响应，与您日常操作并行
-3. **记忆隔离**：顾客对话数据需独立存储，不污染主记忆
-
-### Bot设计方案
-
-```yaml
-名称：闲氪小助手 (IdleX Assistant)
-定位：门店顾客24h在线咨询
-语气：亲切、活泼、有耐心
-能力:
-  - 门店信息查询（位置/价格/营业时间）
-  - 预订流程指导
-  - 常见问题解答
-  - 转人工服务提示
-
-技术实现:
-  - 独立Agent会话（与主系统隔离）
-  - 挂载门店知识库（~/.aida/context/）
-  - 可部署到微信/Telegram/网页等渠道
-```
+#### 5. 完整规划文档
+已保存至：`~/.openclaw/workspace/GEO 运营体系规划.md`
 
 ---
 
-## 🔒 治理规则确认
+### 📋 日常运营流程
 
-您的两条规矩已写入 `~/.aida/governance.yaml`：
-
-| 规则 | 触发条件 | 执行动作 | 状态 |
-|------|----------|----------|------|
-| **内容发布审批** | 任何对外发布内容 | REQUIRE_APPROVAL | ✅ 已配置 |
-| **战略调整审批** | 重大方向调整建议 | REQUIRE_APPROVAL | ✅ 已配置 |
-
-**执行流程**：
 ```
-内容生成 → 存入 pending/ → 创建BPS审批任务 → 您审批 → 移至 approved/ → 可发布
+09:00 能见度监测 → 10:00 战略分析 → 11:00 内容生成
+                                              ↓
+                              ⚠️ 审批节点（您）
+                                              ↓
+                              审批通过 → 内容分发 → 22:00 日报
+                                                    
+                                    每周日 20:00 深度复盘
 ```
 
 ---
 
-## 📅 建议执行计划
+### 🎯 测试阶段说明
 
-### 第一阶段：验证现有体系（本周）
+当前使用**模拟数据**进行能见度监测，因为：
+- 各大模型（豆包/千问/元宝）未开放官方 API
+- 需要验证流程跑通后再考虑爬虫或合作方案
 
-| 时间 | 任务 | 输出 |
-|------|------|------|
-| 每日9:00 | 自动执行能见度监测 | `visibility-YYYY-MM-DD.json` |
-| 每日9:30 | 自动生成优化内容 | `pending/{model}/{store}.md` |
-| 每日10:00 | 生成运营日报 | `daily/report-YYYY-MM-DD.md` |
-| 每日18:00 | 运营小结提醒 | 消息通知 |
-| 您方便时 | 审批待发布内容 | 移至 `approved/` |
-| 每周日18:00 | 周度深度复盘 | `weekly/report-YYYY-WXX.md` |
-
-### 第二阶段：创建顾客咨询bot（下周）
-
-需要您确认：
-1. **部署渠道**：微信 / Telegram / 网页 / 其他？
-2. **知识范围**：仅5家门店 / 包含闲氪平台信息？
-3. **转人工规则**：什么情况下转人工服务？
-
-确认后我将使用 `agent-create` skill为您创建独立Agent。
+模拟数据会体现"一模一策"的必要性——不同模型对同一家门店的能见度评分会有差异。
 
 ---
 
-## 🎬 立即可以做的事
+### ⚠️ 治理规则（系统级保障）
 
-1. **查看今日待审批内容**：
-   ```bash
-   ls ~/.aida/mock-publish/pending/
-   ```
+您的两条规矩已写入 Blueprint：
+1. **内容审批**：`geo-content` 实体状态为 `pending_approval` 时无法分发
+2. **战略审批**：重大战略调整需通过 `svc-geo-strategy-approval` 服务
 
-2. **查看今日日报**：
-   ```bash
-   cat ~/.aida/mock-publish/daily/report-2026-03-08.md
-   ```
-
-3. **手动触发一次完整运营流程**（测试用）：
-   我可以立即执行 `idlex-geo-daily` skill，生成新一轮监测数据和内容。
+审批可通过 BPS Dashboard 或工具进行。
 
 ---
 
-**您希望我先做什么？**
+### 📊 Dashboard
 
-A. 执行一次完整的每日运营流程（生成监测数据+内容+日报）  
-B. 先创建24h顾客咨询bot  
-C. 查看现有待审批内容样例  
-D. 其他需求
+BPS Dashboard 提供实时可视化：
+- 任务状态、审批队列、能见度趋势
+- 网关重启后可访问
 
-请告诉我您的选择，我立即执行！ 🌟
+---
+
+### 🔄 下一步建议
+
+1. **本周测试**
+   - 手动触发能见度监测（模拟数据）
+   - 验证内容生成和审批流程
+   - 测试小氪的咨询能力
+
+2. **下周正式运行**
+   - 注册 cron 任务（自动定时执行）
+   - 开始正式监测和报告
+
+3. **后续优化**
+   - 根据实际能见度数据调整策略
+   - 考虑与模型方的正式合作方案
+
+---
+
+有任何问题或需要调整的地方，随时告诉我！😊
+⚠️ 🔌 Gateway failed
