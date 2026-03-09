@@ -1,0 +1,56 @@
+[
+  {
+    "id": "claude-opus-4.6",
+    "configuredProvider": "openrouter",
+    "expectedProvider": "openrouter",
+    "providerOk": true,
+    "configuredModelId": "anthropic/claude-opus-4.6",
+    "expectedModelId": "anthropic/claude-opus-4.6",
+    "modelOk": true
+  },
+  {
+    "id": "gpt-5.4",
+    "configuredProvider": "openrouter",
+    "expectedProvider": "openrouter",
+    "providerOk": true,
+    "configuredModelId": "openai/gpt-5.4",
+    "expectedModelId": "openai/gpt-5.4",
+    "modelOk": true
+  },
+  {
+    "id": "gemini-3.1-pro",
+    "configuredProvider": "google",
+    "expectedProvider": "google",
+    "providerOk": true,
+    "configuredModelId": "gemini-3.1-pro-preview",
+    "expectedModelId": "gemini-3.1-pro-preview",
+    "modelOk": true
+  },
+  {
+    "id": "kimi-k2.5",
+    "configuredProvider": "moonshot",
+    "expectedProvider": "moonshot",
+    "providerOk": true,
+    "configuredModelId": "kimi-k2.5",
+    "expectedModelId": "kimi-k2.5",
+    "modelOk": true
+  },
+  {
+    "id": "glm-5",
+    "configuredProvider": "zhipu",
+    "expectedProvider": "zhipu",
+    "providerOk": true,
+    "configuredModelId": "glm-5",
+    "expectedModelId": "glm-5",
+    "modelOk": true
+  },
+  {
+    "id": "qwen3.5-plus",
+    "configuredProvider": "dashscope",
+    "expectedProvider": "dashscope",
+    "providerOk": true,
+    "configuredModelId": "qwen3.5-plus",
+    "expectedModelId": "qwen3.5-plus",
+    "modelOk": true
+  }
+]

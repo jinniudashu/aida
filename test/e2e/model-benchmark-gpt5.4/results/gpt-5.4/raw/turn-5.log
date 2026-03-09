@@ -1,0 +1,14 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好，你去 Dashboard 处理就行。
+
+你在 Dashboard 里这次重点看两类内容：
+- **待审批内容**：`~/.aida/mock-publish/pending-approval/2026-03-09-content-batch-01.md`
+- **今日分析依据**：`~/.aida/mock-publish/daily/2026-03-09/visibility-report.md`
+
+你审批完后告诉我一声，我就继续：
+1. 把通过的内容归档到正式日目录
+2. 补齐 **5 家店 × 3 个 AI** 的全量内容资产包
+3. 生成今天的完整运营小结
+
+如果你在 Dashboard 上做了人工干预，我会按你的结果接着走。

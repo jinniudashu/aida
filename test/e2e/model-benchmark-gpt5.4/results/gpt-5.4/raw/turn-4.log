@@ -1,0 +1,54 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我先跑今天的模拟监测和内容生成，并把结果写入测试目录；所有输出仍会进入待审批区，不会直接当作对外发布。
+今天的 GEO 运营第一轮已经开始，我先完成了两步：
+
+## 已完成
+### 1. 能见度探测
+已生成今日探测报告：
+- `~/.aida/mock-publish/daily/2026-03-09/visibility-report.md`
+
+当前模拟结论很清晰：
+- **KTV 是当前最强样板业态**
+- **茶室在千问端最有机会做出优势**
+- **麻将馆最需要从“单一品类”升级成“组局/社交场景”表达**
+- 当前 5 家店整体平均能见度约 **74.3**
+
+### 2. 内容生成
+已根据今天的探测结果产出第一批待审批内容包：
+- `~/.aida/mock-publish/pending-approval/2026-03-09-content-batch-01.md`
+
+同时也生成了总的策略分析：
+- `~/.aida/mock-publish/daily/2026-03-09/strategy-analysis.md`
+
+---
+
+## 今天这批内容里包含什么
+我先给 5 家店各挑了一个最值得切入的模型方向：
+
+- 声临其境KTV-五一广场店｜**豆包版描述**
+- 静享茶空间-楚河汉街店｜**千问版描述**
+- 棋乐无穷-岳麓山店｜**元宝版描述**
+- 音乐盒KTV-江汉路店｜**豆包版描述**
+- 悠然茶室-芙蓉广场店｜**千问版 FAQ**
+
+也就是说，我不是平均发力，而是先按“一模一策”做最优切口。
+
+---
+
+## 我建议你先看这 2 个文件
+优先看：
+1. `~/.aida/mock-publish/daily/2026-03-09/visibility-report.md`
+2. `~/.aida/mock-publish/pending-approval/2026-03-09-content-batch-01.md`
+
+---
+
+## 现在等你确认的事项
+因为你定了审批规则，所以这一步我先停在待审批：
+
+- **如果你认可这批内容方向**，我下一步就继续扩展，给 **5 家店 × 3 个 AI** 全量生成内容包
+- **如果你想微调语气/策略**，我先按你的意见改模板，再批量铺开
+
+我建议直接下一步做：
+### **全量生成 15 份门店 × AI 内容资产包**
+这样今天就能把完整日常运营链路跑通。

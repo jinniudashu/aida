@@ -1,0 +1,7 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好，我来全量落地。
+
+我会按你刚确认的方案，直接把 **实体、Skill、独立顾客 Bot Agent、GEO 运营蓝图、定时任务** 全部正式建起来，并把测试环境流程跑通；涉及你定下的两条红线——**对外内容发布审批** 和 **重大战略调整审批**——我会作为治理约束固化进去，不会绕过。
+
+我先开始执行，完成后给你一份可直接验收的清单。
