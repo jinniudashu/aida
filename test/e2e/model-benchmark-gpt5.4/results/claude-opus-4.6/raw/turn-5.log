@@ -1,0 +1,24 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到！我等你从 Dashboard 审批完成。
+明白，我在等待你完成 Dashboard 审批。
+
+**当前状态：**
+
+📋 **15篇内容待审批**
+- 全部存储在 `geo-content` 实体中
+- 状态：`publishReady: 0`, `lifecycle: "DRAFT"`
+- 治理系统：`pendingApprovals: 0`（等待你通过 Dashboard 操作）
+
+**优先级分布：**
+- **P0 紧急**（3篇）：棋乐无穷-元宝版、悠然茶室-豆包版、静享茶空间-豆包版
+- **P1 常规**（9篇）：声临其境KTV三版、悠然茶室其他两版、棋乐无穷其他两版、静享茶空间其他两版
+- **P2 维护**（3篇）：音乐盒KTV三版（表现优秀，维护性更新）
+
+**审批后动作：**
+你在 Dashboard 审批通过后， governance 系统会触发 `geo-content-publish` 流程，自动将内容写入：
+- `~/.aida/mock-publish/doubao/`
+- `~/.aida/mock-publish/qianwen/`
+- `~/.aida/mock-publish/yuanbao/`
+
+我随时待命，审批完成后立即执行发布。

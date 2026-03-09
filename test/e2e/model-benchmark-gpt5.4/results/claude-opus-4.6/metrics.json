@@ -1,0 +1,18 @@
+{
+  "modelId": "claude-opus-4.6",
+  "modelName": "Claude Opus 4.6",
+  "primary": "openrouter/anthropic/claude-opus-4.6",
+  "timestamp": "2026-03-09T22:59:56.418504",
+  "pass": 38,
+  "fail": 1,
+  "warn": 6,
+  "entities": 33,
+  "skills": 12,
+  "agentWorkspaces": 1,
+  "blueprints": 1,
+  "services": 0,
+  "rules": 0,
+  "violations": 5,
+  "approvals": 0,
+  "testExit": 0
+}

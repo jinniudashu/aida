@@ -1,0 +1,7 @@
+{
+  "id": "claude-opus-4.6",
+  "name": "Claude Opus 4.6",
+  "provider": "openrouter",
+  "primary": "openrouter/anthropic/claude-opus-4.6",
+  "timestamp": "2026-03-09T22:45:56+08:00"
+}

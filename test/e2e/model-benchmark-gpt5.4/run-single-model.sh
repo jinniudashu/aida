@@ -39,9 +39,17 @@ mkdir -p /tmp/model-benchmark-gpt5.4
 echo clean-ok
 REMOTE_CLEAN
 
+ssh_base "mkdir -p /root/aida/.dev" 
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$ROOT_DIR/.dev/model-api-keys.env" "$SSH_HOST:/root/aida/.dev/model-api-keys.env" >/dev/null 2>&1 || true
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$ROOT_DIR/.dev/google-gemini-api.env" "$SSH_HOST:/root/aida/.dev/google-gemini-api.env" >/dev/null 2>&1 || true
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$ROOT_DIR/.dev/openrouter-api.env" "$SSH_HOST:/root/aida/.dev/openrouter-api.env" >/dev/null 2>&1 || true
+ssh_base "python3 - <<'PY'
+from pathlib import Path
+for file in [Path('/root/aida/.dev/model-api-keys.env'), Path('/root/aida/.dev/google-gemini-api.env'), Path('/root/aida/.dev/openrouter-api.env')]:
+    if file.exists():
+        text = file.read_text(encoding='utf-8', errors='ignore').replace('\r\n', '\n')
+        file.write_text(text, encoding='utf-8')
+PY"
 
 
 PRIMARY="$PRIMARY" python3 - <<'PY' > /tmp/model-benchmark-gpt5.4-config.json
@@ -93,7 +101,105 @@ config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + '\n', 
 PY
 REMOTE_PATCH
 
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_HOST" env MODEL_ID_ENV="$MODEL_ID" MODEL_NAME_ENV="$MODEL_NAME" PRIMARY_ENV="$PRIMARY" bash -s <<'REMOTE_RUN'
+ssh_base "bash -s" <<'REMOTE_PROVIDER_PATCH'
+set -e
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+models_path = Path('/root/.openclaw/agents/main/agent/models.json')
+models_path.parent.mkdir(parents=True, exist_ok=True)
+data = {}
+if models_path.exists():
+    try:
+        data = json.loads(models_path.read_text(encoding='utf-8'))
+    except Exception:
+        data = {}
+providers = data.setdefault('providers', {})
+
+providers['google'] = {
+    'baseUrl': 'https://generativelanguage.googleapis.com/v1beta',
+    'api': 'google-generativeai',
+    'models': [{
+        'id': 'gemini-3.1-pro-preview',
+        'name': 'Gemini 3.1 Pro Preview',
+        'reasoning': False,
+        'input': ['text', 'image'],
+        'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0},
+        'contextWindow': 1000000,
+        'maxTokens': 8192,
+    }],
+    'apiKey': 'GOOGLE_API_KEY'
+}
+providers['zhipu'] = {
+    'baseUrl': 'https://api.z.ai/api/paas/v4',
+    'api': 'openai-completions',
+    'models': [{
+        'id': 'glm-5',
+        'name': 'GLM-5',
+        'reasoning': True,
+        'input': ['text'],
+        'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0},
+        'contextWindow': 128000,
+        'maxTokens': 8192,
+    }],
+    'apiKey': 'ZHIPU_API_KEY'
+}
+providers.setdefault('moonshot', {
+    'baseUrl': 'https://api.moonshot.ai/v1',
+    'api': 'openai-completions',
+    'models': [{
+        'id': 'kimi-k2.5',
+        'name': 'Kimi K2.5',
+        'reasoning': False,
+        'input': ['text', 'image'],
+        'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0},
+        'contextWindow': 256000,
+        'maxTokens': 8192,
+    }],
+    'apiKey': 'MOONSHOT_API_KEY'
+})
+providers.setdefault('dashscope', {
+    'baseUrl': 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    'api': 'openai-completions',
+    'models': [{
+        'id': 'qwen3.5-plus',
+        'name': 'Qwen3.5 Plus',
+        'reasoning': True,
+        'input': ['text'],
+        'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0},
+        'contextWindow': 131072,
+        'maxTokens': 8192,
+    }],
+    'apiKey': 'DASHSCOPE_API_KEY'
+})
+
+models_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+PY
+REMOTE_PROVIDER_PATCH
+
+ssh_base "bash -s" <<'REMOTE_INSTALL_PATCH'
+set -e
+python3 - <<'PY'
+from pathlib import Path
+
+path = Path('/root/aida/deploy/install-aida.sh')
+text = path.read_text(encoding='utf-8')
+old = 'config.agents.defaults.model = { primary: "dashscope/qwen3.5-plus" };\nconfig.agents.defaults.models = { "dashscope/qwen3.5-plus": { alias: "Qwen3.5-Plus via DashScope" } };\n'
+new = 'const benchmarkPrimary = process.env.AIDA_BENCHMARK_PRIMARY || "dashscope/qwen3.5-plus";\nconfig.agents.defaults.model = { primary: benchmarkPrimary };\nconfig.agents.defaults.models = { [benchmarkPrimary]: { alias: `Benchmark primary via ${benchmarkPrimary}` } };\n'
+if old in text and 'AIDA_BENCHMARK_PRIMARY' not in text:
+    text = text.replace(old, new)
+    path.write_text(text, encoding='utf-8')
+PY
+REMOTE_INSTALL_PATCH
+
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no /tmp/model-benchmark-primary.txt "$SSH_HOST:/tmp/model-benchmark-primary.txt" >/dev/null
+printf '%s\n' "$MODEL_ID" > /tmp/model-benchmark-model-id.txt
+printf '%s\n' "$MODEL_NAME" > /tmp/model-benchmark-model-name.txt
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no /tmp/model-benchmark-model-id.txt "$SSH_HOST:/tmp/model-benchmark-model-id.txt" >/dev/null
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no /tmp/model-benchmark-model-name.txt "$SSH_HOST:/tmp/model-benchmark-model-name.txt" >/dev/null
+
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_HOST" "bash -s" <<'REMOTE_RUN'
 set -e
 cd /root/aida
 git pull --recurse-submodules 2>&1 >/tmp/model-benchmark-gpt5.4/git-pull.log || true
@@ -103,9 +209,10 @@ set +a
 [ -f /root/aida/.dev/model-api-keys.env ] && source /root/aida/.dev/model-api-keys.env || true
 set -a
 
-MODEL_ID="$MODEL_ID_ENV"
-MODEL_NAME="$MODEL_NAME_ENV"
-PRIMARY="$PRIMARY_ENV"
+MODEL_ID="$(cat /tmp/model-benchmark-model-id.txt)"
+MODEL_NAME="$(cat /tmp/model-benchmark-model-name.txt)"
+PRIMARY="$(cat /tmp/model-benchmark-primary.txt)"
+export AIDA_BENCHMARK_PRIMARY="$PRIMARY"
 
 mkdir -p /tmp/model-benchmark-gpt5.4/$MODEL_ID
 

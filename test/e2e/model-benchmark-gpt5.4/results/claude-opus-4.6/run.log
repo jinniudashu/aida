@@ -1,0 +1,109 @@
+=== MODEL ===
+openrouter/anthropic/claude-opus-4.6
+
+========================================
+  AIDA 一键部署
+========================================
+
+[0;36m[..][0m 预检查...
+[0;32m[OK][0m Node.js 24.13.0
+[0;32m[OK][0m 预检查通过
+[0;36m[..][0m 拉取最新代码...
+Already up to date.
+[0;32m[OK][0m git pull 成功
+[0;36m[..][0m 安装 npm 依赖...
+Run `npm audit` for details.
+[0;32m[OK][0m npm install 完成
+[0;36m[..][0m 编译 bps-engine...
+[0;32m[OK][0m bps-engine 编译完成
+[0;36m[..][0m 初始化 AIDA 项目目录: /root/.aida
+[0;32m[OK][0m 目录结构就绪（项目初始化由 Aida 引导完成）
+[0;36m[..][0m 合并 Aida → 主 Agent workspace: /root/.openclaw/workspace
+[0;32m[OK][0m   Aida/IDENTITY.md
+[0;32m[OK][0m   Aida/SOUL.md
+[0;32m[OK][0m   Aida/AGENTS.md
+[0;32m[OK][0m   Aida/HEARTBEAT.md
+[0;32m[OK][0m   Aida/BOOT.md
+[0;32m[OK][0m   Aida/USER.md
+[0;32m[OK][0m   Aida/TOOLS.md
+[0;36m[..][0m 安装 Aida skills → /root/.openclaw/workspace/skills/
+[0;32m[OK][0m   skill/action-plan
+[0;32m[OK][0m   skill/agent-create
+[0;32m[OK][0m   skill/blueprint-modeling
+[0;32m[OK][0m   skill/business-execution
+[0;32m[OK][0m   skill/dashboard-guide
+[0;32m[OK][0m   skill/project-init
+[0;32m[OK][0m   skill/skill-create
+[0;32m[OK][0m 7 skill(s) 已安装
+[0;36m[..][0m 安装 BPS 引擎扩展...
+[0;32m[OK][0m   清理旧 plugin 路径完成
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+│
+◇  Config warnings ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch  │
+│    (manifest uses "bps-engine", entry hints "aida")                   │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:
+- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config overwrite: /root/.openclaw/openclaw.json (sha256 7c0e2782c6b2cd3693644a0b97dc04e96f136d02fc6ce255d4553473f8c120d1 -> 7d1157a65ceab9fe99c305b5e26d3d1b933eb4bacb146277badbd3cdd1f61c13, backup=/root/.openclaw/openclaw.json.bak)
+Linked plugin path: ~/aida
+Restart the gateway to load plugins.
+[0;32m[OK][0m openclaw plugins install --link 成功
+[0;36m[..][0m 构建 Dashboard...
+✓ built in 12.38s
+[0;32m[OK][0m Dashboard 构建完成
+[0;32m[OK][0m bps-dashboard systemd 服务已启动
+[0;36m[..][0m 合并 Agent 配置到 /root/.openclaw/openclaw.json
+[feishu] FEISHU_APP_ID / FEISHU_APP_SECRET not set, skipping feishu config
+[0;32m[OK][0m openclaw.json 配置已自动合并
+[models] DASHSCOPE_API_KEY not set, skipping dashscope provider
+[models] MOONSHOT_API_KEY not set, skipping moonshot provider
+[0;32m[OK][0m models.json 已更新
+[1;33m[!!][0m DASHSCOPE_API_KEY 和 MOONSHOT_API_KEY 均未设置
+[0;36m[..][0m   设置方法: export DASHSCOPE_API_KEY=sk-... MOONSHOT_API_KEY=sk-... && bash deploy/install-aida.sh
+[0;32m[OK][0m Gateway auth: OpenRouter API key → auth-profiles.json
+
+[0;36m[..][0m 部署验证...
+[0;32m[OK][0m ~/.aida/project.yaml 尚未创建（首次启动时由 Aida 引导生成）
+[0;32m[OK][0m Aida 主 workspace 完整
+[0;32m[OK][0m Aida skills 完整 (7 skill(s))
+[0;32m[OK][0m Dashboard 构建产物完整
+[0;32m[OK][0m Dashboard 服务运行中
+[0;32m[OK][0m BPS 引擎扩展已注册
+[0;32m[OK][0m openclaw.json 配置正确
+[1;33m[!!][0m 飞书 Channel 未配置（设置 FEISHU_APP_ID + FEISHU_APP_SECRET 后重新运行）
+
+========================================
+  [0;32m部署完成[0m
+========================================
+
+[0;32m[OK][0m 已部署：
+  ~/.aida/                   ← 业务项目数据
+  Aida（主 Agent + skills）  ← /root/.openclaw/workspace
+  BPS 引擎扩展              ← openclaw plugins
+  openclaw.json              ← 配置已自动合并
+  Dashboard                  ← /root/aida/dashboard (port 3456)
+
+[0;32m[OK][0m 重启 OpenClaw 实例即可生效
+  验证：发送 '你是谁？' 确认 Aida 已激活
+
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+│
+◇  Config warnings ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch  │
+│    (manifest uses "bps-engine", entry hints "aida")                   │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+Restarted systemd service: openclaw-gateway.service
+gateway-ready:1
