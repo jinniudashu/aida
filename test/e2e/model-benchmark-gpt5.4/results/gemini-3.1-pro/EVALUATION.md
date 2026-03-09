@@ -1,6 +1,6 @@
 # Gemini 3.1 Pro Preview 业务场景效能评测报告
 
-**测试日期**: 2026-03-09
+**测试日期**: 2026-03-10
 **测试方案**: IdleX GEO E2E v3
 **模型**: `google/gemini-3.1-pro-preview`
 
@@ -18,11 +18,17 @@
 | Governance Violations | 0 |
 | Approved Requests | 0 |
 
+## 复测结论
+
+- 我已修正 benchmark 侧的 Google key 同步与导出逻辑，并对 Gemini 3.1 Pro 做了单独复测。
+- 复测后错误依旧稳定复现：`No API provider registered for api: google-generativeai`
+- 这说明问题不在 benchmark 脚本漏传 API key，而在 OpenClaw 2026.3.2 当前运行时对 `google-generativeai` provider 的装配能力本身。
+
 ## 核心问题
 
-- 本轮主要失败原因不是业务理解，而是运行时 provider 装配失败。
+- 本轮主要失败原因仍然不是业务理解，而是运行时 provider 装配失败。
 - 错误信息：`No API provider registered for api: google-generativeai`
-- 结果表现为 Turn 4 之后大量回退到 embedded，并无法真正调用 Gemini 原生 provider。
+- 结果表现为 Turn 3 之后持续回退到 embedded，并无法真正调用 Gemini 原生 provider。
 
 ## 分维度评估
 
@@ -68,5 +74,5 @@
 
 ## 结论
 
-- 当前这轮 Gemini 结果应标记为“provider 装配失败样本”，不能直接与其他已正常接通的模型横向对比。
+- Gemini 3.1 Pro 已完成独立复测，结论不变：当前样本仍应标记为“provider 装配失败样本”，不能直接与其他已正常接通的模型横向对比。
 - 原始日志见 `test/e2e/model-benchmark-gpt5.4/results/gemini-3.1-pro/`。

@@ -207,6 +207,11 @@ set +a
 [ -f /root/aida/.dev/openrouter-api.env ] && source /root/aida/.dev/openrouter-api.env || true
 [ -f /root/aida/.dev/google-gemini-api.env ] && source /root/aida/.dev/google-gemini-api.env || true
 [ -f /root/aida/.dev/model-api-keys.env ] && source /root/aida/.dev/model-api-keys.env || true
+if [ -n "${GOOGLE_API_KEY:-}" ]; then export GOOGLE_API_KEY; fi
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then export OPENROUTER_API_KEY; fi
+if [ -n "${MOONSHOT_API_KEY:-}" ]; then export MOONSHOT_API_KEY; fi
+if [ -n "${DASHSCOPE_API_KEY:-}" ]; then export DASHSCOPE_API_KEY; fi
+if [ -n "${ZHIPU_API_KEY:-}" ]; then export ZHIPU_API_KEY; fi
 set -a
 
 MODEL_ID="$(cat /tmp/model-benchmark-model-id.txt)"

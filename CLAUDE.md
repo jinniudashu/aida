@@ -436,7 +436,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **已完成并提交推送**：GPT-5.4、Claude Opus 4.6、Gemini 3.1 Pro、Kimi K2.5、Qwen3.5-Plus、GLM-5 六个模型的独立结果目录与评测报告
 - **关键发现**：
   - `install-aida.sh` 会覆盖 OpenClaw 默认主模型，需要 benchmark 脚本在安装阶段注入 `AIDA_BENCHMARK_PRIMARY`
-  - Gemini 原生 provider 在 OpenClaw 2026.3.2 下报 `No API provider registered for api: google-generativeai`，当前样本应视为 provider 装配失败而非纯模型能力失真
+  - Gemini 原生 provider 在 OpenClaw 2026.3.2 下报 `No API provider registered for api: google-generativeai`；补齐 benchmark 侧 key 导出后复测仍复现，当前样本应视为 provider 装配失败而非纯模型能力失真
   - Claude Opus 4.6 在业务理解、实体化落地与治理触发上表现最佳之一；Kimi / Qwen 稳定性较好；GLM-5 存在明显会话承接漂移
 
 ### BPS 论文研究

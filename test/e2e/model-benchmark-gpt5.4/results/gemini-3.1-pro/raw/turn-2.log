@@ -5,7 +5,6 @@ Gateway target: ws://127.0.0.1:18789
 Source: local loopback
 Config: /root/.openclaw/openclaw.json
 Bind: loopback
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 [plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
 [plugins] [bps-engine] Initializing BPS Engine plugin...
 [plugins] [bps-engine] AIDA project loaded from /root/.aida

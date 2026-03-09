@@ -2,7 +2,7 @@
   "modelId": "gemini-3.1-pro",
   "modelName": "Gemini 3.1 Pro Preview",
   "primary": "google/gemini-3.1-pro-preview",
-  "timestamp": "2026-03-09T23:09:52.224129",
+  "timestamp": "2026-03-10T06:19:34+08:00",
   "pass": 35,
   "fail": 1,
   "warn": 9,
@@ -10,10 +10,11 @@
   "skills": 7,
   "agentWorkspaces": 0,
   "blueprints": 0,
-  "services": 0,
-  "rules": 0,
+  "services": 15,
+  "rules": 12,
   "violations": 0,
   "approvals": 0,
-  "testExit": 0,
-  "providerError": "No API provider registered for api: google-generativeai"
+  "testExit": 1,
+  "providerError": "No API provider registered for api: google-generativeai",
+  "rerunConfirmed": true
 }
