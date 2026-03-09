@@ -1,0 +1,142 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+# 闲氪GEO日常运营体系规划方案
+
+## 📋 现状评估
+
+已为您读取业务资料并检查系统现状。好消息是：**您的GEO运营体系已经基本建成并正常运行**！
+
+### 现有基础设施 ✅
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| **5家门店数据** | ✅ 就绪 | 长沙3家（声临其境KTV、悠然茶室、棋乐无穷）+ 武汉2家（音乐盒KTV、静享茶空间） |
+| **能见度监测** | ✅ 就绪 | `idlex-geo-visibility` skill，豆包/千问/元宝三模型模拟探测 |
+| **内容生成** | ✅ 就绪 | `idlex-geo-content` skill，一模一策差异化输出 |
+| **日常运营** | ✅ 就绪 | `idlex-geo-daily` skill，完整日报流程 |
+| **周度复盘** | ✅ 就绪 | `idlex-geo-weekly` skill，趋势分析与战略建议 |
+| **内容审批** | ✅ 就绪 | governance.yaml已配置，pending/approved目录分离 |
+| **定时任务** | ✅ 就绪 | 17个cron任务覆盖每日/每周运营节点 |
+
+### 今日运营数据（3月8日）
+
+```
+门店能见度排名：
+🥇 声临其境KTV-五一广场店  84分 ↑
+🥈 悠然茶室-芙蓉广场店      83分 ↑
+🥉 音乐盒KTV-江汉路店       81分 →
+4️⃣ 静享茶空间-楚河汉街店    74分 ↓
+5️⃣ 棋乐无穷-岳麓山店        65分 ↓
+
+待审批内容：15份（5店×3模型）
+存放位置：~/.aida/mock-publish/pending/
+```
+
+---
+
+## 🎯 您的6项需求对照
+
+| 需求 | 实现方案 | 状态 |
+|------|----------|------|
+| 1. 每天监测AI能见度 | `idlex-geo-visibility` + 每日9:00 cron | ✅ 已就绪 |
+| 2. 一模一策战略分析 | `idlex-geo-content` + 策略引擎 | ✅ 已就绪 |
+| 3. 生成优化内容 | 豆包/千问/元宝差异化输出 | ✅ 已就绪 |
+| 4. 内容分发测试环境 | `~/.aida/mock-publish/` 目录体系 | ✅ 已就绪 |
+| 5. 日报+周报 | `idlex-geo-daily` + `idlex-geo-weekly` | ✅ 已就绪 |
+| 6. 24h顾客咨询bot | **需新建独立Agent** | ⏳ 待创建 |
+
+---
+
+## 🤖 24h顾客咨询bot规划
+
+根据AGENTS.md的**Skill vs Agent Decision**，咨询bot需要独立Agent（而非Skill），因为：
+
+1. **Persona隔离**：需要亲切活泼语气，与管理助手风格完全不同
+2. **并发执行**：需24h在线响应，与您日常操作并行
+3. **记忆隔离**：顾客对话数据需独立存储，不污染主记忆
+
+### Bot设计方案
+
+```yaml
+名称：闲氪小助手 (IdleX Assistant)
+定位：门店顾客24h在线咨询
+语气：亲切、活泼、有耐心
+能力:
+  - 门店信息查询（位置/价格/营业时间）
+  - 预订流程指导
+  - 常见问题解答
+  - 转人工服务提示
+
+技术实现:
+  - 独立Agent会话（与主系统隔离）
+  - 挂载门店知识库（~/.aida/context/）
+  - 可部署到微信/Telegram/网页等渠道
+```
+
+---
+
+## 🔒 治理规则确认
+
+您的两条规矩已写入 `~/.aida/governance.yaml`：
+
+| 规则 | 触发条件 | 执行动作 | 状态 |
+|------|----------|----------|------|
+| **内容发布审批** | 任何对外发布内容 | REQUIRE_APPROVAL | ✅ 已配置 |
+| **战略调整审批** | 重大方向调整建议 | REQUIRE_APPROVAL | ✅ 已配置 |
+
+**执行流程**：
+```
+内容生成 → 存入 pending/ → 创建BPS审批任务 → 您审批 → 移至 approved/ → 可发布
+```
+
+---
+
+## 📅 建议执行计划
+
+### 第一阶段：验证现有体系（本周）
+
+| 时间 | 任务 | 输出 |
+|------|------|------|
+| 每日9:00 | 自动执行能见度监测 | `visibility-YYYY-MM-DD.json` |
+| 每日9:30 | 自动生成优化内容 | `pending/{model}/{store}.md` |
+| 每日10:00 | 生成运营日报 | `daily/report-YYYY-MM-DD.md` |
+| 每日18:00 | 运营小结提醒 | 消息通知 |
+| 您方便时 | 审批待发布内容 | 移至 `approved/` |
+| 每周日18:00 | 周度深度复盘 | `weekly/report-YYYY-WXX.md` |
+
+### 第二阶段：创建顾客咨询bot（下周）
+
+需要您确认：
+1. **部署渠道**：微信 / Telegram / 网页 / 其他？
+2. **知识范围**：仅5家门店 / 包含闲氪平台信息？
+3. **转人工规则**：什么情况下转人工服务？
+
+确认后我将使用 `agent-create` skill为您创建独立Agent。
+
+---
+
+## 🎬 立即可以做的事
+
+1. **查看今日待审批内容**：
+   ```bash
+   ls ~/.aida/mock-publish/pending/
+   ```
+
+2. **查看今日日报**：
+   ```bash
+   cat ~/.aida/mock-publish/daily/report-2026-03-08.md
+   ```
+
+3. **手动触发一次完整运营流程**（测试用）：
+   我可以立即执行 `idlex-geo-daily` skill，生成新一轮监测数据和内容。
+
+---
+
+**您希望我先做什么？**
+
+A. 执行一次完整的每日运营流程（生成监测数据+内容+日报）  
+B. 先创建24h顾客咨询bot  
+C. 查看现有待审批内容样例  
+D. 其他需求
+
+请告诉我您的选择，我立即执行！ 🌟

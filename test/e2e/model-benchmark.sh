@@ -1,348 +1,442 @@
 #!/usr/bin/env bash
 # ============================================================
-# AIDA Multi-Model Benchmark Runner
+# AIDA Six-Model Benchmark Test
 # ============================================================
-# Runs the IdleX GEO E2E test (v3) with different LLMs and
-# collects results for a comparative assessment.
-#
-# Usage:
-#   bash test/e2e/model-benchmark.sh                    # run all models
-#   bash test/e2e/model-benchmark.sh --model gemini     # run one model
-#   bash test/e2e/model-benchmark.sh --list              # list models
-#   bash test/e2e/model-benchmark.sh --report            # generate comparison report
-#
-# Prerequisites:
-#   - OPENROUTER_API_KEY set (all models route through OpenRouter)
-#   - Or individual provider API keys in .dev/*.env
-#
-# Run on: root@47.236.109.62
+# Runs IdleX GEO E2E v3 test against 6 LLM models
+# Each model: clean env -> test -> collect results -> commit
 # ============================================================
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-AIDA_REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
-BENCHMARK_DIR="/tmp/aida-model-benchmark"
-OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
-OC_CONFIG="$OPENCLAW_HOME/openclaw.json"
+AIDA_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+RESULTS_DIR="$AIDA_ROOT/test/e2e/benchmark-results"
+SSH_KEY="$AIDA_ROOT/.dev/oc-alicloud.pem"
+SSH_HOST="root@47.236.109.62"
 
-# -- Color --
+# Model definitions (bash 3 compatible)
+MODELS="claude-opus-4.6 gpt-5.4 gemini-3.1-pro kimi-k2.5 glm-5 qwen3.5-plus"
+
+get_model_name() {
+  case "$1" in
+    claude-opus-4.6) echo "Claude Opus 4.6" ;;
+    gpt-5.4) echo "GPT-5.4" ;;
+    gemini-3.1-pro) echo "Gemini 3.1 Pro Preview" ;;
+    kimi-k2.5) echo "Kimi K2.5" ;;
+    glm-5) echo "GLM-5" ;;
+    qwen3.5-plus) echo "Qwen3.5 Plus" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+get_model_provider() {
+  case "$1" in
+    claude-opus-4.6) echo "openrouter" ;;
+    gpt-5.4) echo "openrouter" ;;
+    gemini-3.1-pro) echo "google" ;;
+    kimi-k2.5) echo "moonshot" ;;
+    glm-5) echo "zhipu" ;;
+    qwen3.5-plus) echo "dashscope" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+get_model_id() {
+  case "$1" in
+    claude-opus-4.6) echo "anthropic/claude-opus-4.6" ;;
+    gpt-5.4) echo "openai/gpt-5.4" ;;
+    gemini-3.1-pro) echo "gemini-3.1-pro-preview" ;;
+    kimi-k2.5) echo "kimi-k2.5" ;;
+    glm-5) echo "glm-5" ;;
+    qwen3.5-plus) echo "qwen3.5-plus" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+# Colors
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
 log()     { echo -e "${CYAN}[$(date +%H:%M:%S)]${NC} $*"; }
-section() { echo -e "\n${BOLD}${YELLOW}═══════════════════════════════════════════════${NC}"; \
-            echo -e "${BOLD}  $*${NC}"; \
-            echo -e "${BOLD}${YELLOW}═══════════════════════════════════════════════${NC}\n"; }
-
-# ============================================================
-# Model Registry
-# ============================================================
-# Format: SHORT_NAME|DISPLAY_NAME|OPENCLAW_MODEL_ID|PROVIDER|FALLBACK_1|FALLBACK_2
-MODELS=(
-  "gpt54|GPT-5.4|openrouter/openai/gpt-5.4|openrouter|openrouter/anthropic/claude-sonnet-4.6|openrouter/google/gemini-3.1-pro-preview"
-  "gemini|Gemini 3.1 Pro Preview|openrouter/google/gemini-3.1-pro-preview|openrouter|openrouter/anthropic/claude-sonnet-4.6|openrouter/openai/gpt-5.4"
-  "kimi|Kimi K2.5|openrouter/moonshotai/kimi-k2.5|openrouter|openrouter/anthropic/claude-sonnet-4.6|openrouter/google/gemini-3.1-pro-preview"
-  "glm5|GLM-5|openrouter/z-ai/glm-5|openrouter|openrouter/anthropic/claude-sonnet-4.6|openrouter/google/gemini-3.1-pro-preview"
-  "minimax|MiniMax-M2.5|openrouter/minimax/minimax-m2.5|openrouter|openrouter/anthropic/claude-sonnet-4.6|openrouter/google/gemini-3.1-pro-preview"
-  "qwen|Qwen3.5-Plus|openrouter/qwen/qwen3.5-plus-02-15|openrouter|openrouter/anthropic/claude-sonnet-4.6|openrouter/google/gemini-3.1-pro-preview"
-)
-
-get_field() { echo "$1" | cut -d'|' -f"$2"; }
-
-list_models() {
-  echo "Available models:"
-  echo ""
-  printf "  %-10s %-25s %s\n" "SHORT" "DISPLAY" "OPENCLAW ID"
-  echo "  ---------------------------------------------------------------"
-  for m in "${MODELS[@]}"; do
-    printf "  %-10s %-25s %s\n" "$(get_field "$m" 1)" "$(get_field "$m" 2)" "$(get_field "$m" 3)"
-  done
-  echo ""
-  echo "GPT-5.4 already tested (v3.2, 89/100). Remaining: gemini kimi glm5 minimax qwen"
-}
-
-find_model() {
-  local key="$1"
-  for m in "${MODELS[@]}"; do
-    if [ "$(get_field "$m" 1)" = "$key" ]; then
-      echo "$m"
-      return 0
-    fi
-  done
-  return 1
-}
-
-# ============================================================
-# Switch Model Config
-# ============================================================
-switch_model() {
-  local model_id="$1"
-  local display="$2"
-  local fallback1="$3"
-  local fallback2="$4"
-
-  log "Switching model to: $display ($model_id)"
-
-  # Update openclaw.json
-  node -e '
-const fs = require("fs");
-const config = JSON.parse(fs.readFileSync(process.argv[1], "utf-8"));
-const modelId = process.argv[2];
-const displayName = process.argv[3];
-const fb1 = process.argv[4];
-const fb2 = process.argv[5];
-
-if (!config.agents) config.agents = {};
-if (!config.agents.defaults) config.agents.defaults = {};
-config.agents.defaults.model = {
-  primary: modelId,
-  fallbacks: [fb1, fb2]
-};
-config.agents.defaults.models = {};
-config.agents.defaults.models[modelId] = { alias: displayName };
-
-fs.writeFileSync(process.argv[1], JSON.stringify(config, null, 2) + "\n");
-console.log("  Primary:", modelId);
-console.log("  Fallbacks:", fb1, ",", fb2);
-' "$OC_CONFIG" "$model_id" "$display" "$fallback1" "$fallback2"
-
-  # Clear sessions so new model is picked up
-  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
-  mkdir -p "$OPENCLAW_HOME/agents/main/sessions"
-  log "  Sessions cleared for fresh model assignment"
-}
-
-# ============================================================
-# Run single model benchmark
-# ============================================================
-run_benchmark() {
-  local model_entry="$1"
-  local short=$(get_field "$model_entry" 1)
-  local display=$(get_field "$model_entry" 2)
-  local model_id=$(get_field "$model_entry" 3)
-  local provider=$(get_field "$model_entry" 4)
-  local fb1=$(get_field "$model_entry" 5)
-  local fb2=$(get_field "$model_entry" 6)
-
-  local result_dir="$BENCHMARK_DIR/$short"
-  mkdir -p "$result_dir"
-
-  section "Benchmark: $display ($short)"
-
-  local start_ts=$(date +%s)
-
-  # Switch model
-  switch_model "$model_id" "$display" "$fb1" "$fb2"
-
-  # Run E2E test (skip install — reuse existing install, just re-seed)
-  log "Running E2E test with $display..."
-  export LOG_DIR="/tmp/idlex-geo-e2e-v3"
-  rm -rf "$LOG_DIR" 2>/dev/null || true
-  mkdir -p "$LOG_DIR"
-
-  # We skip install but re-seed data (clean state for fair comparison)
-  cd "$AIDA_REPO"
-  bash test/e2e/idlex-geo-v3.sh --skip-install 2>&1 | tee "$result_dir/full-output.log"
-  local exit_code=${PIPESTATUS[0]}
-
-  local end_ts=$(date +%s)
-  local duration=$((end_ts - start_ts))
-
-  # Copy turn logs
-  cp "$LOG_DIR"/turn-*.log "$result_dir/" 2>/dev/null || true
-  cp "$LOG_DIR/report.txt" "$result_dir/" 2>/dev/null || true
-  cp "$LOG_DIR/all-turns.log" "$result_dir/" 2>/dev/null || true
-
-  # Extract metrics
-  local pass=$(grep -c "PASS" "$result_dir/full-output.log" 2>/dev/null || echo 0)
-  local fail=$(grep -c "FAIL" "$result_dir/full-output.log" 2>/dev/null || echo 0)
-  local warn=$(grep -c "WARN" "$result_dir/full-output.log" 2>/dev/null || echo 0)
-
-  # Count entities
-  local entities=$(curl -sf http://localhost:3456/api/entities 2>/dev/null | \
-    node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).length)}catch{console.log('?')}" 2>/dev/null || echo "?")
-
-  # Count turn lines (proxy for response quality)
-  local turn_lines=0
-  for t in 1 2 3 4 5 6; do
-    if [ -f "$result_dir/turn-$t.log" ]; then
-      local tl=$(grep -v "Config warnings\|plugins\]\|Gateway agent failed\|diagnostic\]" "$result_dir/turn-$t.log" | wc -l)
-      turn_lines=$((turn_lines + tl))
-    fi
-  done
-
-  # Save summary
-  cat > "$result_dir/summary.json" << SUMEOF
-{
-  "model": "$short",
-  "display": "$display",
-  "modelId": "$model_id",
-  "pass": $pass,
-  "fail": $fail,
-  "warn": $warn,
-  "entities": "$entities",
-  "turnLines": $turn_lines,
-  "durationSeconds": $duration,
-  "exitCode": $exit_code,
-  "timestamp": "$(date -Iseconds)"
-}
-SUMEOF
-
-  log "Result: $pass PASS / $fail FAIL / $warn WARN | Entities: $entities | Duration: ${duration}s | Turn lines: $turn_lines"
-
-  # Restore model to default after test
-  return $exit_code
-}
-
-# ============================================================
-# Generate comparison report
-# ============================================================
-generate_report() {
-  section "Generating Comparison Report"
-
-  echo ""
-  printf "%-20s %6s %6s %6s %8s %8s %10s\n" "MODEL" "PASS" "FAIL" "WARN" "ENTITIES" "LINES" "DURATION"
-  echo "--------------------------------------------------------------------------"
-
-  for m in "${MODELS[@]}"; do
-    local short=$(get_field "$m" 1)
-    local display=$(get_field "$m" 2)
-    local summary="$BENCHMARK_DIR/$short/summary.json"
-    if [ -f "$summary" ]; then
-      local pass=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$summary','utf8')).pass)" 2>/dev/null)
-      local fail=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$summary','utf8')).fail)" 2>/dev/null)
-      local warn=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$summary','utf8')).warn)" 2>/dev/null)
-      local entities=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$summary','utf8')).entities)" 2>/dev/null)
-      local lines=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$summary','utf8')).turnLines)" 2>/dev/null)
-      local dur=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$summary','utf8')).durationSeconds)" 2>/dev/null)
-      printf "%-20s %6s %6s %6s %8s %8s %8ss\n" "$display" "$pass" "$fail" "$warn" "$entities" "$lines" "$dur"
-    else
-      printf "%-20s %6s\n" "$display" "(not run)"
-    fi
-  done
-
-  echo ""
-  log "Detailed results: $BENCHMARK_DIR/<model>/summary.json"
-  log "Turn logs: $BENCHMARK_DIR/<model>/turn-{1..6}.log"
-}
-
-# ============================================================
-# API connectivity test
-# ============================================================
-test_api() {
-  local model_entry="$1"
-  local short=$(get_field "$model_entry" 1)
-  local display=$(get_field "$model_entry" 2)
-  local model_id=$(get_field "$model_entry" 3)
-
-  # Extract the OpenRouter model name (strip openrouter/ prefix)
-  local or_model="${model_id#openrouter/}"
-
-  log "Testing $display ($or_model)..."
-
-  local response
-  response=$(curl -s --max-time 30 \
-    -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d "{\"model\":\"$or_model\",\"messages\":[{\"role\":\"user\",\"content\":\"Say OK\"}],\"max_tokens\":10}" \
-    https://openrouter.ai/api/v1/chat/completions 2>&1)
-
-  local content
-  content=$(echo "$response" | node -e "
-    try {
-      const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
-      if (d.error) { console.log('ERROR: ' + (d.error.message || JSON.stringify(d.error))); process.exit(1); }
-      console.log(d.choices?.[0]?.message?.content || 'no content');
-    } catch(e) { console.log('PARSE_ERROR: ' + e.message); process.exit(1); }
-  " 2>/dev/null)
-
-  if [ $? -eq 0 ]; then
-    echo -e "  ${GREEN}OK${NC} $display → $content"
-    return 0
-  else
-    echo -e "  ${RED}FAIL${NC} $display → $content"
-    return 1
-  fi
-}
-
-# ============================================================
-# Main
-# ============================================================
-mkdir -p "$BENCHMARK_DIR"
+pass()    { echo -e "  ${GREEN}✓${NC} $*"; }
+fail()    { echo -e "  ${RED}✗${NC} $*"; }
+section() { echo -e "\n${BOLD}${YELLOW}══════════════════════════════════════════════${NC}\n${BOLD}$*${NC}\n"; }
 
 # Parse args
-ACTION="run_all"
 TARGET_MODEL=""
+SKIP_CLEANUP=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --list)     ACTION="list"; shift ;;
-    --report)   ACTION="report"; shift ;;
-    --test-api) ACTION="test_api"; shift ;;
-    --model)    ACTION="run_one"; TARGET_MODEL="$2"; shift 2 ;;
-    *)          shift ;;
+    --model) TARGET_MODEL="$2"; shift 2 ;;
+    --skip-cleanup) SKIP_CLEANUP=true; shift ;;
+    *) shift ;;
   esac
 done
 
-case $ACTION in
-  list)
-    list_models
-    ;;
+# SSH helper
+ssh_run() {
+  ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_HOST" "bash -s"
+}
 
-  test_api)
-    section "API Connectivity Test"
-    if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-      echo "OPENROUTER_API_KEY not set. Loading from /etc/environment..."
-      eval "$(grep OPENROUTER /etc/environment 2>/dev/null)" || true
-      export OPENROUTER_API_KEY
-    fi
-    FAILED=0
-    for m in "${MODELS[@]}"; do
-      test_api "$m" || FAILED=$((FAILED + 1))
-    done
-    echo ""
-    if [ "$FAILED" -eq 0 ]; then
-      echo -e "${GREEN}All models accessible${NC}"
-    else
-      echo -e "${RED}$FAILED model(s) failed${NC}"
-    fi
-    ;;
+ssh_cmd() {
+  ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$SSH_HOST" "$*"
+}
 
-  run_one)
-    model_entry=$(find_model "$TARGET_MODEL") || {
-      echo "Unknown model: $TARGET_MODEL"
-      list_models
-      exit 1
+ssh_long() {
+  ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=600 "$SSH_HOST" "bash -s"
+}
+
+# Generate openclaw.json model config
+generate_openclaw_json() {
+  local model_id="$1"
+  local provider=$(get_model_provider "$model_id")
+  local full_model_id=$(get_model_id "$model_id")
+
+  case "$provider" in
+    openrouter)
+      echo "{
+  \"agents\": {
+    \"defaults\": {
+      \"model\": {
+        \"primary\": {\"provider\": \"openrouter\", \"model\": \"$full_model_id\"},
+        \"fallbacks\": [
+          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"},
+          {\"provider\": \"moonshot\", \"model\": \"kimi-k2.5\"}
+        ]
+      }
     }
-    run_benchmark "$model_entry"
-    generate_report
-    ;;
+  }
+}"
+      ;;
+    google)
+      echo "{
+  \"agents\": {
+    \"defaults\": {
+      \"model\": {
+        \"primary\": {\"provider\": \"google\", \"model\": \"$full_model_id\"},
+        \"fallbacks\": [
+          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"},
+          {\"provider\": \"moonshot\", \"model\": \"kimi-k2.5\"}
+        ]
+      }
+    }
+  }
+}"
+      ;;
+    moonshot)
+      echo "{
+  \"agents\": {
+    \"defaults\": {
+      \"model\": {
+        \"primary\": {\"provider\": \"moonshot\", \"model\": \"$full_model_id\"},
+        \"fallbacks\": [
+          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"}
+        ]
+      }
+    }
+  }
+}"
+      ;;
+    zhipu)
+      echo "{
+  \"agents\": {
+    \"defaults\": {
+      \"model\": {
+        \"primary\": {\"provider\": \"zhipu\", \"model\": \"$full_model_id\"},
+        \"fallbacks\": [
+          {\"provider\": \"dashscope\", \"model\": \"qwen3.5-plus\"}
+        ]
+      }
+    }
+  }
+}"
+      ;;
+    dashscope)
+      echo "{
+  \"agents\": {
+    \"defaults\": {
+      \"model\": {
+        \"primary\": {\"provider\": \"dashscope\", \"model\": \"$full_model_id\"},
+        \"fallbacks\": [
+          {\"provider\": \"moonshot\", \"model\": \"kimi-k2.5\"}
+        ]
+      }
+    }
+  }
+}"
+      ;;
+  esac
+}
 
-  run_all)
-    section "AIDA Multi-Model Benchmark"
-    log "Models: gemini, kimi, glm5, minimax, qwen (GPT-5.4 already tested)"
-    log "Results dir: $BENCHMARK_DIR"
-    echo ""
+# Clean test environment on remote server
+clean_environment() {
+  log "Cleaning test environment..."
 
-    # Skip GPT-5.4 (already tested as v3.2)
-    for short in gemini kimi glm5 minimax qwen; do
-      model_entry=$(find_model "$short")
-      run_benchmark "$model_entry" || true
-    done
+  ssh_run << 'REMOTE'
+set -e
+AIDA_HOME="$HOME/.aida"
+OPENCLAW_HOME="$HOME/.openclaw"
 
-    # Restore GPT-5.4 as default
-    gpt_entry=$(find_model "gpt54")
-    switch_model \
-      "$(get_field "$gpt_entry" 3)" \
-      "$(get_field "$gpt_entry" 2)" \
-      "$(get_field "$gpt_entry" 5)" \
-      "$(get_field "$gpt_entry" 6)"
+systemctl stop bps-dashboard 2>/dev/null || true
+systemctl stop openclaw-gateway 2>/dev/null || true
+pkill -f "openclaw gateway" 2>/dev/null || true
+sleep 3
 
-    generate_report
-    ;;
+[ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
 
-  report)
-    generate_report
-    ;;
-esac
+rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
+rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
+rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+find "$OPENCLAW_HOME" \( -name "cron*.json" -o -name "cron*.jsonl" -o -name "sessions.json" \) -delete 2>/dev/null || true
+
+echo "Environment cleaned"
+REMOTE
+}
+
+# Configure model on remote server
+configure_model() {
+  local model_id="$1"
+  local openclaw_json
+
+  log "Configuring model: $model_id ($(get_model_name "$model_id"))"
+
+  openclaw_json=$(generate_openclaw_json "$model_id")
+  echo "$openclaw_json" | ssh_cmd "cat > /root/.openclaw/openclaw.json"
+  
+  log "Model config written"
+}
+
+# Run single model test
+run_model_test() {
+  local model_id="$1"
+  local result_dir="$RESULTS_DIR/$model_id"
+
+  section "Testing: $(get_model_name "$model_id") ($model_id)"
+
+  mkdir -p "$result_dir"
+
+  # 1. Clean environment
+  if [ "$SKIP_CLEANUP" = false ]; then
+    clean_environment
+  fi
+
+  # 2. Configure model
+  configure_model "$model_id"
+
+  # 3. Run install + seed + test
+  log "Running E2E test on remote server..."
+
+  ssh_long << 'REMOTE_TEST'
+set -e
+cd $HOME/aida
+git pull --recurse-submodules 2>&1 | tail -3 || true
+
+# Load API keys
+if [ -f "$HOME/aida/.dev/openrouter-api.env" ]; then
+  source "$HOME/aida/.dev/openrouter-api.env" 2>/dev/null || true
+  export OPENROUTER_API_KEY
+fi
+
+# Run install
+echo "=== Running install-aida.sh ==="
+bash deploy/install-aida.sh 2>&1 | tail -30
+
+# Start gateway
+echo "=== Starting gateway ==="
+openclaw gateway start 2>/dev/null || true
+for i in $(seq 1 12); do
+  if openclaw gateway status 2>/dev/null | grep -qiE "running|healthy|active"; then
+    echo "Gateway ready after ${i}x5s"
+    break
+  fi
+  sleep 5
+done
+
+# Run E2E test
+echo "=== Running E2E test ==="
+bash test/e2e/idlex-geo-v3.sh 2>&1 | tee /tmp/e2e-test.log
+TEST_EXIT=$?
+
+# Collect results
+mkdir -p /tmp/benchmark-output
+cp /tmp/idlex-geo-e2e-v3/report.txt /tmp/benchmark-output/ 2>/dev/null || true
+cp /tmp/idlex-geo-e2e-v3/*.log /tmp/benchmark-output/ 2>/dev/null || true
+
+# Extract metrics
+PASS_N=$(grep -oE '[0-9]+ PASS' /tmp/e2e-test.log 2>/dev/null | grep -oE '[0-9]+' | tail -1 || echo 0)
+FAIL_N=$(grep -oE '[0-9]+ FAIL' /tmp/e2e-test.log 2>/dev/null | grep -oE '[0-9]+' | tail -1 || echo 0)
+WARN_N=$(grep -oE '[0-9]+ WARN' /tmp/e2e-test.log 2>/dev/null | grep -oE '[0-9]+' | tail -1 || echo 0)
+ENTITIES=$(curl -sf http://localhost:3456/api/entities 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).length)}catch{console.log(0)}" || echo 0)
+SKILLS=$(find $HOME/.openclaw/workspace/skills/ -name SKILL.md 2>/dev/null | wc -l || echo 0)
+VIOLATIONS=$(curl -sf http://localhost:3456/api/governance/violations 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).length)}catch{console.log(0)}" || echo 0)
+APPROVALS=$(curl -sf http://localhost:3456/api/governance/approvals 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).filter(a=>a.status==='APPROVED').length)}catch{console.log(0)}" || echo 0)
+
+cat > /tmp/benchmark-output/metrics.json << METRICS
+{
+  "timestamp": "$(date -Iseconds)",
+  "pass": ${PASS_N:-0},
+  "fail": ${FAIL_N:-0},
+  "warn": ${WARN_N:-0},
+  "entities": ${ENTITIES:-0},
+  "skills": ${SKILLS:-0},
+  "violations": ${VIOLATIONS:-0},
+  "approvals": ${APPROVALS:-0}
+}
+METRICS
+
+echo "TEST_COMPLETE (exit: $TEST_EXIT)"
+REMOTE_TEST
+
+  # 4. Collect results from remote
+  log "Collecting results..."
+  ssh_cmd "tar -czf /tmp/benchmark-$model_id.tar.gz -C /tmp/benchmark-output ."
+  scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SSH_HOST:/tmp/benchmark-$model_id.tar.gz" "$result_dir/results.tar.gz"
+
+  if [ -f "$result_dir/results.tar.gz" ]; then
+    tar -xzf "$result_dir/results.tar.gz" -C "$result_dir"
+    pass "Results collected: $result_dir"
+    cat "$result_dir/metrics.json" 2>/dev/null || true
+  else
+    fail "Failed to collect results"
+  fi
+
+  # 5. Save model info
+  cat > "$result_dir/model-info.json" << INFO
+{
+  "id": "$model_id",
+  "name": "$(get_model_name "$model_id")",
+  "provider": "$(get_model_provider "$model_id")",
+  "modelId": "$(get_model_id "$model_id")",
+  "timestamp": "$(date -Iseconds)"
+}
+INFO
+
+  log "Model test complete: $model_id"
+}
+
+# Commit results for a model
+commit_results() {
+  local model_id="$1"
+
+  log "Committing results for $model_id..."
+
+  cd "$AIDA_ROOT"
+  git add "test/e2e/benchmark-results/$model_id/"
+  git add "test/e2e/model-benchmark-config.json"
+  git add "test/e2e/model-benchmark.sh"
+
+  if git diff --cached --quiet 2>/dev/null; then
+    log "No changes to commit"
+  else
+    git commit -m "test: add benchmark results for $(get_model_name "$model_id") ($model_id)
+
+$(date '+%Y-%m-%d %H:%M') - IdleX GEO E2E v3 test
+
+Model: $(get_model_name "$model_id")
+Provider: $(get_model_provider "$model_id")
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+    git push origin main 2>/dev/null || log "Push skipped"
+    pass "Committed and pushed"
+  fi
+}
+
+# Generate comparison report
+generate_comparison_report() {
+  local report_file="$RESULTS_DIR/comparison-report.md"
+
+  section "Generating Comparison Report"
+
+  cat > "$report_file" << HEADER
+# AIDA Six-Model Benchmark Comparison Report
+
+**Test Date:** $(date '+%Y-%m-%d')
+**Test Suite:** IdleX GEO E2E v3
+**Server:** $SSH_HOST
+
+## Models Tested
+
+| Model | Provider | Pass | Fail | Warn | Entities | Skills | Violations | Approvals |
+|-------|----------|------|------|------|----------|--------|------------|-----------|
+HEADER
+
+  for model_id in $MODELS; do
+    local result_dir="$RESULTS_DIR/$model_id"
+    local metrics_file="$result_dir/metrics.json"
+
+    if [ -f "$metrics_file" ]; then
+      local pass_n=$(node -e "const m=require('$metrics_file');console.log(m.pass||0)" 2>/dev/null || echo 0)
+      local fail_n=$(node -e "const m=require('$metrics_file');console.log(m.fail||0)" 2>/dev/null || echo 0)
+      local warn_n=$(node -e "const m=require('$metrics_file');console.log(m.warn||0)" 2>/dev/null || echo 0)
+      local entities=$(node -e "const m=require('$metrics_file');console.log(m.entities||0)" 2>/dev/null || echo 0)
+      local skills=$(node -e "const m=require('$metrics_file');console.log(m.skills||0)" 2>/dev/null || echo 0)
+      local violations=$(node -e "const m=require('$metrics_file');console.log(m.violations||0)" 2>/dev/null || echo 0)
+      local approvals=$(node -e "const m=require('$metrics_file');console.log(m.approvals||0)" 2>/dev/null || echo 0)
+
+      echo "| $(get_model_name "$model_id") | $(get_model_provider "$model_id") | $pass_n | $fail_n | $warn_n | $entities | $skills | $violations | $approvals |" >> "$report_file"
+    else
+      echo "| $(get_model_name "$model_id") | $(get_model_provider "$model_id") | - | - | - | - | - | - | - |" >> "$report_file"
+    fi
+  done
+
+  cat >> "$report_file" << FOOTER
+
+## Evaluation Criteria
+
+| Criterion | Weight | Description |
+|-----------|--------|-------------|
+| Business Understanding | 25% | Understands IdleX business, GEO strategy, store context |
+| Tool Calling | 30% | Correctly calls BPS tools to execute operations |
+| Two-Layer Routing | 15% | Correctly distinguishes Governance vs Operations |
+| Governance Compliance | 15% | Handles governance constraints and approval flows |
+| Self-Evolution | 10% | Creates Skills and Agents for recurring patterns |
+| Response Quality | 5% | Natural language quality, clarity, actionability |
+
+## Detailed Analysis
+
+See individual model reports in \`benchmark-results/<model-id>/\` directories.
+
+---
+*Generated by AIDA Model Benchmark Framework*
+FOOTER
+
+  log "Comparison report: $report_file"
+  cat "$report_file"
+}
+
+# ════════════════════════════════════════════════════════════
+# Main
+# ════════════════════════════════════════════════════════════
+
+mkdir -p "$RESULTS_DIR"
+
+log "Available models: $MODELS"
+
+if [ -n "$TARGET_MODEL" ]; then
+  run_model_test "$TARGET_MODEL"
+  commit_results "$TARGET_MODEL"
+else
+  # Run all models
+  for model_id in $MODELS; do
+    run_model_test "$model_id"
+    commit_results "$model_id"
+  done
+
+  generate_comparison_report
+
+  # Final commit
+  cd "$AIDA_ROOT"
+  git add "test/e2e/benchmark-results/comparison-report.md"
+  if ! git diff --cached --quiet 2>/dev/null; then
+    git commit -m "test: add six-model benchmark comparison report
+
+$(date '+%Y-%m-%d %H:%M') - Comprehensive comparison of 6 LLM models
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
+    git push origin main 2>/dev/null || true
+  fi
+fi
+
+section "Benchmark Complete"
+log "Results directory: $RESULTS_DIR"

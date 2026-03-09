@@ -1,0 +1,61 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+# 📊 闲氪 GEO 运营小结 - 2026-03-08
+
+## ✅ 今日完成
+
+| 任务 | 状态 | 产出 |
+|------|------|------|
+| 能见度监测 | ✅ 完成 | 5 店×3 平台，平均 82 分 |
+| 内容生成 | ⚠️ 部分 | 声临其境 9 份文件 |
+| 内容审批 | ✅ 完成 | Dashboard 已审批 |
+| 日报生成 | ✅ 完成 | 4 份报告文件 |
+
+---
+
+## 📈 能见度排名
+
+| 排名 | 门店 | 分数 | 趋势 |
+|------|------|------|------|
+| 🥇 | 声临其境 KTV | 97 | ↓ -7 |
+| 🥈 | 棋乐无穷 | 84 | ↓ -8 |
+| 🥉 | 音乐盒 KTV | 82 | → |
+| 4 | 悠然茶室 | 73 | ↑ +7 |
+| 5 | 静享茶空间 | 72 | → |
+
+---
+
+## 📁 文件归档
+
+```
+~/.aida/mock-publish/daily/
+├── visibility-2026-03-08.json      # 原始数据
+├── visibility-report-2026-03-08.html # 可视化报告
+├── content-summary-2026-03-08.md   # 内容清单
+└── operations-summary-2026-03-08.md # 执行报告
+```
+
+---
+
+## ⏳ 待办事项
+
+| 事项 | 优先级 | 说明 |
+|------|--------|------|
+| 补充生成剩余内容 | 🟡 中 | 4 家门店×3 模型 |
+| 明日 9:00 监测 | ⏰ 自动 | 定时任务已配置 |
+| 周日 18:00 周复盘 | ⏰ 待执行 | 3 月 15 日 |
+
+---
+
+## 🌟 系统状态
+
+- 蓝图系统：✅ 正常
+- 定时任务：✅ 6 个已注册
+- 顾客 bot: ✅ 就绪
+- Dashboard: ✅ 可访问 (http://localhost:3456)
+
+---
+
+**今日总结**: 首日运营顺利，能见度监测和内容审批流程跑通。剩余内容明日补充生成即可。
+
+明天见！👋

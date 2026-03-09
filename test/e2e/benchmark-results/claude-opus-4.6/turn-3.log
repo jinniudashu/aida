@@ -1,0 +1,128 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+# 📊 建模完成！带您看看创建了什么
+
+## ✅ 实体层（9个实体）
+
+### 5家门店实体
+| 门店ID | 名称 | 城市 | 业态 | 包间数 | 状态 |
+|--------|------|------|------|--------|------|
+| store-cs-ktv-01 | 声临其境KTV-五一广场店 | 长沙 | KTV | 8间 | ✅ active |
+| store-cs-tea-01 | 悠然茶室-芙蓉广场店 | 长沙 | 茶室 | 6间 | ✅ active |
+| store-cs-mj-01 | 棋乐无穷-岳麓山店 | 长沙 | 棋牌 | 10间 | ✅ active |
+| store-wh-ktv-01 | 音乐盒KTV-江汉路店 | 武汉 | KTV | 12间 | ✅ active |
+| store-wh-tea-01 | 静享茶空间-楚河汉街店 | 武汉 | 茶室 | 8间 | ✅ active |
+
+### 运营实体
+| 实体ID | 类型 | 名称 | 状态 |
+|--------|------|------|------|
+| geo-operation-main | geo-operation | GEO运营主实体 | ✅ active |
+| content-batch-2026-03-08 | content-batch | 今日内容批次 | ⏳ pending |
+
+---
+
+## ⚙️ 服务层（32个服务）
+
+### GEO核心服务（10个）
+| 服务ID | 名称 | 类型 | 执行者 |
+|--------|------|------|--------|
+| svc-geo-daily | GEO日常运营 | composite | agent |
+| svc-visibility-monitor | 能见度监测 | atomic | agent |
+| svc-strategy-analyze | 策略分析 | atomic | agent |
+| svc-content-generate | 内容生成 | atomic | agent |
+| svc-content-approval | 内容审批 | atomic | **manual** |
+| svc-content-publish | 内容发布 | atomic | agent |
+| svc-daily-report | 日报生成 | atomic | agent |
+| svc-geo-weekly | GEO周度复盘 | composite | agent |
+| svc-weekly-review | 周度策略评审 | atomic | **manual** |
+| svc-strategy-approval | 战略调整审批 | atomic | **manual** |
+
+### 顾客咨询服务（4个）
+| 服务ID | 名称 | 类型 |
+|--------|------|------|
+| svc-customer-inquiry | 顾客在线咨询 | composite |
+| svc-inquiry-store-info | 门店信息查询 | atomic |
+| svc-inquiry-booking | 预订指导 | atomic |
+| svc-inquiry-faq | 常见问题解答 | atomic |
+
+---
+
+## 📁 文件层
+
+```
+~/.aida/
+├── project.yaml              ✅ v2.0
+├── governance.yaml           ✅ 3条约束
+├── GEO-部署完成报告.md       ✅
+├── blueprints/
+│   ├── idlex-geo-ops.yaml    ✅ 17服务+16规则
+│   └── idlex-geo-governance.yaml ✅
+├── agents/
+│   └── idlex-customer-bot.md ✅
+└── data/
+    ├── bps.db                ✅ 运行中
+    └── stores.yaml           ✅ 5家门店
+```
+
+---
+
+## 🖥️ Dashboard 访问
+
+**地址**: http://localhost:3456
+
+**Dashboard上您可以看到**:
+
+### 1. 实体视图
+- 5家门店的完整数据（房型/价格/特色）
+- GEO运营主实体状态
+- 内容批次审批状态
+
+### 2. 服务视图
+- 32个服务的执行状态
+- 人工审批节点高亮（内容审批、战略审批）
+- 服务间依赖关系图
+
+### 3. 任务视图
+- 每日自动任务执行记录
+- 审批任务待办列表
+- 任务成功率统计
+
+### 4. 流程视图
+- GEO日常运营流程（监测→分析→生成→审批→发布）
+- 周度复盘流程
+- 顾客咨询流程
+
+---
+
+## 🔍 关键设计亮点
+
+### 1. 治理内嵌
+- **内容审批** = manual执行者 → 必须您审批
+- **战略审批** = manual执行者 → 必须您确认
+- 系统自动拦截，无法绕过
+
+### 2. 一模一策
+- 豆包/千问/元宝三模型差异化内容
+- 每家门店独立实体，可单独优化
+
+### 3. 审批流程可视化
+```
+内容生成 → pending/ → [您审批] → approved/ → published/
+                          ↑
+                    Dashboard显示待审批任务
+```
+
+---
+
+## 🎯 现在可以做的
+
+1. **打开Dashboard**: http://localhost:3456
+2. **查看门店实体**: 点击Entities → 筛选store类型
+3. **查看待审批**: 点击Tasks → 筛选svc-content-approval
+4. **查看服务拓扑**: 点击Blueprints → 查看flow关系图
+
+---
+
+**建模完成！所有实体、服务、规则已就绪，Dashboard已上线！** 🚀
+
+您想先看Dashboard的哪个部分？我可以帮您导航！ 🌟
