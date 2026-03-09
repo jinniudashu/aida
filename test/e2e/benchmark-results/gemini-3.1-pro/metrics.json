@@ -1,0 +1,13 @@
+{
+  "modelId": "gemini-3.1-pro",
+  "primary": "google/gemini-3.1-pro-preview",
+  "timestamp": "2026-03-09T19:46:51+08:00",
+  "pass": 44,
+  "fail": 0,
+  "warn": 1,
+  "entities": 16,
+  "skills": 11,
+  "violations": 5,
+  "approvals": 0,
+  "testExit": 0
+}

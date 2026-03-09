@@ -1,0 +1,160 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 📊 闲氪 GEO 运营体系 · 完整建模清单
+
+---
+
+### 一、Blueprint（业务蓝图）
+
+**文件位置**: `~/.aida/blueprints/geo-operations.yaml`
+
+| 服务 ID | 服务名称 | 执行类型 | 用途 |
+|---------|----------|----------|------|
+| `svc-geo-ops` | GEO 运营总流程 | composite | 总 orchestrator |
+| `svc-geo-visibility-monitor` | GEO 能见度监测 | agent | 监测豆包/千问/元宝 |
+| `svc-geo-analyze-strategy` | 一模一策战略分析 | agent | 制定差异化策略 |
+| `svc-geo-content-generate` | GEO 优化内容生成 | agent | 生成多模型内容 |
+| `svc-geo-content-review` | 内容审批 | **manual** | 🔒 人工审批节点 |
+| `svc-geo-content-publish` | GEO 内容分发 | agent | 发布到 mock-publish |
+| `svc-geo-daily-report` | GEO 每日运营小结 | agent | 生成日报 |
+| `svc-geo-weekly-review` | GEO 每周深度复盘 | agent | 生成周报 |
+
+**流程拓扑**:
+```
+能见度监测 → 战略分析 → 内容生成 → [审批] → 内容分发
+                                      ↓
+                                   每日小结
+
+能见度监测 → 每周复盘 (当评分<60 时触发)
+```
+
+---
+
+### 二、Skills（4 个核心技能）
+
+| Skill 名称 | 文件位置 | 功能 |
+|------------|----------|------|
+| `geo-visibility-check` | `~/.openclaw/workspace/skills/geo-visibility-check/SKILL.md` | 能见度探测（模拟数据） |
+| `geo-strategy-analyzer` | `~/.openclaw/workspace/skills/geo-strategy-analyzer/SKILL.md` | 一模一策分析引擎 |
+| `geo-content-generator` | `~/.openclaw/workspace/skills/geo-content-generator/SKILL.md` | 多模型内容生成 |
+| `geo-report-builder` | `~/.openclaw/workspace/skills/geo-report-builder/SKILL.md` | 日报/周报生成 |
+
+---
+
+### 三、Agent（独立门店咨询机器人）
+
+**配置**: `xianke-store-assistant`（闲氪小助手 🌸）
+
+| 项目 | 内容 |
+|------|------|
+| **工作空间** | `~/.openclaw/workspace-xianke-helper/` |
+| **文件** | IDENTITY.md, SOUL.md, AGENTS.md |
+| **语气** | 亲切活泼，与管理风格完全不同 |
+| **权限** | 最小权限（仅查询门店实体） |
+| **用途** | 24h 在线回答顾客咨询 |
+
+---
+
+### 四、Entities（门店数据）
+
+#### geo-strategy（5 家门店战略数据）
+
+| 门店 | 城市 | 综合评分 | 优先级最高的模型 |
+|------|------|----------|------------------|
+| 声临其境 KTV-五一广场店 | 长沙 | 75 | 元宝 (high) |
+| 悠然茶室 - 芙蓉广场店 | 长沙 | 72 | 元宝 (high) |
+| 棋乐无穷 - 岳麓山店 | 长沙 | 75 | 元宝 (medium) |
+| 音乐盒 KTV-江汉路店 | 武汉 | 80 | 元宝 (medium) |
+| 静享茶空间 - 楚河汉街店 | 武汉 | 74 | 元宝 (high) |
+
+---
+
+### 五、Cron Jobs（定时任务）
+
+| 任务名称 | 执行时间 | 说明 |
+|----------|----------|------|
+| GEO 每日能见度监测 | 每天 9:00 | 开始门店监测 |
+| GEO 每日运营小结 | 每天 20:00 | 生成日报 |
+| GEO 每周深度复盘 | 每周一 9:00 | 生成周报 |
+
+---
+
+### 六、Governance（治理规则）
+
+**电路断路器状态**: ⚠️ **RESTRICTED**（受限模式）
+
+**待审批事项**: 4 条
+
+| 门店 | 审批 ID | 状态 |
+|------|--------|------|
+| 声临其境 KTV-五一广场店 | `76c08a6f-cc3a-4de5-8aa3-60d95ca1620e` | 待审批 |
+| 悠然茶室 - 芙蓉广场店 | `3ae2a4d2-754a-4b2c-8967-c5ffcad0a32b` | 待审批 |
+| 棋乐无穷 - 岳麓山店 | `6685c7e7-58c3-4ff5-b570-736310517873` | 待审批 |
+| 音乐盒 KTV-江汉路店 | `62f87a3e-853f-49da-a74b-03a9a3fc6028` | 待审批 |
+
+---
+
+### 七、BPS Dashboard 访问
+
+**URL**: `http://localhost:3456`
+
+**Dashboard 上能看到**:
+
+1. **📋 Tasks 面板**
+   - 所有 GEO 相关任务状态
+   - 待审批任务（红色高亮）
+   - 已完成任务历史
+
+2. **🏪 Entities 面板**
+   - 5 家门店的 geo-strategy 数据
+   - geo-content 待审批内容
+
+3. **⚖️ Governance 面板**
+   - 电路断路器状态
+   - 待审批列表（4 条）
+   - 违规记录
+
+4. **📊 Flow 可视化**
+   - GEO 运营流程拓扑图
+   - 服务间连接关系
+
+---
+
+### 八、文件结构总览
+
+```
+~/.aida/
+├── blueprints/
+│   └── geo-operations.yaml      # GEO 运营蓝图
+├── data/
+│   └── bps.db                   # 实体数据库
+├── context/                     # 业务文档（已存在）
+└── mock-publish/                # 内容发布目录
+
+~/.openclaw/workspace/
+├── skills/
+│   ├── geo-visibility-check/
+│   ├── geo-strategy-analyzer/
+│   ├── geo-content-generator/
+│   └── geo-report-builder/
+└── ...
+
+~/.openclaw/workspace-xianke-helper/
+├── IDENTITY.md
+├── SOUL.md
+└── AGENTS.md
+```
+
+---
+
+### 🔔 重要提醒
+
+1. **电路断路器处于 RESTRICTED 状态** — 因为连续触发了 5 次 HIGH 级别的内容发布审批约束。这是正常行为，您的规矩已生效。
+
+2. **待审批内容** — 在 Dashboard 中批准上述 4 个审批 ID 后，内容将自动分发到 `~/.aida/mock-publish/`。
+
+3. **闲氪小助手 Agent** — 需要 Gateway 重启完成后才能使用（已在重启中）。
+
+---
+
+要我帮您打开 Dashboard 链接，或者先处理待审批事项吗？

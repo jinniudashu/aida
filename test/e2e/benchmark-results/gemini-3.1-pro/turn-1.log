@@ -1,0 +1,86 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的，我已经完整了解了闲氪的业务背景和系统现状。现在为您规划一套完整的 GEO 日常运营体系。
+
+---
+
+## 🌟 闲氪 GEO 运营体系规划
+
+基于您的业务资料和两条治理规矩，我设计了**两层架构**：
+
+### 一、治理层（Blueprint）— 定义规则与流程
+
+创建 `geo-operations.yaml` blueprint，包含：
+
+| 服务 | 类型 | 执行人 | 说明 |
+|------|------|--------|------|
+| `svc-geo-visibility-monitor` | atomic | agent | 每日监测 5 家门店在豆包/千问/元宝的能见度 |
+| `svc-geo-analyze-strategy` | atomic | agent | 分析数据，生成"一模一策"优化建议 |
+| `svc-geo-content-generate` | atomic | agent | 针对每家门店×每个 AI 模型生成优化内容 |
+| `svc-geo-content-publish` | atomic | **manual** | 内容分发到 mock-publish 目录（需您审批）|
+| `svc-geo-daily-report` | atomic | agent | 生成每日运营小结 |
+| `svc-geo-weekly-review` | atomic | agent | 生成每周深度复盘 |
+
+**审批触发点**：
+- 内容发布前 → 自动进入审批队列（治理规则已存在于 governance.yaml）
+- 战略调整建议 → 需您确认后方可执行
+
+### 二、运营层（Skills + Entities）— 日常执行
+
+创建以下 Skills：
+
+| Skill | 用途 |
+|-------|------|
+| `geo-visibility-check` | 能见度探测（测试阶段用模拟数据） |
+| `geo-strategy-analyzer` | "一模一策"分析引擎 |
+| `geo-content-generator` | 多模型内容生成 |
+| `geo-report-builder` | 日报/周报生成 |
+
+### 三、独立 Agent — 门店咨询 Bot
+
+根据 AGENTS.md 的 Self-Evolution 指南，面向顾客的 24h 咨询 bot 符合 **Persona isolation** 条件（需要亲切活泼的语气，与管理风格完全不同），建议创建独立 Agent：
+
+- **名称**：闲氪小助手
+- **语气**：亲切、活泼、热情
+- **能力**：回答门店位置、价格、房型、营业时间等咨询
+- **部署**：可嵌入门店小程序/公众号
+
+---
+
+## 📋 实施步骤
+
+我建议您按以下顺序推进：
+
+### Phase 1：基础建设（今天可完成）
+1. ✅ 加载 GEO 运营 blueprint
+2. ✅ 创建 4 个核心 Skills
+3. ✅ 创建门店咨询独立 Agent
+4. ✅ 初始化 5 家门店的 geo-strategy 和 geo-content 实体
+
+### Phase 2：测试运行（1-3 天）
+1. 运行能见度监测（模拟数据）
+2. 生成首批优化内容
+3. 您审批后分发到 mock-publish/
+4. 生成首份日报
+
+### Phase 3：正式运营（1 周后）
+1. 接入真实 AI 模型 API（如需）
+2. 建立周报机制
+3. 根据数据迭代策略
+
+---
+
+## 🎯 我的建议
+
+**立即执行 Phase 1**，我可以帮您：
+1. 创建并加载 `geo-operations.yaml` blueprint
+2. 创建 4 个核心 Skills
+3. 创建"闲氪小助手"独立 Agent
+4. 初始化门店实体数据
+
+**您只需要确认**：
+- ✅ 以上规划是否符合您的预期？
+- ✅ 门店咨询 bot 的语气风格（亲切活泼）是否合适？
+- ✅ 是否需要我现在开始执行 Phase 1？
+
+确认后我立即开始实施。

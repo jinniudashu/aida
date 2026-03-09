@@ -1,0 +1,35 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的！👍
+
+## 📊 Dashboard 审批指南
+
+访问：**http://localhost:3456**
+
+### 您将看到
+
+1. **⚖️ Governance 面板**
+   - 电路断路器状态：RESTRICTED
+   - 待审批列表：4 条
+
+2. **待审批内容详情**
+   | 审批 ID | 门店 | 内容 |
+   |--------|------|------|
+   | `76c08a6f...` | 声临其境 KTV-五一广场店 | 3 模型优化内容 |
+   | `3ae2a4d2...` | 悠然茶室 - 芙蓉广场店 | 3 模型优化内容 |
+   | `6685c7e7...` | 棋乐无穷 - 岳麓山店 | 3 模型优化内容 |
+   | `62f87a3e...` | 音乐盒 KTV-江汉路店 | 3 模型优化内容 |
+
+3. **批准操作**
+   - 点击每条审批 → 查看内容详情 → 点击 **Approve**
+   - 批准后内容将自动分发到 `~/.aida/mock-publish/` 对应目录
+
+### 审批后
+
+- 电路断路器将自动解除 RESTRICTED 状态
+- 我可以继续创建 BPS 任务并同步数据到实体库
+- 明日 9:00 的自动监测 cron 会正常运行
+
+---
+
+有任何问题随时叫我！审批完成后告诉我，我继续后续工作。🌟
