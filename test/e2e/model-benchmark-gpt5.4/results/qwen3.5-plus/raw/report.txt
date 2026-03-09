@@ -1,0 +1,16 @@
+IdleX GEO E2E Test v3
+=====================
+Date:    Monday, 09 March, 2026 11:39:27 PM CST
+Server:  iZt4n7qaa80fqgnql0diggZ
+Session: agent:main:main (dmScope=main)
+Results: 40 PASS / 1 FAIL / 4 WARN / 41 TOTAL
+
+Entities:   8
+Skills:     13
+Violations: 0
+Approvals:  0
+Blueprints: 1
+Publish:    7
+
+Logs: /tmp/idlex-geo-e2e-v3/
+Dashboard: http://localhost:3456

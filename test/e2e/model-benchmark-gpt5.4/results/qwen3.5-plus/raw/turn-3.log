@@ -1,0 +1,136 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 📊 GEO 运营体系建模完成总览
+
+---
+
+### 一、BPS 蓝图（1 个）
+
+| 蓝图名称 | 路径 | 服务数 | 状态 |
+|---------|------|--------|------|
+| 闲氪 GEO 运营体系 | `~/.aida/blueprints/闲氪-geo-运营体系.yaml` | 8 个服务 | ✅ 已加载 |
+
+**服务流程图**:
+```
+能见度探测 → 一模一策分析 → 内容生成 → 🔒审批网关 → 内容分发
+                                              ↓
+                                         (您审批后发布)
+```
+
+---
+
+### 二、Skills（6 个）
+
+| 技能名 | 功能 | 路径 |
+|--------|------|------|
+| `geo-visibility-monitor` | AI 能见度探测 | `skills/geo-visibility-monitor/` |
+| `geo-strategy-analyzer` | 一模一策分析 | `skills/geo-strategy-analyzer/` |
+| `geo-content-creator` | 优化内容生成 | `skills/geo-content-creator/` |
+| `geo-daily-reporter` | 日报生成 | `skills/geo-daily-reporter/` |
+| `geo-weekly-reviewer` | 周报复盘 | `skills/geo-weekly-reviewer/` |
+| `store-consultant-bot` | 24h 咨询 Bot | `skills/store-consultant-bot/` |
+
+---
+
+### 三、定时任务（Cron，5 个）
+
+| 任务名 | Schedule | 下次执行 | 状态 |
+|--------|----------|----------|------|
+| GEO 每日监测启动 | 每日 09:00 | 明天 09:00 | ✅ |
+| GEO 每日监测 (旧) | 每日 09:00 | 明天 09:00 | ⚠️ 可清理 |
+| GEO 日报生成 | 每日 22:00 | 今天 22:00 | ✅ |
+| GEO 周报复盘 | 每周日 20:00 | 3 月 15 日 | ✅ |
+| GEO 每周复盘 (旧) | 每周一 10:00 | 3 月 17 日 | ⚠️ 可清理 |
+
+---
+
+### 四、业务实体（8 个）
+
+**门店实体（5 家）**:
+| 门店 ID | 名称 | 城市 | 状态 |
+|--------|------|------|------|
+| `store-cs-ktv-01` | 声临其境 KTV-五一广场店 | 长沙 | ✅ 已测试 |
+| `store-cs-tea-01` | 悠然茶室 - 芙蓉广场店 | 长沙 | ⏳ 待监测 |
+| `store-cs-mj-01` | 棋乐无穷 - 岳麓山店 | 长沙 | ⏳ 待监测 |
+| `store-wh-ktv-01` | 音乐盒 KTV-江汉路店 | 武汉 | ⏳ 待监测 |
+| `store-wh-tea-01` | 静享茶空间 - 楚河汉街店 | 武汉 | ⏳ 待监测 |
+
+**行动计划（1 个）**:
+- `plan-geo-operations-001` - GEO 日常运营（active）
+
+---
+
+### 五、当前任务状态
+
+| 任务 ID | 服务 | 状态 | 说明 |
+|--------|------|------|------|
+| `df754fc3...` | 内容发布审批 | 🔴 **OPEN** | 等待您审批声临其境 KTV 内容 |
+
+---
+
+### 六、文件目录
+
+```
+~/.aida/
+├── blueprints/
+│   └── 闲氪-geo-运营体系.yaml          ← 蓝图定义
+├── mock-publish/
+│   ├── GEO-初始化报告.md               ← 完整报告
+│   └── store-cs-ktv-01/
+│       └── 2026-03-09/
+│           └── draft.md                ← 待审批内容草稿
+└── context/                            ← 业务资料（已有）
+
+~/.openclaw/workspace/skills/
+├── geo-visibility-monitor/
+├── geo-strategy-analyzer/
+├── geo-content-creator/
+├── geo-daily-reporter/
+├── geo-weekly-reviewer/
+└── store-consultant-bot/
+```
+
+---
+
+### 七、Dashboard 能看到什么 🖥️
+
+**访问地址**: `http://localhost:3456` (或服务器 IP:3456)
+
+**Dashboard 实时展示**:
+
+| 模块 | 内容 |
+|------|------|
+| **任务看板** | 所有 BPS 任务状态（OPEN/IN_PROGRESS/COMPLETED/FAILED） |
+| **流程可视化** | GEO 运营流程图 + 当前任务位置 |
+| **审批队列** | 待您审批的任务（当前 1 个：声临其境 KTV 内容） |
+| **实体列表** | 5 家门店 + 行动计划 + 内容草稿 |
+| **服务目录** | 8 个 GEO 服务的定义和状态 |
+| **治理状态** | 电路 breaker 状态、约束、违规记录 |
+| **任务历史** | 已完成任务的执行记录和结果 |
+
+**当前 Dashboard 会显示**:
+- 🔴 1 个待审批任务（`svc-geo-approval-gate`）
+- 🟢 3 个已完成任务（能见度探测→分析→内容生成）
+- 📋 5 家门店实体
+- 📅 3 个活跃 cron 任务
+
+---
+
+### 八、治理规则状态 ✅
+
+| 规则 | 状态 | 说明 |
+|------|------|------|
+| 内容发布审批 | ✅ 生效中 | 所有内容必须经您审批 |
+| 战略调整确认 | ✅ 生效中 | 重大调整需您确认 |
+| 电路 breaker | ✅ NORMAL | 无违规 |
+
+---
+
+## 🎯 下一步建议
+
+1. **查看 Dashboard** → `http://localhost:3456` 查看可视化界面
+2. **审批内容草稿** → 任务 ID `df754fc3-15c7-42ef-b7c5-4d106f9f3fb8`
+3. **批量探测剩余 4 家门店** → 完成首次全量监测
+4. **清理旧 cron 任务** → 移除重复的监测任务
+
+需要我帮您打开 Dashboard 或执行其他操作吗？

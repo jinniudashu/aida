@@ -1,0 +1,7 @@
+{
+  "id": "qwen3.5-plus",
+  "name": "Qwen3.5-Plus",
+  "provider": "dashscope",
+  "primary": "dashscope/qwen3.5-plus",
+  "timestamp": "2026-03-09T23:39:27+08:00"
+}

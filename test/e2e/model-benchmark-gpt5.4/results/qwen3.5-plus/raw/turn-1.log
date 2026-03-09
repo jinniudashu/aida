@@ -1,0 +1,88 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的，我已经完整阅读了闲氪的业务资料。现在为您规划一套完整的 GEO 日常运营体系。
+
+## 📋 闲氪 GEO 运营体系规划
+
+基于闲氪"双轮驱动"战略和"大模型三原则"（能看见、敢调用、能交付），我为您设计以下体系：
+
+### 一、体系架构总览
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GEO 运营体系                              │
+├─────────────────────────────────────────────────────────────┤
+│  监测层 → 分析层 → 生成层 → 审批层 → 分发层 → 复盘层         │
+├─────────────────────────────────────────────────────────────┤
+│  24h 门店咨询 Bot（独立代理，亲切活泼语气）                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 二、核心服务设计
+
+| 服务 ID | 服务名称 | 类型 | 说明 |
+|--------|---------|------|------|
+| `svc-geo-visibility-check` | AI 能见度探测 | atomic | 模拟探测门店在豆包/千问/元宝的曝光情况 |
+| `svc-geo-analyze-strategy` | 一模一策分析 | agent | 分析数据，制定每家门店的优化策略 |
+| `svc-geo-content-generate` | 优化内容生成 | agent | 为每家门店×每个 AI 模型生成 SEO 内容 |
+| `svc-geo-content-publish` | 内容分发 | system | 分发到 `~/.aida/mock-publish/` |
+| `svc-geo-daily-report` | 日报生成 | agent | 每日运营小结 |
+| `svc-geo-weekly-review` | 周报复盘 | agent | 每周深度复盘 |
+| `svc-geo-approval-gate` | 审批网关 | manual | **治理关卡** - 您审批后才能发布 |
+
+### 三、治理规则（您的两条规矩）
+
+我将通过 BPS 蓝图实现两条**硬性治理约束**：
+
+1. **内容发布审批**：所有 `svc-geo-content-publish` 任务必须先经过 `svc-geo-approval-gate`（executor: manual）
+2. **战略调整确认**：当 `svc-geo-analyze-strategy` 输出"重大战略调整"标记时，必须经您确认才能执行
+
+### 四、实体类型设计
+
+| 实体类型 | 说明 |
+|---------|------|
+| `store` | 已有 - 5 家合作门店 |
+| `geo-visibility-report` | 能见度探测报告（每日×每店×每 AI） |
+| `geo-optimization-plan` | 一模一策优化方案 |
+| `geo-content-draft` | 待审批的内容草稿 |
+| `geo-approval-request` | 审批请求记录 |
+| `action-plan` | 已有 - 用于周期性运营计划 |
+
+### 五、24h 门店咨询 Bot
+
+这是一个**独立代理**（非您日常交互的 Aida），特点：
+- **语气**：亲切活泼、口语化、有 emoji
+- **功能**：回答顾客关于门店位置、价格、房型、营业时间等问题
+- **渠道**：可部署为微信客服、网页悬浮窗、或独立 Chatbot
+- **数据源**：读取 `store` 实体数据 + FAQ 知识库
+
+---
+
+## 🚀 下一步执行计划
+
+我建议分 3 个阶段实施：
+
+**Phase 1 - 基础框架（今天）**
+1. 加载 GEO 运营蓝图
+2. 创建必要实体类型
+3. 创建 mock-publish 目录
+4. 注册每日/每周 cron 任务
+
+**Phase 2 - 监测与内容生成（明天）**
+1. 运行首次能见度探测（模拟数据）
+2. 生成一模一策分析
+3. 生成首批优化内容草稿
+4. 提交给您审批
+
+**Phase 3 - 咨询 Bot 部署（后天）**
+1. 创建独立咨询 bot 代理
+2. 配置门店知识库
+3. 测试问答效果
+
+---
+
+**您确认这个规划方向吗？** 如果没问题，我现在开始执行 Phase 1。
+
+另外有两个细节需要您确认：
+1. **日报发送时间**：您希望每天几点收到 GEO 运营日报？（建议 22:00，工作结束后）
+2. **周报发送时间**：每周几进行深度复盘？（建议周日晚）

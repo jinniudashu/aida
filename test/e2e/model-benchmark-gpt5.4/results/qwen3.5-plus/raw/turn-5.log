@@ -1,0 +1,32 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的！您在 Dashboard 会看到：
+
+---
+
+### 🖥️ Dashboard 审批指引
+
+**访问地址**: `http://localhost:3456`
+
+**审批路径**:
+1. 进入 **任务看板** → 筛选 `OPEN` 状态
+2. 找到 5 个 `svc-geo-approval-gate` 任务
+3. 点击任务查看内容草稿（或提前在文件路径查看）
+4. 审批操作：
+   - ✅ **批准** → `bps_complete_task` 完成任务
+   - ✏️ **需修改** → 备注修改意见后退回
+
+**5 个待审批任务**:
+| 门店 | 任务 ID (前 8 位) | 优先级 |
+|------|------------------|--------|
+| 声临其境 KTV | `df754fc3` | 普通 |
+| 悠然茶室 | `dfd490cf` | 普通 |
+| 棋乐无穷 | `b85fb36c` | 🔴 高 |
+| 音乐盒 KTV | `c0588ed2` | 普通 |
+| 静享茶空间 | `4f8dc681` | 普通 |
+
+---
+
+**审批完成后**，内容会自动进入分发流程，保存到 `~/.aida/mock-publish/` 对应目录。
+
+有任何问题随时叫我！👋
