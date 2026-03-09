@@ -239,27 +239,9 @@ set -e
 mkdir -p /tmp/model-benchmark-gpt5.4/$MODEL_ID/raw
 cp /tmp/idlex-geo-e2e-v3/* /tmp/model-benchmark-gpt5.4/$MODEL_ID/raw/ 2>/dev/null || true
 
-PASS_N=$(python3 - <<'PY'
-import re
-from pathlib import Path
-text = Path('/tmp/model-benchmark-gpt5.4/$MODEL_ID/e2e-test.log').read_text(encoding='utf-8', errors='ignore')
-nums = re.findall(r'(\d+) PASS', text)
-print(nums[-1] if nums else '0')
-PY)
-FAIL_N=$(python3 - <<'PY'
-import re
-from pathlib import Path
-text = Path('/tmp/model-benchmark-gpt5.4/$MODEL_ID/e2e-test.log').read_text(encoding='utf-8', errors='ignore')
-nums = re.findall(r'(\d+) FAIL', text)
-print(nums[-1] if nums else '0')
-PY)
-WARN_N=$(python3 - <<'PY'
-import re
-from pathlib import Path
-text = Path('/tmp/model-benchmark-gpt5.4/$MODEL_ID/e2e-test.log').read_text(encoding='utf-8', errors='ignore')
-nums = re.findall(r'(\d+) WARN', text)
-print(nums[-1] if nums else '0')
-PY)
+PASS_N=$(python3 -c "import re, pathlib; text=pathlib.Path('/tmp/model-benchmark-gpt5.4/${MODEL_ID}/e2e-test.log').read_text(encoding='utf-8', errors='ignore'); nums=re.findall(r'(\\d+) PASS', text); print(nums[-1] if nums else '0')")
+FAIL_N=$(python3 -c "import re, pathlib; text=pathlib.Path('/tmp/model-benchmark-gpt5.4/${MODEL_ID}/e2e-test.log').read_text(encoding='utf-8', errors='ignore'); nums=re.findall(r'(\\d+) FAIL', text); print(nums[-1] if nums else '0')")
+WARN_N=$(python3 -c "import re, pathlib; text=pathlib.Path('/tmp/model-benchmark-gpt5.4/${MODEL_ID}/e2e-test.log').read_text(encoding='utf-8', errors='ignore'); nums=re.findall(r'(\\d+) WARN', text); print(nums[-1] if nums else '0')")
 ENTITIES=$(curl -sf http://localhost:3456/api/entities 2>/dev/null | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
 SERVICES=$(curl -sf http://localhost:3456/api/services 2>/dev/null | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
 RULES=$(curl -sf http://localhost:3456/api/rules 2>/dev/null | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
@@ -290,7 +272,8 @@ cat > /tmp/model-benchmark-gpt5.4/$MODEL_ID/metrics.json <<JSON
 }
 JSON
 
-tar -czf /tmp/model-benchmark-gpt5.4/$MODEL_ID/results.tar.gz -C /tmp/model-benchmark-gpt5.4/$MODEL_ID .
+rm -f /tmp/model-benchmark-gpt5.4/$MODEL_ID/results.tar.gz
+tar --exclude=results.tar.gz -czf /tmp/model-benchmark-gpt5.4/$MODEL_ID/results.tar.gz -C /tmp/model-benchmark-gpt5.4/$MODEL_ID .
 echo benchmark-complete
 REMOTE_RUN
 

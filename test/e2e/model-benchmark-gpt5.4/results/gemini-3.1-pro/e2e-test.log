@@ -1,0 +1,461 @@
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 0: Clean Environment + Install[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:07:35][0m Stopping existing services...
+[0;36m[23:07:38][0m Backing up ~/.aida/ ...
+[0;36m[23:07:38][0m Wiping OpenClaw state (workspace, sessions, cron, memory)...
+[0;36m[23:07:38][0m   State wiped (plugins, config, and auth preserved)
+[0;36m[23:07:38][0m Loading API keys...
+[0;36m[23:07:38][0m   OPENROUTER_API_KEY loaded (73 chars)
+[0;36m[23:07:38][0m Updating repo...
+Fetching submodule erpsys
+Already up to date.
+[0;36m[23:07:44][0m Running install-aida.sh (includes Gateway auth setup)...
+
+========================================
+  AIDA 一键部署
+========================================
+
+[0;36m[..][0m 预检查...
+[0;32m[OK][0m Node.js 24.13.0
+[0;32m[OK][0m 预检查通过
+[0;36m[..][0m 拉取最新代码...
+Already up to date.
+[0;32m[OK][0m git pull 成功
+[0;36m[..][0m 安装 npm 依赖...
+Run `npm audit` for details.
+[0;32m[OK][0m npm install 完成
+[0;36m[..][0m 编译 bps-engine...
+[0;32m[OK][0m bps-engine 编译完成
+[0;36m[..][0m 初始化 AIDA 项目目录: /root/.aida
+[0;32m[OK][0m 目录结构就绪（项目初始化由 Aida 引导完成）
+[0;36m[..][0m 合并 Aida → 主 Agent workspace: /root/.openclaw/workspace
+[0;32m[OK][0m   Aida/IDENTITY.md
+[0;32m[OK][0m   Aida/SOUL.md
+[0;32m[OK][0m   Aida/AGENTS.md
+[0;32m[OK][0m   Aida/HEARTBEAT.md
+[0;32m[OK][0m   Aida/BOOT.md
+[0;32m[OK][0m   Aida/USER.md
+[0;32m[OK][0m   Aida/TOOLS.md
+[0;36m[..][0m 安装 Aida skills → /root/.openclaw/workspace/skills/
+[0;32m[OK][0m   skill/action-plan
+[0;32m[OK][0m   skill/agent-create
+[0;32m[OK][0m   skill/blueprint-modeling
+[0;32m[OK][0m   skill/business-execution
+[0;32m[OK][0m   skill/dashboard-guide
+[0;32m[OK][0m   skill/project-init
+[0;32m[OK][0m   skill/skill-create
+[0;32m[OK][0m 7 skill(s) 已安装
+[0;36m[..][0m 安装 BPS 引擎扩展...
+[0;32m[OK][0m   清理旧 plugin 路径完成
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] System knowledge: 2 loaded, 0 skipped
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+│
+◇  Config warnings ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch  │
+│    (manifest uses "bps-engine", entry hints "aida")                   │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:
+- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config overwrite: /root/.openclaw/openclaw.json (sha256 f3ccf9049c48610b006ad10275f9b7990e0410baa8e26ba8f30ecb10ce5ff2c8 -> fd3460b7e11c40045aabb9024a9dd10d34c51a42e7da612cd70047c26c4b9b04, backup=/root/.openclaw/openclaw.json.bak)
+Linked plugin path: ~/aida
+Restart the gateway to load plugins.
+[0;32m[OK][0m openclaw plugins install --link 成功
+[0;36m[..][0m 构建 Dashboard...
+✓ built in 12.42s
+[0;32m[OK][0m Dashboard 构建完成
+[0;32m[OK][0m bps-dashboard systemd 服务已启动
+[0;36m[..][0m 合并 Agent 配置到 /root/.openclaw/openclaw.json
+[feishu] FEISHU_APP_ID / FEISHU_APP_SECRET not set, skipping feishu config
+[0;32m[OK][0m openclaw.json 配置已自动合并
+[models] DASHSCOPE_API_KEY not set, skipping dashscope provider
+[models] MOONSHOT_API_KEY not set, skipping moonshot provider
+[0;32m[OK][0m models.json 已更新
+[1;33m[!!][0m DASHSCOPE_API_KEY 和 MOONSHOT_API_KEY 均未设置
+[0;36m[..][0m   设置方法: export DASHSCOPE_API_KEY=sk-... MOONSHOT_API_KEY=sk-... && bash deploy/install-aida.sh
+[0;32m[OK][0m Gateway auth: OpenRouter API key → auth-profiles.json
+
+[0;36m[..][0m 部署验证...
+[0;32m[OK][0m ~/.aida/project.yaml 尚未创建（首次启动时由 Aida 引导生成）
+[0;32m[OK][0m Aida 主 workspace 完整
+[0;32m[OK][0m Aida skills 完整 (7 skill(s))
+[0;32m[OK][0m Dashboard 构建产物完整
+[0;32m[OK][0m Dashboard 服务运行中
+[0;32m[OK][0m BPS 引擎扩展已注册
+[0;32m[OK][0m openclaw.json 配置正确
+[1;33m[!!][0m 飞书 Channel 未配置（设置 FEISHU_APP_ID + FEISHU_APP_SECRET 后重新运行）
+
+========================================
+  [0;32m部署完成[0m
+========================================
+
+[0;32m[OK][0m 已部署：
+  ~/.aida/                   ← 业务项目数据
+  Aida（主 Agent + skills）  ← /root/.openclaw/workspace
+  BPS 引擎扩展              ← openclaw plugins
+  openclaw.json              ← 配置已自动合并
+  Dashboard                  ← /root/aida/dashboard (port 3456)
+
+[0;32m[OK][0m 重启 OpenClaw 实例即可生效
+  验证：发送 '你是谁？' 确认 Aida 已激活
+
+[0;36m[23:08:14][0m Starting OpenClaw gateway...
+│
+◇  Config warnings ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch  │
+│    (manifest uses "bps-engine", entry hints "aida")                   │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+Restarted systemd service: openclaw-gateway.service
+[0;36m[23:08:16][0m Waiting for gateway health...
+[0;36m[23:08:20][0m   Gateway healthy after 1x5s
+[0;36m[23:08:20][0m Verifying model config...
+  Primary model: google/gemini-3.1-pro-preview
+  Fallbacks: ["moonshot/kimi-k2.5"]
+[0;36m[23:08:20][0m   No stale session files — clean start confirmed
+[0;36m[23:08:20][0m V0: Post-install checks
+  [0;32mPASS[0m V0.1 ~/.aida/blueprints/
+  [0;32mPASS[0m V0.2 ~/.aida/data/
+  [0;32mPASS[0m V0.3 ~/.aida/context/
+  [0;32mPASS[0m V0.4 SOUL.md
+  [0;32mPASS[0m V0.5 AGENTS.md
+  [0;32mPASS[0m V0.6 HEARTBEAT.md
+  [0;32mPASS[0m V0.7 BOOT.md
+  [0;32mPASS[0m V0.8 USER.md
+  [0;32mPASS[0m V0.9 TOOLS.md
+  [0;32mPASS[0m V0.10 Skills >= 7 (found 7)
+  [0;32mPASS[0m V0.11 Dashboard /api/overview
+  [0;32mPASS[0m V0.12 USER.md has timezone
+  [0;32mPASS[0m V0.13 TOOLS.md has BPS tools
+  [0;32mPASS[0m V0.15 Gateway auth-profiles.json
+  [0;32mPASS[0m V0.16 OpenRouter auth configured
+  [0;32mPASS[0m V0.14 SOUL.md Two-Layer condensed
+[0;36m[23:08:20][0m Phase 0 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 1: Data Seeding[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:08:20][0m Creating project.yaml...
+[0;36m[23:08:20][0m Creating governance.yaml...
+[0;36m[23:08:20][0m Copying business context docs...
+[0;36m[23:08:20][0m   Copied 7 docs from /root/idlekr/docs
+[0;36m[23:08:20][0m Creating mock-publish directories...
+[0;36m[23:08:20][0m Seeding 5 store entities + governance via TypeScript...
+[seed] DB: /root/.aida/data/bps.db
+[seed] + 声临其境KTV-五一广场店 (store-cs-ktv-01)
+[seed] + 悠然茶室-芙蓉广场店 (store-cs-tea-01)
+[seed] + 棋乐无穷-岳麓山店 (store-cs-mj-01)
+[seed] + 音乐盒KTV-江汉路店 (store-wh-ktv-01)
+[seed] + 静享茶空间-楚河汉街店 (store-wh-tea-01)
+[seed] + 3 governance constraints
+[seed] Done: 7 entities total
+(node:482858) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[0;36m[23:08:21][0m Restarting Dashboard...
+[0;36m[23:08:24][0m V1: Post-seed checks
+  [0;32mPASS[0m V1.1 5 store entities (got 5)
+  [0;32mPASS[0m V1.2 >= 3 governance constraints (got 3)
+  [0;32mPASS[0m V1.3 Context docs present (got 7)
+  [0;32mPASS[0m V1.4 Mock-publish dirs
+  [0;32mPASS[0m V1.5 project.yaml
+[0;36m[23:08:24][0m Phase 1 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 2: Business Requirements (Turn 1)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:08:24][0m Baseline: 7 entities, 7 skills
+[0;36m[23:08:24][0m Turn 1: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 1, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
+    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
+    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
+    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
+    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
+    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-1.log, 26 lines total) ---[0m
+
+  [0;32mPASS[0m V2.1 Aida produced response
+  [1;33mWARN[0m V2.2 Mentions plan/strategy (non-critical)
+  [0;32mPASS[0m V2.3 Identifies skill/agent gap
+  [0;32mPASS[0m V2.4 Two-Layer: governance vs operations
+[0;36m[23:08:29][0m Phase 2 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 3: Modeling (Turn 2)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:08:29][0m Turn 2: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 2, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
+    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
+    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
+    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
+    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
+    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-2.log, 26 lines total) ---[0m
+
+[0;36m[23:08:40][0m V3: Post-modeling checks
+  [0;31mFAIL[0m V3.1 New entities created >= 2 (got 0)
+  [1;33mWARN[0m V3.2 Action plan entity (got 0) (non-critical)
+  [1;33mWARN[0m V3.3 Strategy entity (got 0) (non-critical)
+[0;36m[23:08:40][0m Entity breakdown:
+  knowledge: 2
+  store: 5
+  [1;33mWARN[0m V3.4 No new Skills created (non-critical)
+  [1;33mWARN[0m V3.5 No Agent workspace created (non-critical)
+  [1;33mWARN[0m V3.6 No blueprints created (Entity+Skill path preferred)
+[0;36m[23:08:40][0m Phase 3 complete. Entities: +0
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 4: Review (Turn 3)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:08:40][0m Turn 3: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 3, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
+    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
+    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
+    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
+    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
+    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-3.log, 26 lines total) ---[0m
+
+  [0;32mPASS[0m V4.1 Aida produced review
+  [1;33mWARN[0m V4.2 Mentions Dashboard (non-critical)
+[0;36m[23:08:45][0m Phase 4 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 5: GEO Execution (Turn 4)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:08:45][0m Turn 4: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 4, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
+    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
+    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
+    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
+    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
+    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-4.log, 25 lines total) ---[0m
+
+[0;36m[23:08:56][0m V5: Post-execution checks
+  [1;33mWARN[0m V5.1 No governance trigger (Aida may not have attempted publish)
+  [0;32mPASS[0m V5.2 Aida reported governance interception
+[0;36m[23:08:56][0m GEO entity scan:
+[0;36m[23:08:56][0m Phase 5 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 6: Dashboard Approval[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:08:56][0m Turn 5: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 5, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
+    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
+    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
+    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
+    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
+    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-5.log, 26 lines total) ---[0m
+
+  [1;33mWARN[0m V6.1 No pending approvals to process
+[0;36m[23:09:01][0m Phase 6 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 7: Daily Summary (Turn 6)[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:09:01][0m Turn 6: sending to Aida (dmScope=main, shared session)...
+[0;36m--- Aida response (turn 6, first 30 lines) ---[0m
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 14 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[openclaw] Unhandled promise rejection: Error: No API provider registered for api: google-generativeai
+    at resolveApiProvider (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:8:15)
+    at streamSimple (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/stream.js:21:22)
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:78129:10
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:77843:51
+    at file:///root/.local/share/pnpm/global/5/.pnpm/openclaw@2026.3.2_@napi-rs+canvas@0.1.95_@types+express@5.0.6_hono@4.11.10_node-llama-cpp@3.15.1/node_modules/openclaw/dist/subagent-registry-CkqrXKq4.js:81814:23
+    at streamAssistantResponse (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:151:28)
+    at async runLoop (file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:86:29)
+    at async file:///root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-agent-core@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-agent-core/dist/agent-loop.js:24:9
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-6.log, 25 lines total) ---[0m
+
+  [0;32mPASS[0m V7.1 Aida produced summary
+  [0;32mPASS[0m V7.2 Summary has business content
+[0;36m[23:09:07][0m Phase 7 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase 8: Final Verification[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+[0;36m[23:09:07][0m Comprehensive checks...
+  [0;32mPASS[0m V8.1 Total entities >= 7 (got 7)
+[0;36m[23:09:07][0m Entity breakdown:
+  Total: 7
+  knowledge: 2
+  store: 5
+[0;36m[23:09:07][0m   Violations: 0, Approved: 0
+  [0;32mPASS[0m V8.2 Dashboard /
+  [0;32mPASS[0m V8.2 Dashboard /business-goals
+  [0;32mPASS[0m V8.2 Dashboard /approvals
+  [0;32mPASS[0m V8.2 Dashboard /governance
+  [0;32mPASS[0m V8.2 Dashboard /agent-log
+  [0;32mPASS[0m V8.3 Skills >= 7 (got 7)
+[0;36m[23:09:07][0m Skills:
+  blueprint-modeling
+  business-execution
+  dashboard-guide
+  action-plan
+  agent-create
+  skill-create
+  project-init
+[0;36m[23:09:07][0m Agent workspaces:
+  workspace
+[0;36m[23:09:07][0m   Blueprints: 0, Mock-publish files: 0
+[0;36m[23:09:07][0m Phase 8 complete.
+
+[1m[1;33m══════════════════════════════════════════════[0m
+[1m  Phase Test Report[0m
+[1m[1;33m══════════════════════════════════════════════[0m
+
+IdleX GEO E2E Test v3
+=====================
+Date:    Monday, 09 March, 2026 11:09:07 PM CST
+Server:  iZt4n7qaa80fqgnql0diggZ
+Session: agent:main:main (dmScope=main)
+
+Results: 35 PASS / 1 FAIL / 9 WARN / 36 TOTAL
+
+[1;33mMOSTLY PASSED (1 minor failures)[0m
+
+Logs:      /tmp/idlex-geo-e2e-v3/turn-{1..6}.log
+Dashboard: http://localhost:3456
+
+[0;36m[23:09:07][0m Report saved: /tmp/idlex-geo-e2e-v3/report.txt
+[0;36m[23:09:07][0m Combined logs: /tmp/idlex-geo-e2e-v3/all-turns.log
