@@ -423,6 +423,22 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **持续问题**：Gateway auth-profiles.json 缺失导致每轮降级 embedded 模式；治理绕过（第 4 次复现，Aida 自建文件级审批流替代）
 - **LLM 模型结论**：`openrouter/openai/gpt-5.4` 确认可用且效果最佳；注意 `openai/` 前缀路由到原生 OpenAI（不兼容），必须用 `openrouter/` 前缀
 
+### 第三方专家评估（2026-03-09）
+- 评估报告：`archive/AIDA项目第三方专家评估报告 (2026-03-09).md`
+- **综合评分：8.4/10**（理论原创 9.5 / 架构完整 8.5 / 工程质量 8.0 / 治理能力 9.0 / 测试覆盖 8.8 / 实用成熟 7.5 / 可扩展性 8.0）
+- **核心结论**：AIDA 是理论原创、架构完整、工程扎实的 AI-Native 组织运营基础设施平台
+- **双引擎对比**：erpsys（Django 参考）→ bps-engine（TypeScript 生产版）演进路径合理
+- **P0 建议**：Blueprint 编译器完善、文件 I/O 治理绕过修复、Gateway 热加载
+- **SWOT 分析**：优势（理论原创+治理领先+工程扎实），劣势（业务验证有限+模型依赖），机会（市场空白+学术价值），威胁（LLM 能力进化+大厂竞争）
+
+### 六模型隔离 Benchmark（2026-03-09，进行中）
+- 新增独立测试目录 `test/e2e/model-benchmark-gpt5.4/`，与历史 `benchmark-results/` 分离，支持 preflight / 单模型运行 / 汇总报告
+- **已完成并提交推送**：GPT-5.4、Claude Opus 4.6、Gemini 3.1 Pro、Kimi K2.5、Qwen3.5-Plus、GLM-5 六个模型的独立结果目录与评测报告
+- **关键发现**：
+  - `install-aida.sh` 会覆盖 OpenClaw 默认主模型，需要 benchmark 脚本在安装阶段注入 `AIDA_BENCHMARK_PRIMARY`
+  - Gemini 原生 provider 在 OpenClaw 2026.3.2 下报 `No API provider registered for api: google-generativeai`，当前样本应视为 provider 装配失败而非纯模型能力失真
+  - Claude Opus 4.6 在业务理解、实体化落地与治理触发上表现最佳之一；Kimi / Qwen 稳定性较好；GLM-5 存在明显会话承接漂移
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
