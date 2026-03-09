@@ -1,0 +1,12 @@
+{
+  "modelId": "kimi-k2.5",
+  "primary": "moonshot/kimi-k2.5",
+  "timestamp": "2026-03-09T20:14:53+08:00",
+  "pass": 40,
+  "fail": 1,
+  "warn": 4,
+  "entities": 8,
+  "skills": 12,
+  "violations": 0,
+  "approvals": 0
+}
