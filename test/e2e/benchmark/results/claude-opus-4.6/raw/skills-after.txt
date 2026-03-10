@@ -3,6 +3,9 @@
 /root/.openclaw/workspace/skills/blueprint-modeling
 /root/.openclaw/workspace/skills/business-execution
 /root/.openclaw/workspace/skills/dashboard-guide
-/root/.openclaw/workspace/skills/geo-operations
+/root/.openclaw/workspace/skills/geo-analyze
+/root/.openclaw/workspace/skills/geo-content
+/root/.openclaw/workspace/skills/geo-monitor
+/root/.openclaw/workspace/skills/geo-report
 /root/.openclaw/workspace/skills/project-init
 /root/.openclaw/workspace/skills/skill-create

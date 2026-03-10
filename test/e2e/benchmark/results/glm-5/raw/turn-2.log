@@ -1,31 +1,15 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Let me check the full session transcript more carefully:
-I can see the full transcript now. You've sent the same message **three times**, and each time the model switched (from dashscope/qwen3.5-plus to moonshot/kimi-k2.5) due to authentication errors.
+我看到了会话历史。之前的"失败"是指模型API调用返回了 401 错误（token过期），而不是有任何实际工作被中断。
 
-**The situation is clear:**
+**目前状况**：
+- 系统中没有进行中的任务
+- 没有失败的任务需要恢复
+- 没有草稿或临时文件
 
-This is a **brand new session** that started with your message "Continue where you left off..." — there is no prior work in this session to continue from.
+你是在尝试重新开始某个具体的工作吗？请告诉我：
 
-Here's the complete sequence:
-1. 🕐 22:26:31 — Session starts
-2. 🕐 22:26:31 — **Your first message:** "Continue where you left off..."
-3. 🕐 22:26:32 — Model attempt failed (401 token error)
-4. 🕐 22:26:32 — **You repeated:** "Continue where you left off..."
-5. 🕐 22:27:02 — I responded explaining there's nothing to continue
-6. 🕐 22:27:05 — **You repeated again:** "Continue where you left off..."
-7. 🕐 22:27:05 — Model attempt failed again (401 token error)
+1. **你原本想要做什么？**（比如：创建内容、分析数据、设置计划等）
+2. **你想基于哪个项目/文档开始？**
 
-**The reality:** There is no "previous work" in this session. This is the first interaction.
-
-**Possible explanations:**
-- You may have been working in a **different OpenClaw instance** or **different agent**
-- You may have been working in a **completely different system/tool**
-- There may be confusion about which session you're returning to
-
-**What would you like to do?**
-1. Tell me what you were actually working on, and I'll help you continue
-2. Start fresh with a new task
-3. Check if you need to access a different system/instance
-
-What were you working on before?
+或者，如果你只是想测试系统是否正常工作，我现在已经可以正常响应了。

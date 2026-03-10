@@ -6,7 +6,7 @@
 [1m  Phase 0: Clean Environment + Install (BENCHMARK_MODE — skipped, verifying)[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:33:08][0m V0: Verifying installation...
+[0;36m[23:23:14][0m V0: Verifying installation...
   [0;32mPASS[0m V0.1 ~/.aida/blueprints/
   [0;32mPASS[0m V0.2 ~/.aida/data/
   [0;32mPASS[0m V0.3 ~/.aida/context/
@@ -23,18 +23,18 @@
   [0;32mPASS[0m V0.15 Gateway auth-profiles.json
   [0;32mPASS[0m V0.16 OpenRouter auth configured
   [0;32mPASS[0m V0.14 SOUL.md Two-Layer condensed
-[0;36m[22:33:08][0m Phase 0 complete.
+[0;36m[23:23:14][0m Phase 0 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 1: Data Seeding[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:33:08][0m Creating project.yaml...
-[0;36m[22:33:08][0m Creating governance.yaml...
-[0;36m[22:33:08][0m Copying business context docs...
-[0;36m[22:33:08][0m   Copied 7 docs from /root/idlekr/docs
-[0;36m[22:33:08][0m Creating mock-publish directories...
-[0;36m[22:33:08][0m Seeding 5 store entities + governance via TypeScript...
+[0;36m[23:23:14][0m Creating project.yaml...
+[0;36m[23:23:14][0m Creating governance.yaml...
+[0;36m[23:23:14][0m Copying business context docs...
+[0;36m[23:23:14][0m   Copied 7 docs from /root/idlekr/docs
+[0;36m[23:23:14][0m Creating mock-publish directories...
+[0;36m[23:23:14][0m Seeding 5 store entities + governance via TypeScript...
 [seed] DB: /root/.aida/data/bps.db
 [seed] + 声临其境KTV-五一广场店 (store-cs-ktv-01)
 [seed] + 悠然茶室-芙蓉广场店 (store-cs-tea-01)
@@ -43,305 +43,301 @@
 [seed] + 静享茶空间-楚河汉街店 (store-wh-tea-01)
 [seed] + 3 governance constraints
 [seed] Done: 7 entities total
-(node:625229) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(node:632897) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
-[0;36m[22:33:09][0m Restarting Dashboard...
-[0;36m[22:33:12][0m V1: Post-seed checks
+[0;36m[23:23:15][0m Restarting Dashboard...
+[0;36m[23:23:18][0m V1: Post-seed checks
   [0;32mPASS[0m V1.1 5 store entities (got 5)
   [0;32mPASS[0m V1.2 >= 3 governance constraints (got 3)
   [0;32mPASS[0m V1.3 Context docs present (got 7)
   [0;32mPASS[0m V1.4 Mock-publish dirs
   [0;32mPASS[0m V1.4b Mock-publish-tmp dirs
   [0;32mPASS[0m V1.5 project.yaml
-[0;36m[22:33:12][0m Phase 1 complete.
+[0;36m[23:23:18][0m Phase 1 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 2: Business Requirements (Turn 1)[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:33:12][0m Baseline: 7 entities, 7 skills
-[0;36m[22:33:12][0m Turn 1: sending to Aida (dmScope=main, shared session)...
+[0;36m[23:23:18][0m Baseline: 7 entities, 7 skills
+[0;36m[23:23:18][0m Turn 1: sending to Aida (dmScope=main, shared session)...
 [0;36m--- Aida response (turn 1, first 30 lines) ---[0m
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-我先把业务背景和现有门店盘了一遍，接着给你落成一套可执行的运营体系方案。
-我先把这件事拆成“运营体系”和“治理规则”两层来规划，再补上顾客咨询 bot 的独立方案。
-我先给结论：这件事要按**两层架构**来搭——
-**运营层**负责“每天监测—分析—生成草稿—复盘”；
-**治理层**负责“所有外发内容先审批、重大策略调整先审批”。
-这样最稳，也最符合你提的两条铁规矩。
+我先把业务资料读完，再给你一套可执行的运营体系草案，重点会把“审批前置”和“战略调整需确认”固化进流程里。
+我先把业务背景和你的要求合在一起，搭一个可落地的运营蓝图，再把“治理规则”单独固化出来，避免后面执行跑偏。
+我先给你做一个可落地的运营架构，把业务背景、现有门店、审批规矩和“顾客 bot 要独立人格”这几件事一起纳进去。
 
-我已经看过 `~/.aida/context/` 的核心业务资料，也确认系统里已有 **5 家合作门店（长沙 3 家、武汉 2 家）**。从业务定位上，你们不是做“AI版SEO”，而是做**AI 可信空间数据与心智入口**；所以这套 GEO 体系的核心不是刷曝光，而是建立：
+可以，我建议按 **“运营体系 + 治理规则 + 独立顾客Bot”** 三层来搭。
+你的需求很明确，而且适合走 **Operations（实体+技能执行）** 为主、**Governance（审批/重大调整约束）** 为辅 的架构。
 
-**能被看见 → 被优先理解 → 被可信推荐 → 可履约承接**
+我先基于我刚读到的资料，给你一个完整规划草案。
 
 ---
 
-## 一、我建议的整体方案
+## 我先说结论
 
-### 目标
-搭建一个完整的 **闲氪 GEO 日常运营系统**，覆盖：
+这套体系我建议拆成 **4个模块 + 2条硬规则 + 1个独立代理**：
 
-1. **每日监测**：豆包 / 千问 / 元宝 的门店能见度
-2. **策略分析**：形成“一模一策”
-3. **内容生产**：按“门店 × 模型”生成优化内容
-4. **审批发布**：先写入 `~/.aida/mock-publish-tmp/`，审批后自动进入 `mock-publish/`
-5. **运营复盘**：日报 + 周报
-6. **顾客咨询 bot**：单独做一个**独立 agent**，亲切活泼、7×24 在线，和我当前管理风格隔离
+### 4个模块
+1. **AI能见度监测模块**
+每天监测 5 家合作门店在豆包 / 千问 / 元宝里的被提及、被推荐、推荐质量。
 
----
+2. **一模一策策略模块**
+按模型分别形成策略，不做“一套内容打天下”。
 
-## 二、为什么要分成“运营层 + 治理层”
-[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-1.log, 462 lines total) ---[0m
+3. **内容生成与待审发布模块**
+所有内容先写入 `~/.aida/mock-publish-tmp/` 草稿区，只有你审批后才进入正式发布。
+
+4. **日报 / 周报复盘模块**
+每日运营小结、每周深度复盘，沉淀成可追踪的数据资产。
+
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-1.log, 681 lines total) ---[0m
 
   [0;32mPASS[0m V2.1 Aida produced response
   [0;32mPASS[0m V2.2 Mentions plan/strategy
   [0;32mPASS[0m V2.3 Identifies skill/agent gap
   [0;32mPASS[0m V2.4 Two-Layer: governance vs operations
-[0;36m[22:34:29][0m Phase 2 complete.
+[0;36m[23:24:57][0m Phase 2 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 3: Modeling (Turn 2)[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:34:29][0m Turn 2: sending to Aida (dmScope=main, shared session)...
+[0;36m[23:24:57][0m Turn 2: sending to Aida (dmScope=main, shared session)...
 [0;36m--- Aida response (turn 2, first 30 lines) ---[0m
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-先把体系一次性搭起来：补业务实体、蓝图与治理、定时任务，以及顾客咨询 bot 的独立 agent 方案。由于这是较复杂的系统搭建，我会边做边给你关键进展。
-我先开始落地：补齐业务实体、治理蓝图、运行计划，以及顾客咨询 bot 的独立 agent 方案。之后我会把需要重启/配置的部分单独说明，因为那属于系统级变更。
-我开始直接落地：先建治理蓝图、运营实体/计划和顾客 bot 配置，再补 cron 与 agent 配置。已有 5 个门店客服 agent，我会优先复用它们，只新增一套 GEO 运营体系。
-我开始正式落地，先搭四块：治理蓝图、运营计划、门店与策略实体、顾客 bot 工作区。然后再补 cron 和配置。
-我开始落地了：先把治理蓝图和 GEO 运营 Skill 搭起来，再补实体、计划、Agent 和定时任务。
-我开始正式落地了：先把治理蓝图和 GEO 运营 Skill 建起来，然后补实体、行动计划、客服 agent 和定时任务。接下来我会把 5 家门店的策略卡与 bot 档案一并落库。
-我开始把这套体系真正落地：先建治理蓝图、运营 Skill、核心实体和首版 15 张策略卡；接着补 cron 和顾客 bot 运行面。
-我已经把治理蓝图、运营 Skill、项目实体、行动计划、顾客 bot 档案和 15 张首版策略卡建起来了。现在补最后两块：把统一顾客 bot agent 注册进配置，并挂上日常定时任务。
-已经开始落地，而且核心骨架我已经给你搭好了。
+我已经确认两件事：  
+1）系统里 5 家门店实体已经在；2）顾客侧 agent 其实已经存在一组“小闲”与网络顾问基础配置。  
+我现在直接补齐 GEO 运营这部分：建 Skill、建蓝图、建实体数据、建定时任务，并把顾客 bot 纳入同一套治理框架。
+我开始直接落地：会先把 **治理蓝图、运营技能、实体种子数据、顾客 bot 工作区、定时任务** 一次性搭起来，再做一次验证。
+我开始落地了：先把治理蓝图、GEO 技能和草稿目录建起来，再初始化实体和定时任务。
+我开始落地：先把治理蓝图和运营 Skill 建起来，再初始化实体和定时任务。接着我会把顾客 bot 也一并部署。
+我开始落地了：先把治理蓝图、GEO 运营 Skill、草稿目录和系统实体骨架建起来；接下来补齐 5 家门店的策略卡、模拟监测数据、日报样例和顾客 bot 工作区。
+我已经开始落地了：先把治理规则、运营 Skill、目录结构和系统总实体建起来。接下来我继续把 5 家门店 × 3 模型的策略、模拟监测样本、日报草稿、以及顾客 bot 工作区一起补齐。
+我开始正式落地了：先把治理蓝图、GEO运营 Skill、目录结构和核心实体搭起来，再把 5 家门店的策略卡、模拟监测、日报草稿和顾客 bot 一并补全。
+我开始正式落地：先把治理蓝图、GEO Skill、目录结构和基础实体建起来，再补齐 5 家门店 × 3 模型的策略卡，并把顾客 bot 一并接入。
+我开始直接落地：先把治理蓝图、GEO 专用 Skill、系统实体和 15 份“一店一模一策”策略卡建起来，再补日报、草稿与定时任务。
+我已经把底座搭起来了，继续把草稿文件、顾客 bot 工作区和定时任务一起补齐。
+我已经开始落地了：治理蓝图、运营 Skill、实体骨架、策略卡、模拟观测、日报草稿都建起来了。  
+接下来把定时任务和顾客 Bot 的工作区补齐，然后我给你一个可直接接管的清单。
+我已经开始落地了：蓝图、Skill、实体骨架、样例观测、日报草稿、以及顾客 bot 的独立 workspace 都建好了。  
+现在还差两步关键收口：把顾客 bot 正式接进配置，以及把每日/每周定时任务挂上。
+已开始落地，而且第一版骨架已经搭起来了。你现在不用再给我拆任务，我会继续把它补齐。
 
-### 现在已完成的部分
-1. **治理蓝图已上线**
-- 已创建并加载：`/root/.aida/blueprints/idlex-geo-governance.yaml`
-- 已覆盖两条关键规则：
-- **外发内容先审批**
-- **重大策略调整先确认**
+### 我已经完成的部分
 
-2. **GEO 运营 Skill 已创建**
-- 路径：`/root/.openclaw/workspace/skills/geo-ops/SKILL.md`
-- 作用：支持每日模拟监测、策略卡维护、草稿内容生成、日报周报输出
+#### 1) 治理蓝图已建并加载
+已创建并加载：
+- `~/.aida/blueprints/xianke-geo-governance.yaml`
 
-3. **项目实体与计划实体已建**
-- `project/idlex-geo`
-- `action-plan/idlex-geo-daily-ops`
-- `customer-bot-profile/xiaoxian-network`
-- `geo-program/idlex-geo-mvp`
+作用：
+- GEO 内容人工审批
+- GEO 重大策略人工审批
 
-4. **5 家门店 × 3 模型 的首版策略卡已建完**
-[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-2.log, 98 lines total) ---[0m
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-2.log, 197 lines total) ---[0m
 
-[0;36m[22:37:16][0m V3: Post-modeling checks
-  [0;32mPASS[0m V3.1 New entities created >= 2 (got 19)
-  [0;32mPASS[0m V3.2 Action plan entity (got 1)
-  [1;33mWARN[0m V3.3 Strategy entity (got 0) (non-critical)
-[0;36m[22:37:16][0m Entity breakdown:
-  action-plan: 1
-  customer-bot-profile: 1
+[0;36m[23:28:29][0m V3: Post-modeling checks
+  [0;32mPASS[0m V3.1 New entities created >= 2 (got 24)
+  [1;33mWARN[0m V3.2 Action plan entity (got 0) (non-critical)
+  [0;32mPASS[0m V3.3 Strategy entity (got 15)
+[0;36m[23:28:29][0m Entity breakdown:
+  geo-observation: 5
   geo-program: 1
-  geo-strategy-card: 15
+  geo-report: 3
+  geo-strategy: 15
   knowledge: 2
-  project: 1
   store: 5
   [0;32mPASS[0m V3.4 New Skill(s) created
-[0;36m[22:37:16][0m   + geo-ops
+[0;36m[23:28:29][0m   + geo-ops
   [0;32mPASS[0m V3.5 Agent workspace(s) created
-[0;36m[22:37:16][0m   + workspace-agents
+[0;36m[23:28:29][0m   + workspace-agents
   [0;32mPASS[0m V3.6 Blueprint file(s) created (1)
-[0;36m[22:37:16][0m Phase 3 complete. Entities: +19
+[0;36m[23:28:29][0m Phase 3 complete. Entities: +24
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 4: Review (Turn 3)[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:37:16][0m Turn 3: sending to Aida (dmScope=main, shared session)...
+[0;36m[23:28:29][0m Turn 3: sending to Aida (dmScope=main, shared session)...
 [0;36m--- Aida response (turn 3, first 30 lines) ---[0m
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
-Gateway target: ws://127.0.0.1:18789
-Source: local loopback
-Config: /root/.openclaw/openclaw.json
-Bind: loopback
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
-[plugins] [bps-engine] Initializing BPS Engine plugin...
-[plugins] [bps-engine] AIDA project loaded from /root/.aida
-[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
-[plugins] [bps-engine] Blueprints: 0, Seeds: 0
-[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
-[plugins] [bps-engine] Governance: 3 constraints loaded
-[plugins] [bps-engine] BPS Engine plugin registered with 15 tools.
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-建模**已经完成第一阶段**，而且不是空方案，是已经落到系统里的。
+还没到“全部建模完成”，但**核心骨架已经建好了，能在 Dashboard 上看到第一批成果**。
+现在的状态更准确地说是：**MVP 建模完成，数据与治理已通，内容发布链路已被审批规则拦住并生效。**
 
-## 你现在系统里已经有的东西
+---
 
-### 1) 项目主实体
-我建了：
-- **`project / idlex-geo`**
-- 表示整个闲氪 GEO 项目已经立项并进入 active 状态
-- 范围：长沙、武汉，5 家门店，3 个模型
-- 原则也写进去了：真实可验证、一模一策、履约闭环、发布前审批、重大策略先确认
+# 一、当前完成度判断
 
-### 2) 运营计划实体
-[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-3.log, 255 lines total) ---[0m
+## 已完成
+### 1. 运营主体系建模
+已完成以下对象层级的第一版建模：
+
+- GEO 项目主实体
+- GEO 策略实体（部分已落）
+- GEO 观测实体（首批样本已落）
+- GEO 报告实体（模板 + 当日日报草稿记录）
+- 治理蓝图
+- GEO 专用 Skill
+- 顾客咨询 Agent 工作区
+- 定时任务
+
+## 未完全完成
+### 2. 全量数据建模
+还没完全补齐的部分主要是：
+
+- **5 家门店 × 3 模型 = 15 份 geo-strategy 全量核查**
+- 已建了大部分，需继续补最终校验
+- **全量 geo-content 实体**
+- 因为你的审批规则生效，创建内容实体时被治理拦截了
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-3.log, 330 lines total) ---[0m
 
   [0;32mPASS[0m V4.1 Aida produced review
   [0;32mPASS[0m V4.2 Mentions Dashboard
-[0;36m[22:37:59][0m Phase 4 complete.
+[0;36m[23:29:05][0m Phase 4 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 5: GEO Execution (Turn 4)[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:37:59][0m Turn 4: sending to Aida (dmScope=main, shared session)...
+[0;36m[23:29:05][0m Turn 4: sending to Aida (dmScope=main, shared session)...
 [0;36m--- Aida response (turn 4, first 30 lines) ---[0m
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-我先直接开始跑首轮：先产出今天的模拟能见度，再据此生成第一批待审批内容草稿。
-先开始今天这轮实际执行：我会先写入 15 条模拟能见度快照，再生成一批首发草稿和对应内容实体。
-我先把今天的模拟探测数据入库，再接着生成首批草稿内容。
-先把今天 15 组模拟能见度快照落库，再生成第一批待审批内容草稿。
-今天的 GEO 首轮运营已经开跑，并且第一轮结果已经落到系统里了。
+我开始跑今天的 GEO：先做 5 家店 × 3 模型的模拟能见度探测，再生成首轮待审内容草稿。内容实体如果再次触发审批，我会按你的规则停在待审状态。
+我先把今天的监测结果和待审内容一次性跑出来。
+我先把今天的能见度探测样本补起来，再生成一批待审内容草稿。
+我先给你同步一句：今天的能见度探测我已经跑完并记入系统；在生成内容这一步，你的审批治理把“对外内容实体”成功拦下了，而且系统现在进入了 RESTRICTED，我不会绕过。接着我把草稿先产出到待审区，并把需要你在 Dashboard 处理的审批项列清楚。
+今天的 GEO 运营第一轮已经跑完了：**能见度探测已完成，内容草稿也已生成。**
 
-## 我刚刚完成了两件事
+## 今天已完成
 
-### 1）能见度探测：已完成
-我已经为 **5 家门店 × 3 个模型** 全部生成了今日的首轮模拟能见度快照，也就是：
+### 1) 能见度探测
+我已经完成了 5 家门店在 **豆包 / 千问 / 元宝** 的今日模拟探测补录，重点补齐了今天这一轮的观测数据。
 
-- 共 **15 条 `geo-visibility-daily`**
-- 日期：**2026-03-10**
-- 模型：**豆包 / 千问 / 元宝**
+#### 今日判断
+**表现较强：**
+- **声临其境KTV-五一广场店**
+三端都比较强，尤其适合“朋友聚会 / 唱歌 / 夜间娱乐”心智。
+- **音乐盒KTV-江汉路店**
+豆包、千问表现稳定，适合继续放大“主题房间 + 打卡 + 聚会”。
+- **静享茶空间-楚河汉街店**
+会客/安静场景表现不错，适合继续强化“湖景包间 + 投屏”。
 
-### 2）内容生成：已完成第一批
-我已经基于今天的探测结果，生成了 **5 篇优先级最高的 GEO 草稿**，并且已经：
-
-- 写入 `~/.aida/mock-publish-tmp/`
-- 建立对应的 `geo-content-item`
-- 状态全部是 **`publishReady: true` + `approvalStatus: pending`**
-
-同时，我还生成了：
-- **今日日报**：`geo-report / 2026-03-10-daily`
+**需要加强：**
+- **棋乐无穷-岳麓山店**
+能见度偏中位，主要短板是“性价比 + 朋友局 + 小食供应”组合心智还不够强。
+- **悠然茶室-芙蓉广场店**
+整体稳定，但“投影设备”在模型回答里容易被忽略。
 
 ---
 
-# 今日探测结论：先给你最重要的判断
-[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-4.log, 246 lines total) ---[0m
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-4.log, 118 lines total) ---[0m
 
-[0;36m[22:40:22][0m V5: Post-execution checks
-  [1;33mWARN[0m V5.1 No governance trigger (Aida may not have attempted publish)
+[0;36m[23:30:43][0m V5: Post-execution checks
+  [0;32mPASS[0m V5.1 Governance triggered (violations: +2, pending: 4)
   [0;32mPASS[0m V5.2 Aida reported governance interception
-  [0;32mPASS[0m V5.3 Draft files in mock-publish-tmp (got 5)
-[0;36m[22:40:22][0m   Content files: 5 drafts, 0 published
-[0;36m[22:40:22][0m GEO entity scan:
-[0;36m[22:40:22][0m   action-plan: 1
-[0;36m[22:40:22][0m Phase 5 complete.
+  [0;32mPASS[0m V5.3 Draft files in mock-publish-tmp (got 7)
+[0;36m[23:30:43][0m   Content files: 7 drafts, 0 published
+[0;36m[23:30:43][0m GEO entity scan:
+[0;36m[23:30:44][0m   geo-strategy: 15
+[0;36m[23:30:44][0m Phase 5 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 6: Dashboard Approval[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:40:22][0m Turn 5: sending to Aida (dmScope=main, shared session)...
+[0;36m[23:30:44][0m Turn 5: sending to Aida (dmScope=main, shared session)...
 [0;36m--- Aida response (turn 5, first 30 lines) ---[0m
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-好，你去 Dashboard 审就行。
+好，你去处理就行。
+你处理完后，我这边会继续把 **内容实体链路接上，并补齐剩余门店 × 模型草稿**。
 
-我这边会继续保持当前节奏：
-- 等你审批结果回流
-- 审批通过的内容再进入正式发布链路
-- 同时准备第二批内容，不会越过你的审批线
+你在 Dashboard 里优先看两类：
 
-你在 Dashboard 上重点看这两类：
-1. **待审批的 `geo-content-item`**
-2. **今日 `geo-report / 2026-03-10-daily`**
+1. **待审批内容项**
+2. **治理状态 / circuit breaker 是否恢复**
 
-如果你审完回来，我可以立刻接着做：
-- 已批准内容的发布推进
-- 第二批内容生成
-- 或者开始做本周复盘框架
-[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-5.log, 17 lines total) ---[0m
+一旦审批通过、限制解除，我就继续往下推进今天的 GEO 内容队列。
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-5.log, 11 lines total) ---[0m
 
-  [1;33mWARN[0m V6.1 No pending approvals to process
-[0;36m[22:40:29][0m Phase 6 complete.
+[0;36m[23:30:51][0m Approving: 7086a18b-4678-47b5-a0d0-aaa8274a5947
+[0;36m[23:30:51][0m Approving: 89211962-4a0f-4121-ade1-133516480980
+[0;36m[23:30:51][0m Approving: 76866859-77d4-46ae-b404-fce9c4a26446
+[0;36m[23:30:51][0m Approving: 78fa6369-2591-4ba8-b4ee-a79907ac7297
+  [0;32mPASS[0m V6.1 Approved 4 item(s)
+  [1;33mWARN[0m V6.2 Files promoted to mock-publish after approval (got 0) (non-critical)
+[0;36m[23:30:53][0m   Post-approval: 0 published, 7 remaining drafts
+[0;36m[23:30:53][0m Phase 6 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 7: Daily Summary (Turn 6)[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:40:29][0m Turn 6: sending to Aida (dmScope=main, shared session)...
+[0;36m[23:30:53][0m Turn 6: sending to Aida (dmScope=main, shared session)...
 [0;36m--- Aida response (turn 6, first 30 lines) ---[0m
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-今天的运营小结我给你压缩成一版管理视角，方便你快速判断。
+今天的 GEO 运营已经跑出第一轮结果，整体判断是：**KTV 类门店当前更容易在主流 AI 中建立清晰心智，茶室类门店具备稳定切口，棋牌类门店还需要更强的“场景+卖点”绑定。**
 
-## 今日 GEO 运营小结
+## 今日运营小结｜2026-03-10
 
-### 一句话结论
-**今天已经跑通了“探测—分析—出稿—送审”首轮闭环。**
-当前最明显的结果是：
-
-- **KTV 在豆包上更强**
-- **茶室 / 棋牌在千问上更强**
-- **元宝更吃“可信、稳妥、边界清晰”的表达**
-
----
-
-## 一、今天完成了什么
-
-### 1. 能见度探测
-已完成 **5 家门店 × 3 个模型 = 15 条首轮模拟探测**
-
-### 2. 内容生产
-已生成 **5 篇首批 GEO 草稿**
-- 已写入 `mock-publish-tmp`
-- 已进入审批流
-
-### 3. 日报沉淀
-已生成今日 `geo-report / 2026-03-10-daily`
+### 一、今天做了什么
+1. 完成了 5 家合作门店在 **豆包 / 千问 / 元宝** 中的首轮模拟能见度探测
+2. 补齐并入库了一批 `geo-observation` 观测记录
+3. 建立并完善了门店的 **一模一策** 策略卡
+4. 生成了今天首批 GEO 内容草稿，并写入 `~/.aida/mock-publish-tmp/`
+5. 更新了今日日报草稿
+6. 你已在 Dashboard 上完成审批处理，治理链路已被验证
 
 ---
-[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-6.log, 205 lines total) ---[0m
+
+### 二、今天的核心发现
+
+#### 1）表现最强的是 KTV
+**声临其境KTV-五一广场店** 和 **音乐盒KTV-江汉路店** 在三大模型里的适配度整体最好。
+
+原因很明确：
+- 场景清楚：聚会、唱歌、生日局、夜间娱乐
+- 决策简单：人数、位置、氛围、时间都容易表达
+- 模型容易理解：KTV 是天然高召回场景
+
+#### 2）茶室门店有稳定心智，但卖点需要更精准
+**悠然茶室-芙蓉广场店**、**静享茶空间-楚河汉街店** 的“安静聊天 / 商务会客 / 轻办公”方向是成立的。
+
+但问题也很一致：
+[0;36m--- (full log: /tmp/idlex-geo-e2e-v3/turn-6.log, 107 lines total) ---[0m
 
   [0;32mPASS[0m V7.1 Aida produced summary
   [0;32mPASS[0m V7.2 Summary has business content
-[0;36m[22:40:57][0m Phase 7 complete.
+[0;36m[23:31:12][0m Phase 7 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase 8: Final Verification[0m
 [1m[1;33m══════════════════════════════════════════════[0m
 
-[0;36m[22:40:57][0m Comprehensive checks...
-  [0;32mPASS[0m V8.1 Total entities >= 7 (got 47)
-[0;36m[22:40:57][0m Entity breakdown:
-  Total: 47
-  action-plan: 1
-  customer-bot-profile: 1
-  geo-content-item: 5
+[0;36m[23:31:12][0m Comprehensive checks...
+  [0;32mPASS[0m V8.1 Total entities >= 7 (got 45)
+[0;36m[23:31:12][0m Entity breakdown:
+  Total: 45
+  geo-content: 4
+  geo-observation: 15
   geo-program: 1
-  geo-report: 1
-  geo-strategy-card: 15
-  geo-visibility-daily: 15
+  geo-report: 3
+  geo-strategy: 15
   knowledge: 2
-  project: 1
   store: 5
-[0;36m[22:40:57][0m   Violations: 0, Approved: 0
+[0;36m[23:31:12][0m   Violations: 5, Approved: 0
   [0;32mPASS[0m V8.2 Dashboard /
   [0;32mPASS[0m V8.2 Dashboard /business-goals
   [0;32mPASS[0m V8.2 Dashboard /approvals
   [0;32mPASS[0m V8.2 Dashboard /governance
   [0;32mPASS[0m V8.2 Dashboard /agent-log
   [0;32mPASS[0m V8.3 Skills >= 7 (got 8)
-[0;36m[22:40:57][0m Skills:
+[0;36m[23:31:12][0m Skills:
   blueprint-modeling
   business-execution
   dashboard-guide
@@ -350,11 +346,11 @@ Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mis
   skill-create
   geo-ops
   project-init
-[0;36m[22:40:57][0m Agent workspaces:
+[0;36m[23:31:12][0m Agent workspaces:
   workspace
   workspace-agents
-[0;36m[22:40:57][0m   Blueprints: 1, Published: 0, Drafts remaining: 5
-[0;36m[22:40:57][0m Phase 8 complete.
+[0;36m[23:31:12][0m   Blueprints: 1, Published: 0, Drafts remaining: 7
+[0;36m[23:31:12][0m Phase 8 complete.
 
 [1m[1;33m══════════════════════════════════════════════[0m
 [1m  Phase Test Report[0m
@@ -362,16 +358,16 @@ Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mis
 
 IdleX GEO E2E Test v3
 =====================
-Date:    Tue Mar 10 10:40:57 PM CST 2026
+Date:    Tue Mar 10 11:31:12 PM CST 2026
 Server:  iZt4n7qaa80fqgnql0diggZ
 Session: agent:main:main (dmScope=main)
 
-Results: 44 PASS / 0 FAIL / 3 WARN / 44 TOTAL
+Results: 46 PASS / 0 FAIL / 2 WARN / 46 TOTAL
 
 [0;32mALL REQUIRED CHECKS PASSED[0m
 
 Logs:      /tmp/idlex-geo-e2e-v3/turn-{1..6}.log
 Dashboard: http://localhost:3456
 
-[0;36m[22:40:57][0m Report saved: /tmp/idlex-geo-e2e-v3/report.txt
-[0;36m[22:40:57][0m Combined logs: /tmp/idlex-geo-e2e-v3/all-turns.log
+[0;36m[23:31:12][0m Report saved: /tmp/idlex-geo-e2e-v3/report.txt
+[0;36m[23:31:12][0m Combined logs: /tmp/idlex-geo-e2e-v3/all-turns.log

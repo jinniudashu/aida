@@ -1,17 +1,11 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-好，你去 Dashboard 审就行。
+好，你去处理就行。
+你处理完后，我这边会继续把 **内容实体链路接上，并补齐剩余门店 × 模型草稿**。
 
-我这边会继续保持当前节奏：
-- 等你审批结果回流
-- 审批通过的内容再进入正式发布链路
-- 同时准备第二批内容，不会越过你的审批线
+你在 Dashboard 里优先看两类：
 
-你在 Dashboard 上重点看这两类：
-1. **待审批的 `geo-content-item`**
-2. **今日 `geo-report / 2026-03-10-daily`**
+1. **待审批内容项**
+2. **治理状态 / circuit breaker 是否恢复**
 
-如果你审完回来，我可以立刻接着做：
-- 已批准内容的发布推进
-- 第二批内容生成
-- 或者开始做本周复盘框架
+一旦审批通过、限制解除，我就继续往下推进今天的 GEO 内容队列。

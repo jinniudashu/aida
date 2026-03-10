@@ -510,6 +510,24 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **残留问题（R7）**：`collect-metrics.sh` SSH 崩溃 + "Argument list too long"
 - **推荐生产配置**：`moonshot/kimi-k2.5`（主）+ `google/gemini-3.1-pro-preview`（备）+ `dashscope/qwen3.5-plus`（替补）
 
+### 多模型基准测试 R7 — 首轮完整数据采集（2026-03-11）
+- 综合报告：`test/e2e/benchmark/results/R7-BENCHMARK-REPORT-CN.md`
+- **目标**：修复 R6 数据采集管线，首轮 6/6 模型 metrics + behavior + session JSONL 全部采集成功
+- **框架修复**：collect-metrics.sh 重写（移除 set -e, temp 文件替代 argv, JSONL 提前下载）+ agent config 污染修复（agents.list trim）
+- **排名**：
+  1. **GPT-5.4** (8.55/10) — 46P/0F/2W，最佳 E2E + 治理 RESTRICTED
+  2. **Claude Opus 4.6** (8.50/10) — 38P/1F/8W，164 工具调用（105 BPS）+ 53 实体
+  3. Kimi K2.5 (6.50/10) — 40P/0F/8W，23 violations（最多治理触发）
+  4. Gemini 3.1 Pro (5.90/10) — 44P/1F/3W，15 发布文件（最多）
+  5. Qwen3.5-Plus (5.45/10) — 39P/1F/7W，最清晰二层路由 + Config 自毁
+  6. GLM-5 (1.30/10) — 35P/1F/11W，从未收到业务提示
+- **关键发现**：
+  - GPT-5.4 取代 Kimi 成为最佳：唯一触发 RESTRICTED 熔断器 + 零 FAIL
+  - Claude 工具调用量是第二名的 1.9 倍，但 0 治理触发 — 工具量 ≠ 治理合规
+  - agent-create 的 tools.profile 非法值是致命陷阱（Qwen R5→R7 损失 2.30 分）
+  - R6→R7 评分基准变化：R7 首次基于完整数据，分数变化含评分精度提升因素
+- **推荐生产配置**：`openrouter/openai/gpt-5.4`（主）+ `openrouter/anthropic/claude-opus-4.6`（备）+ `moonshot/kimi-k2.5`（替补）
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

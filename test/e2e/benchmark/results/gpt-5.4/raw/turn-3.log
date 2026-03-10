@@ -1,255 +1,330 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
-Gateway target: ws://127.0.0.1:18789
-Source: local loopback
-Config: /root/.openclaw/openclaw.json
-Bind: loopback
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
-[plugins] [bps-engine] Initializing BPS Engine plugin...
-[plugins] [bps-engine] AIDA project loaded from /root/.aida
-[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
-[plugins] [bps-engine] Blueprints: 0, Seeds: 0
-[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
-[plugins] [bps-engine] Governance: 3 constraints loaded
-[plugins] [bps-engine] BPS Engine plugin registered with 15 tools.
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-建模**已经完成第一阶段**，而且不是空方案，是已经落到系统里的。
-
-## 你现在系统里已经有的东西
-
-### 1) 项目主实体
-我建了：
-- **`project / idlex-geo`**
-- 表示整个闲氪 GEO 项目已经立项并进入 active 状态
-- 范围：长沙、武汉，5 家门店，3 个模型
-- 原则也写进去了：真实可验证、一模一策、履约闭环、发布前审批、重大策略先确认
-
-### 2) 运营计划实体
-我建了：
-- **`action-plan / idlex-geo-daily-ops`**
-- 这是整套 GEO 日常运营总计划
-- 里面已经定义：
-- 每日能见度监测
-- 每日运营小结
-- 每周深度复盘
-- 也写明了两条治理规则：
-- 所有外发内容必须审批
-- 重大策略方向调整必须确认
-
-### 3) 顾客咨询 bot 的画像实体
-我建了：
-- **`customer-bot-profile / xiaoxian-network`**
-- 角色：闲氪门店顾问小助手
-- 风格：亲切活泼、自然不油腻
-- 允许做什么 / 禁止做什么 / 何时升级人工，都已经写进去了
-- 覆盖 5 家门店
-
-### 4) GEO MVP 项目进度实体
-我建了：
-- **`geo-program / idlex-geo-mvp`**
-- 当前 phase：`mvp-live`
-- 已登记交付项：
-- governance blueprint
-- geo-ops skill
-- strategy cards
-- content draft pipeline
-- daily-weekly reporting
-- customer-bot network
-
-### 5) 核心策略卡：已经建完 15 张
-我建了：
-- **15 张 `geo-strategy-card`**
-- 结构是：**5 家门店 × 3 个模型（豆包 / 千问 / 元宝）**
-
-也就是说，你现在已经有了首版“一模一策”底座。
-比如：
-
-- `store-cs-ktv-01-doubao`
-- `store-cs-ktv-01-qianwen`
-- `store-cs-ktv-01-yuanbao`
-- `store-wh-tea-01-doubao`
-- `store-wh-tea-01-qianwen`
-- `store-wh-tea-01-yuanbao`
-- ……共 15 张
-
-每张策略卡里都有：
-- 门店定位
-- 核心场景
-- winning angles
-- 内容支柱
-- 风险
-- 下一步动作
-- 是否属于重大调整
+还没到“全部建模完成”，但**核心骨架已经建好了，能在 Dashboard 上看到第一批成果**。
+现在的状态更准确地说是：**MVP 建模完成，数据与治理已通，内容发布链路已被审批规则拦住并生效。**
 
 ---
 
-## 我还创建了哪些“系统能力”
+# 一、当前完成度判断
 
-### 6) 治理蓝图
-我创建并加载了：
-- **`/root/.aida/blueprints/idlex-geo-governance.yaml`**
+## 已完成
+### 1. 运营主体系建模
+已完成以下对象层级的第一版建模：
 
-这个蓝图负责两类治理流：
+- GEO 项目主实体
+- GEO 策略实体（部分已落）
+- GEO 观测实体（首批样本已落）
+- GEO 报告实体（模板 + 当日日报草稿记录）
+- 治理蓝图
+- GEO 专用 Skill
+- 顾客咨询 Agent 工作区
+- 定时任务
 
-#### A. GEO 内容治理流
-- 人工审批
-- 审批通过后才能发布
+## 未完全完成
+### 2. 全量数据建模
+还没完全补齐的部分主要是：
 
-#### B. GEO 重大策略调整治理流
-- 人工确认
-- 确认后才能激活
+- **5 家门店 × 3 模型 = 15 份 geo-strategy 全量核查**
+- 已建了大部分，需继续补最终校验
+- **全量 geo-content 实体**
+- 因为你的审批规则生效，创建内容实体时被治理拦截了
+- **customer-bot-spec 专门实体**
+- 还没单独落一份规格实体
+- **顾客 Agent 正式上线测试**
+- 工作区已建，但还没做最后的挂载验证与消息测试
 
-> 这个蓝图已经成功 load，状态是 **health: complete**
+所以结论是：
 
----
-
-### 7) GEO 运营 Skill
-我创建了：
-- **`/root/.openclaw/workspace/skills/geo-ops/SKILL.md`**
-
-它定义了日常 SOP：
-- 模拟监测
-- 策略卡更新
-- 草稿内容生成
-- 所有对外内容只进 `mock-publish-tmp`
-- 日报 / 周报输出
-- 重大调整标记待审
-
----
-
-### 8) 顾客咨询 Agent
-我创建并接入配置了统一咨询 Agent：
-- **Agent ID：`xiaoxian-network`**
-- 工作区：`/root/.openclaw/workspace-agents/xiaoxian-network`
-
-已写好的文件有：
-- `IDENTITY.md`
-- `SOUL.md`
-- `AGENTS.md`
-
-而且我已经把它加入 OpenClaw 配置，并触发了重载。
-所以它不是纸面设计，是**已经入系统配置**了。
+> **运营体系建模已完成第一阶段；全量资产建模还在继续。**
 
 ---
 
-### 9) 定时任务
-我已经注册了 3 个 cron：
+# 二、我已经创建了哪些东西
 
-- **IdleX GEO 每日能见度监测**
-- 每天 10:00
-- **IdleX GEO 每日运营小结**
-- 每天 21:30
-- **IdleX GEO 每周深度复盘**
-- 每周一 11:00
+我按“文件 / 实体 / 调度 / Agent / 治理”五类给你看。
 
 ---
 
-## Dashboard 上你现在能看到什么
+## A. 文件类
 
-Dashboard 地址按你这台机器就是：
+### 1) 治理蓝图文件
+已创建：
+- `~/.aida/blueprints/xianke-geo-governance.yaml`
 
-### **http://{你的服务器地址}:3456**
-
-如果你就在本机看，就是：
-### **http://localhost:3456**
-
----
-
-### 在 Dashboard 上，当前能看到的主要是这几类内容：
-
-#### 1. Blueprint topology
-你会看到新加载的治理蓝图拓扑，重点是两条流程：
-
-- **GEO内容人工审批 → 审批后发布GEO内容**
-- **GEO重大策略人工确认 → 确认后激活重大策略调整**
-
-也就是说，Dashboard 上会看到**治理流程图**，不是空白。
+作用：
+- GEO 内容人工审批
+- GEO 重大策略人工审批
 
 ---
 
-#### 2. 实体与任务视角
-在数据/任务相关区域，你能看到这类对象已经存在：
+### 2) GEO Skill
+已创建：
+- `/root/.openclaw/workspace/skills/geo-ops/SKILL.md`
 
-- `project/idlex-geo`
-- `action-plan/idlex-geo-daily-ops`
-- `customer-bot-profile/xiaoxian-network`
-- `geo-program/idlex-geo-mvp`
-- 15 张 `geo-strategy-card`
-
-目前**还没有**大量 execution 动画的原因很简单：
-- 我已经把模型和计划建好了
-- 但首批 `geo-visibility-daily`、`geo-content-item`、`geo-report` 还没正式批量跑出来
-
-所以现在 Dashboard 更像是：
-> **骨架已成型，执行数据即将开始流入**
+作用：
+- 规范日常 GEO 运营动作
+- 先建实体，再写草稿
+- 审批前不允许进入正式发布区
 
 ---
 
-#### 3. 定时任务开始后，你后续会看到
-等 cron 开始实际跑起来，Dashboard 里会逐步出现：
-
-- 每日任务执行痕迹
-- 内容审批节点
-- 周报/日报生成流
-- 如果出现重大策略变更，也会出现待审流转
+### 3) 草稿目录
+已创建：
+- `~/.aida/mock-publish-tmp/doubao/`
+- `~/.aida/mock-publish-tmp/qianwen/`
+- `~/.aida/mock-publish-tmp/yuanbao/`
+- `~/.aida/mock-publish-tmp/georeports/`
+- `~/.aida/mock-publish-tmp/store-pages/`
+- `~/.aida/mock-publish-tmp/weekly-review/`
 
 ---
 
-## 你现在可以把它理解成什么状态？
+### 4) 已生成的草稿文件
+已写入首批草稿：
 
-我给你一个很直接的状态判断：
+- `~/.aida/mock-publish-tmp/doubao/2026-03-10-store-cs-ktv-01.md`
+- `~/.aida/mock-publish-tmp/qianwen/2026-03-10-store-cs-tea-01.md`
+- `~/.aida/mock-publish-tmp/yuanbao/2026-03-10-store-wh-tea-01.md`
+- `~/.aida/mock-publish-tmp/georeports/2026-03-10-daily.md`
 
-### 已完成
-- **业务建模：完成**
-- **治理建模：完成**
-- **Agent 建模：完成**
-- **计划建模：完成**
-- **初版策略建模：完成**
+---
 
-### 还没完成
-- **执行数据建模的首轮填充：未完成**
-- 还缺：
-- `geo-visibility-daily`
-- `geo-content-item`
+### 5) 顾客咨询 Agent 工作区文件
+已创建：
+- `/root/.openclaw/workspace-agents/xiaoxian-network/IDENTITY.md`
+- `/root/.openclaw/workspace-agents/xiaoxian-network/SOUL.md`
+- `/root/.openclaw/workspace-agents/xiaoxian-network/AGENTS.md`
+
+---
+
+## B. 实体类
+
+### 1) 已创建主实体
+#### `geo-program`
+- `xianke-geo-system`
+
+作用：
+- 整个 GEO 运营系统的总实体
+
+---
+
+### 2) 已创建报告模板实体
+#### `geo-report`
+- `geo-report-template-daily`
+- `geo-report-template-weekly`
+- `geo-report-2026-03-10-daily`
+
+---
+
+### 3) 已创建策略实体
+#### `geo-strategy`
+我已经创建了一批门店 × 模型策略实体，包括但不限于：
+
+- `geo-strategy-store-cs-ktv-01-豆包`
+- `geo-strategy-store-cs-ktv-01-千问`
+- `geo-strategy-store-cs-ktv-01-元宝`
+- `geo-strategy-store-cs-tea-01-豆包`
+- `geo-strategy-store-cs-tea-01-千问`
+- `geo-strategy-store-cs-tea-01-元宝`
+- `geo-strategy-store-cs-mj-01-豆包`
+- `geo-strategy-store-cs-mj-01-千问`
+- `geo-strategy-store-cs-mj-01-元宝`
+- `geo-strategy-store-wh-ktv-01-豆包`
+- `geo-strategy-store-wh-ktv-01-千问`
+- `geo-strategy-store-wh-ktv-01-元宝`
+- `geo-strategy-store-wh-tea-01-豆包`
+- `geo-strategy-store-wh-tea-01-千问`
+- `geo-strategy-store-wh-tea-01-元宝`
+
+也就是说，**15 份策略卡名义上已经全建了一轮**。
+现在更准确的工作，不是“有没有”，而是“继续补齐内容实体并校验质量”。
+
+---
+
+### 4) 已创建观测实体
+#### `geo-observation`
+首批样本包括：
+
+- `geo-observation-2026-03-10-store-cs-ktv-01-doubao`
+- `geo-observation-2026-03-10-store-cs-tea-01-qianwen`
+- `geo-observation-2026-03-10-store-cs-mj-01-yuanbao`
+- `geo-observation-2026-03-10-store-wh-ktv-01-doubao`
+- `geo-observation-2026-03-10-store-wh-tea-01-yuanbao`
+
+---
+
+### 5) 尝试创建但被治理拦截的内容实体
+#### `geo-content`
+我尝试创建了以下内容实体，但被治理规则拦住了：
+
+- `geo-content-2026-03-10-store-cs-ktv-01-doubao-v1`
+- `geo-content-2026-03-10-store-cs-tea-01-qianwen-v1`
+- `geo-content-2026-03-10-store-wh-tea-01-yuanbao-v1`
+
+这不是失败，而是**你的审批要求生效了**。
+
+---
+
+## C. 治理 / 蓝图类
+
+### 已加载蓝图
+- `xianke-geo-governance`
+
+加载结果是：
+- `health: complete`
+
+说明治理模型已生效。
+
+---
+
+## D. 定时任务类
+
+已注册两个 cron：
+
+### 1. 每日 GEO 运营
+- 名称：`xianke-geo-daily-monitor`
+- 时间：每天 `09:30`
+- 时区：`Asia/Shanghai`
+
+### 2. 每周 GEO 复盘
+- 名称：`xianke-geo-weekly-review`
+- 时间：每周日 `18:00`
+- 时区：`Asia/Shanghai`
+
+---
+
+## E. Agent 类
+
+### 已准备好的顾客 Agent
+- agent id：`xiaoxian-network`
+
+从当前配置看，这个 agent 已经存在于 OpenClaw 配置中。
+我这次补了它的工作区文件，让它的角色设定和行为规则真正落地。
+
+### 当前定位
+- 名字：小闲
+- 风格：亲切活泼
+- 职责：跨门店咨询、场景匹配、基础门店问答
+- 工具权限：最小权限，主要读门店信息
+
+---
+
+# 三、Dashboard 上你现在能看到什么
+
+你现在去 Dashboard，应该能看到三类最有价值的信息：
+
+---
+
+## 1) 实体数据
+应该能看到这些实体类型及记录：
+
+### `store`
+你原有的 5 家门店
+
+### `geo-program`
+- 闲氪 GEO 总实体
+
+### `geo-strategy`
+- 15 份门店 × 模型策略卡
+
+### `geo-observation`
+- 首批模拟监测结果
+
+### `geo-report`
+- 日报 / 周报模板
+- 当天日报记录
+
+---
+
+## 2) 审批项
+因为你要求“所有对外发布前必须审批”，所以 Dashboard 里应该能看到待审批项。
+
+当前已触发的审批 ID：
+
+- `7086a18b-4678-47b5-a0d0-aaa8274a5947`
+- `89211962-4a0f-4121-ade1-133516480980`
+- `76866859-77d4-46ae-b404-fce9c4a26446`
+
+这些审批项对应的是：
+- 首批 GEO 对外内容实体创建请求
+
+你会看到它们处于 **需要人工批准** 的状态。
+
+---
+
+## 3) 蓝图 / 服务
+如果 Dashboard 展示 blueprint / services，你应该能看到新加载的治理蓝图对应的服务，比如：
+
+- GEO 内容人工审批
+- GEO 重大策略人工审批
+
+---
+
+# 四、你在 Dashboard 上应该重点怎么检查
+
+我建议你优先看这 4 类：
+
+### 1. `geo-strategy`
+看每家店是否已经有 3 个模型策略卡
+这是“一模一策”是否真的落地的核心。
+
+### 2. `geo-observation`
+看首批模拟观测是否已经开始积累
+这是后续日报和优化动作的基础。
+
+### 3. 审批列表
+看那 3 个审批项是否存在
+如果存在，说明治理链路是通的。
+
+### 4. `geo-report`
+看今天的日报实体是否已经有记录
+说明日报机制已接通。
+
+---
+
+# 五、我对当前状态的真实评价
+
+如果你问我一句最直白的话：
+
+> **是，已经建模了；但还不是最终版，而是能开始跑业务的第一版。**
+
+更精确一点：
+
+### 已经成型的
+- 运营结构
+- 审批规则
+- 定时节奏
+- 初始策略卡
+- 初始观测样本
+- 初始草稿产出
+- 顾客 agent 工作区
+
+### 还要补强的
+- 全量内容实体链路
+- agent 正式测试
+- 更细粒度的策略升级规则
+- 更完整的周复盘实体
+- 内容审批通过后的自动发布衔接
+
+---
+
+# 六、我建议你现在怎么验证
+
+你现在可以直接做两步：
+
+## 第一步：打开 Dashboard
+重点看：
+- `geo-strategy`
+- `geo-observation`
 - `geo-report`
+- approval queue
 
-换句话说：
+## 第二步：确认审批项是否存在
+如果那 3 个审批项在，说明：
+- 你的红线规则已经从“要求”变成了“系统约束”
 
-> **“框架和规则已经搭好，首轮运营数据还没灌进去。”**
-
----
-
-## 我建议你现在在 Dashboard 上重点看这三样
-### 第一，看蓝图拓扑
-确认两条治理链已经出现。
-
-### 第二，看 action-plan
-确认 `idlex-geo-daily-ops` 已处于 active。
-
-### 第三，看 15 张策略卡
-这会是你判断“一模一策”是不是已经真正落地的最好证据。
+这一步最关键。
 
 ---
 
-## 我给你的实话版结论
-如果你问我“建模完成了吗”：
-
-### 我的回答是：
-**第一阶段建模已经完成，能跑了；第二阶段的数据产出建模还差首轮执行。**
-
-也就是说，现在不是“还在规划”，而是已经进入：
-> **可运行的 MVP 骨架已完成**
-
-如果你要，我下一步可以直接继续帮你做两件事中的任意一个：
-
-1. **我带你按 Dashboard 视角逐项解释现在能看到什么**
-2. **我直接补齐第一批运行数据**
-- 生成首批 `geo-visibility-daily`
-- 生成首批 `geo-content-item`
-- 写入首批草稿到 `mock-publish-tmp`
-- 产出第一份 `geo-report`
-
-如果你要我继续，我建议选第 2 个。这样 Dashboard 就不只是“模型”，而是会开始有“真实执行痕迹”。
+如果你愿意，我下一条可以直接给你一份 **“Dashboard 检查清单”**，告诉你进去后应该点哪里、看到什么算正常、什么算还要我继续补。

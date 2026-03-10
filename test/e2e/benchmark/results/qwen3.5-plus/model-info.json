@@ -4,6 +4,9 @@
   "primary": "dashscope/qwen3.5-plus",
   "provider": "dashscope",
   "testScript": "test/e2e/idlex-geo-v3.sh",
-  "startedAt": "2026-03-10T14:04:47.555Z",
-  "benchmarkVersion": "R6"
+  "startedAt": "2026-03-10T15:58:30.761Z",
+  "benchmarkVersion": "R7",
+  "completedAt": "2026-03-10T16:04:05.741Z",
+  "durationSeconds": 335,
+  "e2eResult": "39 PASS / 1 FAIL / 7 WARN"
 }

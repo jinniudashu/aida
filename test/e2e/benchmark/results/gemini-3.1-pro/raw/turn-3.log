@@ -1,45 +1,29 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
-Gateway target: ws://127.0.0.1:18789
-Source: local loopback
-Config: /root/.openclaw/openclaw.json
-Bind: loopback
-[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
-[plugins] [bps-engine] Initializing BPS Engine plugin...
-[plugins] [bps-engine] AIDA project loaded from /root/.aida
-[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
-[plugins] [bps-engine] Blueprints: 0, Seeds: 0
-[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
-[plugins] [bps-engine] Governance: 3 constraints loaded
-[plugins] [bps-engine] BPS Engine plugin registered with 15 tools.
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-全套模型与架构已经完全搭建完毕！现在这套系统已经按照你的要求实现了**管理自动化**和**内外人设隔离**。
+全套建模已经彻底完成。在这套架构里，我们从“战略想法”落地到了“可执行的机器资产”。
 
-带你盘点一下我们刚才创建的核心资产：
+你可以随时打开浏览器访问 **BPS Dashboard（地址通常是 `http://localhost:3456`）**。以下是你立刻能在看板上看到的内容和我为你创建的底层资产：
 
-### 1. 自动化流水线（Entity + Skill + Cron）
-* **运行计划（Action Plan）**：在系统里创建了 `plan-geo-daily` 实体，记录了你需要推进的每日监测与每周复盘进度。
-* **业务技能（Skill）**：为你编写了专属的 `geo-daily-ops` 技能卡片。这份文件规定了我（Aida）每天必须提取5家门店数据，模拟请求豆包、千问、元宝，并根据各自偏好（如千问重数据、元宝重社交）生成对应的草稿文案。
-* **定时任务（Cron）**：在底层注册了每天早 09:00 和每周五 17:00 的定时心跳。时间一到，系统会自动唤醒我执行上述技能。
+### 1. 审批中心 (Pending Approvals) —— 你最常打交道的地方
+*   **你能在 Dashboard 看到的**：有一条标红的**待审批事项**。
+*   **背后逻辑**：这就是我们刚才跑通的“护栏测试”。系统尝试把写好的《武汉楚河汉街24h自助茶室推荐（豆包版）》标为正式发布时，被底层的治理规则（Governance）死死拦住。
+*   **你的操作**：在 Dashboard 点击“Approve（批准）”，内容才会真正放行。这确保了**“未经你确认，系统一字不发”**的绝对控制权。
 
-### 2. 底层红线（Governance）
-* **内容发布拦截器**：拦截任何试图将文件发往外部或打上 `publishReady: true` 标签的动作。
-* **战略防篡改拦截器**：锁定所有核心战略文档。
-这两个拦截器属于硬性红线（Hard Enforcement），哪怕我（Aida）失控，系统也会在动作执行前将其强行阻断。
+### 2. 实体看板 (Entities / Dossiers) —— 你的业务数据库
+*   **你能在 Dashboard 看到的**：
+    *   **`store`（门店）**: 5 家门店的静态档案（武汉静享茶空间、长沙棋乐无穷等），包含准确的房型、价格和特色。
+    *   **`action-plan`（行动计划）**: 我为你创建了一个名为 `geo-daily-ops` 的长效计划，状态为 Active。里面清晰列出了每天 10:00 监测、11:00 出策略、14:00 写草稿、18:00 小结的节奏。
 
-### 3. 客服智能体（Agent）
-* **专属顾问“小闲”（ID: xiaoxian-network）**：我为它单独开辟了工作区，写入了亲切活泼的 `SOUL.md` 和专属的 `IDENTITY.md`。
-* **数据隔离**：它的权限被严格限制在只能查询（`bps_query_entities`）门店相关的公开实体数据，绝对无法看到我们的业务看板、审批流或战略计划。它随时可以接入到微信客服或前端页面中。
+### 3. 定时任务中心 (Cron Schedulers) —— 隐形的时钟
+*   **已创建资产**：我向 Gateway 注册了两个底层心跳任务。
+    *   **每日运行** (`0 10 * * *`)：每天上午自动唤醒我，执行 GEO 的一模一策监测和草稿生成。
+    *   **每周复盘** (`0 18 * * 5`)：周五傍晚强制我整理全周三大模型的心智占有率数据。
 
----
+### 4. 技能与员工库 (Skills & Agents) —— 公司的数字员工
+*   **Skill - `geo-daily-ops`（我的SOP）**：我把“豆包要结构化、千问要长尾逻辑、元宝要生活场景”的规律写成了永久的业务技能（SKILL），以后哪怕我换了模型版本，我依然知道怎么干活。
+*   **Agent - 闲小氪（24h客服）**：在隔离的安全区 `~/.openclaw/workspace/agents/xianxiaoke/` 下，我为你创建了专属客服。它被剥夺了执行层面的所有权限，只能以 🌟☕️🎤 等活泼的语气读取 `store` 实体为你解答顾客问题。
 
-### 📊 在 Dashboard 上你能看到什么？
-你可以随时打开系统的可视化仪表盘（`http://127.0.0.1:3456` 或你对应的服务器IP端口）进行掌控：
+**下一步建议：**
+你现在可以去 Dashboard 的“审批 (Approvals)”菜单里，把那条测试的发布请求给“批准”或“拒绝”掉，体验一下“审批把关”的实感。
 
-1. **Governance（治理中心）**：你能清楚地看到两条激活的拦截规则（审批锁和战略锁），以及实时的拦截日志。
-2. **Data / Dossiers（业务档案库）**：你可以看到武汉、长沙那5家门店的结构化数据字典，以及我们刚刚建立的 `plan-geo-daily` 运营计划。
-3. **Approvals（审批台，核心关注）**：这是你每天最常用的板块。明早9点我生成完“一模一策”的各大模型文案后，由于触发了红线拦截，它们全部会作为**待审批项（Pending Approvals）**出现在这里。你点击同意后，系统才会将它们归档到 `mock-publish/` 正式发布区。
-
-一切就绪！需要我现在立刻为你手动试运行一次今天的“GEO日常探测与草稿生成”吗？
+体验完之后，如果要我随时拉起“闲小氪”进行模拟客服对话测试，或者立刻开始一次全量的 GEO 监测，随时吩咐我。

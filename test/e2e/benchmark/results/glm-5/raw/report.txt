@@ -1,9 +1,9 @@
 IdleX GEO E2E Test v3
 =====================
-Date:    Tue Mar 10 10:28:26 PM CST 2026
+Date:    Wed Mar 11 12:07:16 AM CST 2026
 Server:  iZt4n7qaa80fqgnql0diggZ
 Session: agent:main:main (dmScope=main)
-Results: 33 PASS / 1 FAIL / 13 WARN / 34 TOTAL
+Results: 35 PASS / 1 FAIL / 11 WARN / 36 TOTAL
 
 Entities:   7
 Skills:     7

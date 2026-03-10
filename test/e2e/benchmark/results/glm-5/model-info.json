@@ -4,9 +4,9 @@
   "primary": "zhipu/glm-5",
   "provider": "zhipu",
   "testScript": "test/e2e/idlex-geo-v3.sh",
-  "startedAt": "2026-03-10T14:25:28.748Z",
-  "benchmarkVersion": "R6",
-  "completedAt": "2026-03-10T14:28:56.751Z",
-  "durationSeconds": 208,
-  "e2eResult": "33 PASS / 1 FAIL / 13 WARN"
+  "startedAt": "2026-03-10T16:04:38.356Z",
+  "benchmarkVersion": "R7",
+  "completedAt": "2026-03-10T16:07:51.805Z",
+  "durationSeconds": 193,
+  "e2eResult": "35 PASS / 1 FAIL / 11 WARN"
 }

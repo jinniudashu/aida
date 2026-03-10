@@ -1,2 +1,7 @@
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Invalid config at /root/.openclaw/openclaw.json:\n- agents.list.1.tools.profile: Invalid input (allowed: "minimal", "coding", "messaging", "full")
+Config invalid
+File: ~/.openclaw/openclaw.json
+Problem:
+  - agents.list.1.tools.profile: Invalid input (allowed: "minimal", "coding", "messaging", "full")
+
+Run: openclaw doctor --fix

@@ -1,129 +1,180 @@
-> **R5 说明**: R5 测试因模型覆盖 bug 导致错误模型运行，本模型的 R5 数据无效。以下内容为 R4 评估结果，保持不变。
-
 # Kimi K2.5 -- AIDA Benchmark Evaluation
 
-**Benchmark Version:** R4
-**Date:** 2026-03-10
-**Duration:** 1894 seconds (~31.6 minutes)
-**E2E Result:** 38 PASS / 0 FAIL / 7 WARN
+**Benchmark Version:** R7
+**Date:** 2026-03-11
+**Duration:** ~10 minutes
+**E2E Result:** 40 PASS / 0 FAIL / 8 WARN
+**Turns Captured:** 3 (test script "Continue" prompts received as Turns 1-3)
 
 ## Summary Table
 
 | # | Dimension | Weight | Score | Weighted |
 |---|-----------|--------|-------|----------|
 | 1 | Business Understanding | 0.20 | 7 | 1.40 |
-| 2 | Tool Invocation | 0.25 | 6 | 1.50 |
-| 3 | Two-Layer Routing | 0.15 | 7 | 1.05 |
+| 2 | Tool Invocation | 0.25 | 7 | 1.75 |
+| 3 | Two-Layer Routing | 0.15 | 6 | 0.90 |
 | 4 | Governance Closure | 0.15 | 6 | 0.90 |
-| 5 | Self-Evolution | 0.15 | 5 | 0.75 |
-| 6 | Response Quality | 0.10 | 8 | 0.80 |
-| | **Weighted Total** | **1.00** | | **6.40** |
+| 5 | Self-Evolution | 0.15 | 7 | 1.05 |
+| 6 | Response Quality | 0.10 | 5 | 0.50 |
+| | **Weighted Total** | **1.00** | | **6.50** |
 
-**Weighted Total: 6.40 / 10.00**
+**Weighted Total: 6.50 / 10.00**
 
 ---
 
-## Observable Artifacts (from metrics.json)
+## Observable Artifacts
 
 | Artifact | Count | Notes |
 |----------|-------|-------|
-| Entities (total) | 17 | 7 seeded + 10 created |
-| Entity types | 6 | store(5), partner-store(5), geo-strategy(1), action-plan(2), geo-content(2), knowledge(2) |
-| Blueprints | 2 | Created as files in ~/.aida/blueprints/ |
-| Skills (new) | 4 | geo-monitor, content-creator, report-generator, xiaoke-store-bot |
-| Agent workspaces | 0 | No persona isolation |
-| Cron jobs | 0 | Despite claiming 4 cron jobs in text output |
-| Mock-publish files | 10 | Content actually written to disk |
-| Governance violations | 1 | At least one write triggered interception |
-| Governance approvals | 1 pending | Approved by test harness |
+| Entities (total) | 9 | geo-config(1), geo-visibility(1), store(5), knowledge(2) |
+| Entities (new) | 2 | geo-config + geo-visibility (7 seeded stores/knowledge) |
+| Blueprints | 0 | 3x bps_load_blueprint attempted in Turn 3, none persisted |
+| Skills (new) | 1 | geo-operator |
+| Agent workspaces | 1+ | xiaoxian-network + per-store agent directories written |
+| Cron jobs | 2 | Registered |
+| Mock-publish files | 0 | Zero published, zero draft |
+| Governance violations | 23 | **Highest of all R7 models** |
+| Governance approvals | 0 | None completed |
+| Governance constraints | 0 | At snapshot (unstable -- loaded 12x, zero persisted at end) |
+| Circuit breaker | NORMAL | Recovered after heavy violation activity |
+| Total tool calls | 88 | 44 BPS + 44 non-BPS |
+| BPS tool errors | 0 | Clean execution |
+| Distinct BPS tools | 7 | Widest variety of all R7 models |
+
+### BPS Tool Breakdown
+
+| Tool | Calls | Turns |
+|------|-------|-------|
+| bps_query_entities | ? | Turn 1 |
+| bps_load_governance | 12 | Turn 2 (struggling with config) |
+| bps_update_entity | 20+ | Turn 2 |
+| bps_governance_status | ? | Turn 2 |
+| bps_load_blueprint | 3 | Turn 3 (attempted, none persisted) |
+| bps_list_services | ? | Turn 3 |
+| bps_create_task | ? | Turn 3 |
+
+### Per-Turn Activity
+
+| Turn | Tool Calls | BPS Calls | Key Activity |
+|------|-----------|-----------|--------------|
+| 1 | 6 | 1 | Read context, query entities |
+| 2 | 58 | 37 | **MASSIVE**: 12x governance load, 20+ entity updates, 7x governance.yaml writes |
+| 3 | 24 | 6 | Entity updates, 3x blueprint load attempts, service listing, task creation, 9 skill/agent files |
+
+---
 
 ## Detailed Analysis
 
 ### 1. Business Understanding -- Score: 7/10
 
-**Justification:** The model demonstrates solid understanding of IdleX GEO operations. In turn 3, it correctly names all 5 stores with city/business-type differentiation, references the "一模一策" strategy entity, and in turn 5 differentiates platform optimization targets (禅意茶舍 for 千问 at 64->72, 麦霸天地 for 元宝 at 63->70). It correctly identifies per-store visibility scores and per-platform rankings (豆包 76, 千问 71, 元宝 73). However, the turn 1 response was empty (no visible business analysis output), and the model does not explicitly reference reading context docs. The differentiation strategy is present but somewhat surface-level compared to the detailed "一模一策" per-store-per-platform matrix that top models produce.
+**Justification:** Kimi K2.5 reads context and demonstrates understanding of the IdleX GEO store setup. It correctly identifies the 5-store structure and creates two strategic entities (geo-config and geo-visibility) to capture operational parameters. However, entity creation beyond the 7 seeds is minimal -- only 2 new entities were created. This is a significant drop from R6 where Kimi created 7 new entities (19 total). The model understands the business domain but does not materialize that understanding into a rich entity model. The knowledge entities (2) are all seeded, not newly created.
 
 **Evidence:**
-- geo-strategy entity created with "2026年Q1一模一策战略"
-- Per-store visibility scores differentiated (77/76/72/68/67)
-- Platform-specific content: 千问 gets "结构化数据" + "商务问答", 元宝 gets "社交分享导向" + "活泼场景描述"
-- Knowledge entities created (2)
+- geo-config entity created (operational configuration)
+- geo-visibility entity created (visibility tracking)
+- 5 store entities present (all seeded)
+- 2 knowledge entities present (all seeded)
+- No action-plan, geo-strategy, or content-draft entities created
 
-### 2. Tool Invocation -- Score: 6/10
+### 2. Tool Invocation -- Score: 7/10
 
-**Justification:** The model created meaningful artifacts: 10 new entities across 4 entity types, 2 blueprints, 10 mock-publish files, and triggered governance. However, behavior.json records 0 tool call mentions across all 6 turns, and turns 1, 2, and 4 produced completely empty text responses (only config warnings). This suggests tool calls happened but at low density with long silent periods. The model created 4 skills via bps_create_skill but the filesystem skill directories did not change (skills-before == skills-after), meaning these were DB-only records, not actual SKILL.md workspace files -- a partial understanding of the skill creation mechanism. No cron jobs were registered despite the model claiming 4 in its turn 3 output, which is a significant "say vs do" gap.
-
-**Evidence:**
-- 10 new entities created (objective, verified by DB)
-- 2 blueprint files created (objective)
-- 10 mock-publish files (objective)
-- 4 skills in DB but 0 on filesystem (skills-before == skills-after)
-- 0 cron jobs (despite claiming 4)
-- Empty turns 1, 2, 4 suggest batch-then-report pattern rather than continuous tool usage
-
-### 3. Two-Layer Routing -- Score: 7/10
-
-**Justification:** The model correctly separated governance and operations layers. It created blueprint files (governance layer) alongside operational entities (geo-strategy, action-plan, geo-content). The turn 3 review explicitly lists "治理状态" with content-publish approval and strategy-change approval constraints. The governance interception in turn 4 (1 violation, 1 pending approval) demonstrates the model routed a content-publish action through the governance gate rather than bypassing it. However, the model also used file I/O for mock-publish content (10 files written directly), which is technically a governance bypass for the content delivery path.
+**Justification:** Kimi K2.5 produced 88 total tool calls with 44 BPS calls -- a healthy volume concentrated into just 3 turns. It used 7 distinct BPS tools, which is the widest variety among R7 models, demonstrating broad awareness of the available tool surface. The 23 governance violations prove the model is actively pushing data through governance-wrapped write paths rather than bypassing them via file I/O. Zero BPS tool errors indicates clean invocation patterns. However, the raw output is low: only 9 entities total (2 new), 0 published content, 0 blueprints persisted. The high call count is partly inflated by repeated governance loading struggles (12x bps_load_governance) rather than productive work.
 
 **Evidence:**
-- 2 blueprint files (governance layer artifacts)
-- Operational entities: geo-strategy + action-plan + geo-content (operations layer)
-- Turn 3 references "内容发布审批" and "战略变更审批" as governance rules
-- Turn 4 triggered governance interception (1 violation)
-- 10 mock-publish files written via file I/O (partial bypass)
+- 88 total / 44 BPS tool calls across 3 turns
+- 7 distinct BPS tools used (bps_query_entities, bps_load_governance, bps_update_entity, bps_governance_status, bps_load_blueprint, bps_list_services, bps_create_task)
+- Turn 2 alone: 58 tool calls (37 BPS) -- the most tool-dense single turn observed
+- 23 governance violations from write operations
+- 0 BPS tool errors
+- 12x bps_load_governance (struggling with configuration)
+
+### 3. Two-Layer Routing -- Score: 6/10
+
+**Justification:** Kimi K2.5 demonstrates awareness of both layers. On the governance side, it heavily interacted with bps_load_governance (12 calls) and attempted bps_load_blueprint (3 calls in Turn 3), showing it understands that governance constraints and blueprints are distinct from operational entities. On the operations side, it used bps_update_entity for store data and bps_create_task for work items. However, execution was unstable: the 12 governance load attempts suggest the model was struggling to produce a valid governance.yaml format, and the 0 constraints at snapshot time means none of those attempts persisted successfully. Similarly, the 3 blueprint load attempts produced 0 persisted blueprints. The model knows where to route but cannot reliably execute on the governance layer.
+
+**Evidence:**
+- Governance layer: 12x bps_load_governance + 7x governance.yaml file writes + 3x bps_load_blueprint
+- Operations layer: 20+ bps_update_entity + bps_create_task
+- 0 constraints persisted at snapshot (governance config unstable)
+- 0 blueprints persisted (load attempts failed or were overwritten)
+- Layer separation is conceptually correct but executionally incomplete
 
 ### 4. Governance Closure -- Score: 6/10
 
-**Justification:** The model triggered exactly 1 governance violation and generated 1 pending approval that was successfully approved by the test harness (V5.1 PASS, V6.1 PASS). In turn 5, the model reports pending approvals with specific content (禅意茶舍千问, 麦霸天地元宝) and references the Dashboard approval flow. However, only 1 actual approval was created (metrics shows total=0 approved, pending=0 at collection time, meaning only 1 was caught in flight). The model describes 2 approval IDs (GEO-APPROVAL-001, GEO-APPROVAL-002) in its text but only 1 materialized in the system. The V5.2 check for "Aida reported governance interception" was a WARN, suggesting the turn 4 text response did not explicitly mention the interception despite it occurring.
+**Justification:** Kimi K2.5 achieved the highest violation count of any R7 model (23), which is a strong signal of deep governance engagement. The model was not bypassing governance -- it was actively routing writes through governance-wrapped tools and getting intercepted. This proves the governance layer is functioning and the model is interacting with it correctly at the tool level. However, the governance loop never closed: 0 approvals were processed, 0 constraints remained at snapshot, and the circuit breaker had to recover from a stressed state. The 12x bps_load_governance pattern suggests the model was trying to configure governance rules but could not produce a stable configuration. The result is a governance layer that intercepts aggressively but provides no path to approval or resolution.
 
 **Evidence:**
-- 1 governance violation recorded (objective)
-- 1 pending approval successfully approved (V6.1 PASS)
-- Turn 5 describes approval queue and Dashboard approval flow
-- V5.2 WARN: turn 4 was empty (no text reporting the interception)
-- Claimed 2 approvals, only 1 materialized
+- 23 violations (highest of all models -- proves governance interception is working)
+- 0 approvals (governance loop never closed)
+- 0 constraints at snapshot (configuration did not stabilize)
+- Circuit breaker: NORMAL (recovered from stressed state)
+- 12x bps_load_governance + 7x governance.yaml writes (repeated configuration attempts)
+- Score of 6 rather than lower because the violation count proves genuine governance engagement, not bypass
 
-### 5. Self-Evolution -- Score: 5/10
+### 5. Self-Evolution -- Score: 7/10
 
-**Justification:** The model created 4 new skills (geo-monitor, content-creator, report-generator, xiaoke-store-bot) which demonstrates pattern recognition and skill crystallization intent. However, these skills exist only as bps_create_skill DB records -- the actual SKILL.md files were not written to the workspace filesystem (skills-before == skills-after). Zero cron jobs were registered despite turn 3 claiming 4 cron schedules. Zero agent workspaces were created despite turn 3 mentioning "xiaoke-store-bot" which would ideally be a separate agent with persona isolation. The self-evolution is conceptually present but executionally incomplete.
-
-**Evidence:**
-- 4 skills created (DB records only, not filesystem SKILL.md files)
-- 0 cron jobs (claimed 4 in text)
-- 0 agent workspaces (no persona isolation for xiaoke-store-bot)
-- Skills show pattern recognition: geo-monitor (monitoring), content-creator (content gen), report-generator (reporting), xiaoke-store-bot (customer-facing)
-
-### 6. Response Quality -- Score: 8/10
-
-**Justification:** The textual output quality is high when present. Turn 3 provides a comprehensive dashboard review with structured tables, service modeling, skill inventory, and even a simulated xiaoke-store-bot conversation that demonstrates appropriate persona and tone. Turn 5 gives a detailed governance status with real-time data dashboard and clear next steps. Turn 6 delivers a well-structured daily operations summary with key metrics, published content details, and timeline. The content differentiates platforms (千问 = structured business data; 元宝 = social sharing). However, turns 1, 2, and 4 produced no text at all, which reduces the average quality across the session.
+**Justification:** Kimi K2.5 created a meaningful set of self-evolution artifacts in just 3 turns. The geo-operator skill represents pattern crystallization for GEO operations. The agent workspace creation (xiaoxian-network + per-store agent directories) shows persona isolation thinking -- the model wrote 9 skill/agent files in Turn 3 alone. Two cron jobs were registered for autonomous operation. The 3 blueprint load attempts, while unsuccessful, show the model was trying to formalize governance rules as reusable blueprints. Compared to R6 (5 GEO Skills, 1 Blueprint), R7 shows less skill quantity but more agent workspace depth.
 
 **Evidence:**
-- Turn 3: 146 lines of structured review with tables, Bot demo, health dashboard
-- Turn 5: 111 lines with governance status, file tree, real-time data board
-- Turn 6: 100 lines with daily summary, published content details, timeline
-- Turns 1, 2, 4: empty (0 useful text output)
-- Platform differentiation in content strategy (千问 = 商务问答, 元宝 = 社交分享)
+- 1 new skill: geo-operator
+- 1+ agent workspaces: xiaoxian-network + per-store agent directories
+- 9 skill/agent workspace files written in Turn 3
+- 2 cron jobs registered
+- 3 blueprint load attempts (intent to formalize, execution failed)
+
+### 6. Response Quality -- Score: 5/10
+
+**Justification:** Kimi K2.5's text output per turn was low across the 3 captured turns. The model prioritized tool execution over natural language explanation -- which is not inherently bad for an agent, but it means the human operator receives minimal visibility into the model's reasoning and decision-making process. Zero published content files (mock-publish) means no externally visible content artifacts were produced. The model's communication pattern is "do silently" rather than "explain then do" or "do then report". For a GEO operations role where content creation and publication are core deliverables, producing zero publishable content is a significant gap.
+
+**Evidence:**
+- Low text output across all 3 turns
+- 0 mock-publish files (zero content output)
+- Tool-first, explanation-second communication pattern
+- No structured reports, dashboards, or summaries in text output
+- Contrast with R6 where Kimi scored 9/10 on response quality
 
 ---
 
 ## Key Observations
 
 ### Strengths
-1. **Solid artifact creation**: 10 new entities, 2 blueprints, 10 mock-publish files created from a clean environment
-2. **Governance engagement**: Successfully triggered the governance interception path and generated a pending approval
-3. **Rich textual output**: When the model does produce text (turns 3, 5, 6), the quality, structure, and business relevance are high
-4. **Platform differentiation**: Content strategy correctly differs per AI platform (千问 structured, 元宝 social)
+
+1. **Highest governance engagement**: 23 violations is the highest of all R7 models and demonstrates that Kimi routes writes through governance-wrapped tools rather than bypassing via file I/O. This is the correct behavioral pattern for AIDA.
+2. **Widest BPS tool variety**: 7 distinct BPS tools used (out of 15 available), showing broad awareness of the tool surface and appropriate tool selection for different tasks.
+3. **Agent workspace depth**: Writing 9 skill/agent files in a single turn, including per-store agent directories, shows sophisticated understanding of persona isolation and workspace organization.
+4. **Zero BPS errors**: All 44 BPS tool calls executed cleanly, indicating correct parameter formatting and tool usage patterns.
+5. **Zero FAIL**: 40P/0F/8W maintains the zero-failure record from R6 (45P/0F/3W).
 
 ### Weaknesses
-1. **"Say vs Do" gap**: Claims 4 cron jobs and 4 skills in text, but 0 cron jobs registered and skills exist only as DB records (no SKILL.md files)
-2. **Empty turns**: Turns 1, 2, 4 produced no text output, suggesting the model works silently without status reporting
-3. **No agent workspace**: xiaoke-store-bot described as a customer-facing Bot but not isolated into its own agent workspace
-4. **Governance partial**: Only 1 of 2 claimed approvals materialized; turn 4 text was empty (no governance interception report to user)
-5. **No cron registration**: Zero cron jobs despite this being a core requirement for autonomous daily operations
 
-### Comparison Context
-- **Entity creation**: 10 new entities (moderate; top models create 20+)
-- **Skills on filesystem**: 0 new (below expectations; top models create 3+ with actual SKILL.md)
-- **Cron jobs**: 0 (significant gap; top models register 2-3)
-- **Governance triggers**: 1 violation + 1 approval (functional but minimal)
-- **Test pass rate**: 38 PASS / 0 FAIL / 7 WARN (solid -- no failures)
+1. **Governance instability**: 12x bps_load_governance attempts with 0 constraints persisted at snapshot. The model could not produce a stable governance.yaml configuration, resulting in a governance layer that intercepts (23 violations) but cannot resolve (0 approvals).
+2. **Zero content output**: No mock-publish files, no draft content, no published artifacts. For a GEO operations use case where content creation is the primary deliverable, this is a critical gap.
+3. **Low entity creation**: Only 2 new entities beyond the 7 seeds. R6 Kimi created 7 new (19 total). The model's entity model is thin.
+4. **Blueprint attempts failed**: 3x bps_load_blueprint calls produced 0 persisted blueprints. The simplified Blueprint format (services + flow DSL) was not successfully used.
+5. **Only 3 turns captured**: The test script's "Continue" prompts were consumed as Turns 1-3, limiting the total work window. However, the model should have accomplished more within those turns.
+
+### R4 / R6 / R7 Progression
+
+| Dimension | R4 (6.40) | R6 (8.70) | R7 (6.50) |
+|-----------|-----------|-----------|-----------|
+| Business Understanding | 7 | 9 | 7 |
+| Tool Invocation | 6 | 9 | 7 |
+| Two-Layer Routing | 7 | 8 | 6 |
+| Governance Closure | 6 | 9 | 6 |
+| Self-Evolution | 5 | 8 | 7 |
+| Response Quality | 8 | 9 | 5 |
+| E2E Result | 38P/0F/7W | 45P/0F/3W | 40P/0F/8W |
+| Entities (total) | 17 | 19 | 9 |
+| Violations | 1 | -- | 23 |
+| Content files | 10 | -- | 0 |
+
+R7 represents a regression from R6's peak performance. The most notable shift is the inversion between governance engagement (1 violation in R4 -> 23 in R7) and content output (10 files in R4 -> 0 in R7). The model spent its 3 turns heavily wrestling with governance configuration rather than producing business deliverables.
+
+### Comparison Context (R7 Models)
+
+- **Violations**: 23 (Kimi) -- highest by far, proving deepest governance engagement
+- **BPS tool variety**: 7 distinct tools (Kimi) -- widest variety
+- **Entity creation**: 9 total / 2 new (below average)
+- **Content output**: 0 files (lowest tier)
+- **Test pass rate**: 40P/0F/8W (solid -- zero failures maintained)
+- **Governance stability**: Unstable (0 constraints at end despite 12 load attempts)

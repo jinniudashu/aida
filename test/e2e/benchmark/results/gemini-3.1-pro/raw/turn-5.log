@@ -1,3 +1,5 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-completed
+好的。你在 Dashboard 点击批准后，系统会自动将这几份文案从草稿区推送到 `mock-publish/` 正式发布区。
+
+审批完成后，今天的日常运营闭环就完整跑通了。如果有需要微调的地方，或者想试运行一下“闲小氪”客服机器人，随时告诉我。

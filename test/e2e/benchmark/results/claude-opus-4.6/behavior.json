@@ -1,1 +1,1078 @@
-{"turns":[],"error":"no session JSONL found","source":"jsonl"}
+{
+  "source": "session-jsonl",
+  "sessionFile": "3c95d641-70e0-44f3-83e3-a7bc7d6f6c55.jsonl",
+  "totalEntries": 234,
+  "totalMessages": 230,
+  "collectedAt": "2026-03-10T15:21:20.824Z",
+  "summary": {
+    "totalToolCalls": 164,
+    "bpsToolCalls": 105,
+    "writeToolCalls": 23,
+    "otherToolCalls": 36,
+    "toolErrors": 0,
+    "bpsToolNames": [
+      "bps_query_entities",
+      "bps_scan_work",
+      "bps_list_services",
+      "bps_governance_status",
+      "bps_create_skill",
+      "bps_update_entity",
+      "bps_load_governance",
+      "bps_query_tasks",
+      "bps_load_blueprint"
+    ],
+    "allToolNames": [
+      "exec",
+      "memory_search",
+      "bps_query_entities",
+      "bps_scan_work",
+      "read",
+      "bps_list_services",
+      "bps_governance_status",
+      "agents_list",
+      "bps_create_skill",
+      "bps_update_entity",
+      "write",
+      "bps_load_governance",
+      "edit",
+      "process",
+      "gateway",
+      "bps_query_tasks",
+      "cron",
+      "bps_load_blueprint"
+    ]
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "userPrompt": "[Tue 2026-03-10 23:01 GMT+8] 我是闲氪的GEO负责人。闲氪帮合作门店在AI时代\"被看见\"。\n请先看一下 ~/.aida/context/ 里的业务资料，系统里已有5家合作门店（长沙3家+武汉2家）。\n\n我需要一套完整的GEO日常运营体系：\n1. 每天监测门店在主流AI（豆包、千问、元宝）中的能见度\n2. 分析数据制定\"一模一策\"战略\n3. 针对每家门店、每个AI模型生成",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 28,
+      "textBytes": 5414,
+      "toolCalls": {
+        "total": 20,
+        "bps": 4,
+        "write": 0,
+        "other": 16,
+        "errors": 0
+      },
+      "toolNames": [
+        "exec",
+        "memory_search",
+        "bps_query_entities",
+        "bps_scan_work",
+        "read",
+        "bps_list_services",
+        "bps_governance_status",
+        "agents_list"
+      ],
+      "bpsToolNames": [
+        "bps_query_entities",
+        "bps_scan_work",
+        "bps_list_services",
+        "bps_governance_status"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_query_entities",
+          "inputKeys": [
+            "entityType"
+          ]
+        },
+        {
+          "name": "bps_scan_work",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_list_services",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        }
+      ],
+      "writeTargets": []
+    },
+    {
+      "turn": 2,
+      "userPrompt": "[Tue 2026-03-10 23:03 GMT+8] 方案可以。全权交给你落地——实体、Skill、Agent、蓝图、定时任务，需要什么就建什么。",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 66,
+      "textBytes": 1827,
+      "toolCalls": {
+        "total": 41,
+        "bps": 30,
+        "write": 3,
+        "other": 8,
+        "errors": 0
+      },
+      "toolNames": [
+        "bps_create_skill",
+        "bps_update_entity",
+        "read",
+        "write",
+        "bps_load_governance",
+        "bps_governance_status",
+        "edit",
+        "exec",
+        "process",
+        "gateway"
+      ],
+      "bpsToolNames": [
+        "bps_create_skill",
+        "bps_update_entity",
+        "bps_load_governance",
+        "bps_governance_status"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_create_skill",
+          "inputKeys": [
+            "name",
+            "description",
+            "body"
+          ]
+        },
+        {
+          "name": "bps_create_skill",
+          "inputKeys": [
+            "name",
+            "description",
+            "body"
+          ]
+        },
+        {
+          "name": "bps_create_skill",
+          "inputKeys": [
+            "name",
+            "description",
+            "body"
+          ]
+        },
+        {
+          "name": "bps_create_skill",
+          "inputKeys": [
+            "name",
+            "description",
+            "body"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_load_governance",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_load_governance",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_load_governance",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_load_governance",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_load_governance",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        }
+      ],
+      "writeTargets": [
+        "~/.aida/governance.yaml",
+        "~/.aida/governance.yaml",
+        "~/.aida/governance.yaml"
+      ]
+    },
+    {
+      "turn": 3,
+      "userPrompt": "建模完成了吗？带我看看你创建了哪些东西，Dashboard上能看到什么？",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 10,
+      "textBytes": 2029,
+      "toolCalls": {
+        "total": 6,
+        "bps": 4,
+        "write": 0,
+        "other": 2,
+        "errors": 0
+      },
+      "toolNames": [
+        "bps_governance_status",
+        "bps_query_entities",
+        "exec",
+        "bps_query_tasks",
+        "cron"
+      ],
+      "bpsToolNames": [
+        "bps_governance_status",
+        "bps_query_entities",
+        "bps_query_tasks"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_query_entities",
+          "inputKeys": [
+            "entityType"
+          ]
+        },
+        {
+          "name": "bps_query_entities",
+          "inputKeys": [
+            "entityType"
+          ]
+        },
+        {
+          "name": "bps_query_tasks",
+          "inputKeys": []
+        }
+      ],
+      "writeTargets": []
+    },
+    {
+      "turn": 4,
+      "userPrompt": "[Tue 2026-03-10 23:11 GMT+8] 确认没问题。开始今天的GEO运营工作——先做能见度探测，然后生成内容。",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 118,
+      "textBytes": 3941,
+      "toolCalls": {
+        "total": 94,
+        "bps": 65,
+        "write": 20,
+        "other": 9,
+        "errors": 0
+      },
+      "toolNames": [
+        "bps_governance_status",
+        "exec",
+        "write",
+        "bps_load_governance",
+        "bps_update_entity",
+        "cron",
+        "bps_load_blueprint"
+      ],
+      "bpsToolNames": [
+        "bps_governance_status",
+        "bps_load_governance",
+        "bps_update_entity",
+        "bps_load_blueprint"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_load_governance",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_load_blueprint",
+          "inputKeys": [
+            "yaml",
+            "persist"
+          ]
+        }
+      ],
+      "writeTargets": [
+        "~/.aida/governance.yaml",
+        "~/.aida/mock-publish-tmp/doubao/store-cs-ktv-01-20260310.md",
+        "~/.aida/mock-publish-tmp/qianwen/store-cs-ktv-01-20260310.md",
+        "~/.aida/mock-publish-tmp/yuanbao/store-cs-ktv-01-20260310.md",
+        "~/.aida/mock-publish-tmp/doubao/store-cs-tea-01-20260310.md",
+        "~/.aida/mock-publish-tmp/qianwen/store-cs-tea-01-20260310.md",
+        "~/.aida/mock-publish-tmp/yuanbao/store-cs-tea-01-20260310.md",
+        "~/.aida/mock-publish-tmp/doubao/store-cs-mj-01-20260310.md",
+        "~/.aida/mock-publish-tmp/qianwen/store-cs-mj-01-20260310.md",
+        "~/.aida/mock-publish-tmp/yuanbao/store-cs-mj-01-20260310.md",
+        "~/.aida/mock-publish-tmp/doubao/store-wh-tea-01-20260310.md",
+        "~/.aida/mock-publish-tmp/qianwen/store-wh-tea-01-20260310.md",
+        "~/.aida/mock-publish-tmp/yuanbao/store-wh-tea-01-20260310.md",
+        "~/.aida/mock-publish-tmp/doubao/store-wh-ktv-01-20260310.md",
+        "~/.aida/mock-publish-tmp/qianwen/store-wh-ktv-01-20260310.md",
+        "~/.aida/mock-publish-tmp/yuanbao/store-wh-ktv-01-20260310.md",
+        "~/.openclaw/workspace-store-concierge/IDENTITY.md",
+        "~/.openclaw/workspace-store-concierge/SOUL.md",
+        "~/.openclaw/workspace-store-concierge/AGENTS.md",
+        "~/.openclaw/workspace/memory/2026-03-10.md"
+      ]
+    },
+    {
+      "turn": 5,
+      "userPrompt": "[Tue 2026-03-10 23:16 GMT+8] 收到，我去Dashboard处理审批。",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 607,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 6,
+      "userPrompt": "[Tue 2026-03-10 23:20 GMT+8] 审批都处理好了。做个今天的运营小结。",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 6,
+      "textBytes": 2656,
+      "toolCalls": {
+        "total": 3,
+        "bps": 2,
+        "write": 0,
+        "other": 1,
+        "errors": 0
+      },
+      "toolNames": [
+        "bps_governance_status",
+        "bps_query_entities",
+        "exec"
+      ],
+      "bpsToolNames": [
+        "bps_governance_status",
+        "bps_query_entities"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_governance_status",
+          "inputKeys": []
+        },
+        {
+          "name": "bps_query_entities",
+          "inputKeys": [
+            "entityType"
+          ]
+        }
+      ],
+      "writeTargets": []
+    }
+  ]
+}

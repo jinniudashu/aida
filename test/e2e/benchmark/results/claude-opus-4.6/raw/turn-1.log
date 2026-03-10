@@ -1,101 +1,128 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-我来先了解闲氪的业务背景和现有门店情况，然后为你规划这套GEO运营体系。
-我已了解闲氪的业务背景。现在让我查看现有的服务类型和治理状态，然后为你设计这套GEO运营体系。
-现在我为你规划这套完整的GEO运营体系。首先建立治理规则，确保内容发布和战略调整都经过你的审批。
-蓝图已加载。现在创建GEO运营的行动计划，并设置每日自动监测：
-现在创建GEO运营的Skill，并注册定时任务：
-现在为门店咨询Bot创建独立Agent（需要人格隔离和24h在线）：
-让我直接为门店咨询Bot创建独立Agent：
-现在把咨询Bot添加到GEO运营蓝图，并创建用户交互入口：
-让我运行一次GEO运营演示，展示完整流程：
+Now let me also read the remaining context files and check existing agents:
+Now let me read the remaining context docs and the business-execution skill:
+Good, I now have a thorough understanding of the entire landscape. Let me read the blueprint-modeling skill and then craft the comprehensive plan:
+Now I have a complete picture. Let me build the comprehensive plan. This involves:
+
+1. **Operations layer**: Action plan with daily monitoring, analysis, content gen, reporting
+2. **Governance layer**: Content publication approval + strategy change approval (already in governance.yaml ✅)
+3. **Independent agent**: Customer-facing 24h store consultation bot (needs different persona)
+4. **Skills**: GEO-specific skills for monitoring, analysis, content generation
+5. **Blueprints**: For the approval flow
+6. **Cron jobs**: Daily execution schedule
+
+Let me present the plan:
+
+好的，我已经完整阅读了所有业务资料。系统现状很清晰：
+
+- ✅ **5家门店数据**已就位（长沙3家 + 武汉2家）
+- ✅ **治理规则**已配置（内容发布审批 + 战略变更审批）
+- ✅ **发布目录结构**已创建（doubao/qianwen/yuanbao/general）
+- ⚠️ 尚无GEO运营蓝图、技能、行动计划或定时任务
+
 ---
 
-## 📋 闲氪GEO日常运营体系规划完成
+## 🌟 闲氪GEO日常运营体系 — 总规划
 
-### ✅ 已完成部署
+我把你的需求拆成了 **三个层面**，每个层面对应不同的实现机制：
 
-| 组件 | 状态 | 说明 |
+---
+
+### 一、治理层（规矩）— 已就绪 ✅
+
+你提的两条规矩已经在 `governance.yaml` 中生效：
+
+| 规矩 | 实现方式 | 状态 |
+|------|---------|------|
+| 对外发布内容必须审批 | `c-content-publish`：对 `geo-content` 实体设置 `publishReady` 时触发 REQUIRE_APPROVAL | ✅ 已生效 |
+| 战略重大调整需确认 | `c-strategy-change`：对 `geo-strategy` 实体设置 `majorChange` 时触发 REQUIRE_APPROVAL | ✅ 已生效 |
+
+**无需改动**，我后续的运营流程会自动触发这两个审批门。
+
+---
+
+### 二、运营层（日常干活）— 需要搭建
+
+用 **行动计划 + 技能 + 定时任务** 实现，具体架构：
+
+#### 每日运营流 📊
+
+```
+09:00  能见度探测（5门店 × 3模型 = 15次探测）
+       ↓
+09:30  数据分析 → 生成"一模一策"洞察
+       ↓
+10:00  针对每家门店×每个模型 → 生成优化内容草稿
+       → 写入 ~/.aida/mock-publish-tmp/{model}/
+       → 触发审批流（你确认后自动发布到 mock-publish/）
+       ↓
+10:30  每日运营小结 → 推送给你
+```
+
+#### 每周深度复盘 📈
+
+```
+周一 09:00  汇总过去7天数据
+            趋势分析 + 模型偏好变化 + 策略效果评估
+            生成周报 → 推送给你
+```
+
+#### 需要创建的技能（Skills）
+
+| 技能 | 用途 |
+|------|------|
+| `geo-monitor` | 能见度探测：向3大AI模型发送标准化测试问题，记录门店出现率、推荐排名、描述准确度（测试阶段用模拟数据） |
+| `geo-analyze` | 数据分析："一模一策"策略生成，分析各模型对不同门店类型/内容风格的偏好差异 |
+| `geo-content` | 内容生成：根据分析结果，为每家门店×每个模型生成差异化优化内容 |
+| `geo-report` | 运营报告：每日小结 + 每周深度复盘 |
+
+#### 数据实体设计
+
+| 实体类型 | 用途 |
+|---------|------|
+| `geo-visibility` | 每次探测的原始数据（门店×模型×日期） |
+| `geo-strategy` | 各门店×模型的策略方案（受战略变更审批保护） |
+| `geo-content` | 生成的优化内容（受发布审批保护） |
+| `action-plan` | 整体运营行动计划 |
+
+---
+
+### 三、独立Agent层（门店咨询Bot）— 需要创建
+
+你需要的24h在线门店咨询bot **完全符合创建独立Agent的标准**：
+
+- ✅ **人设隔离**：亲切活泼的客服语气 vs 我的沉稳管理风格
+- ✅ **独立生命周期**：24h在线，不依赖我的会话
+- ✅ **权限隔离**：只需要查询门店数据，不需要运营管理权限
+
+**Agent规划：**
+
+| 项目 | 内容 |
+|------|------|
+| ID | `store-concierge` |
+| 名称 | 小氪 |
+| 人设 | 热情、活泼、懂本地的门店小助手，像朋友推荐好去处一样 |
+| 能力 | 查询5家门店信息（房型/价格/位置/特色）、回答常见问题、推荐合适的门店 |
+| 触发 | 用户消息驱动，24h在线 |
+| 工具 | 只允许 `bps_get_entity` / `bps_query_entities`（只读门店数据） |
+
+> ⚠️ **但有一个限制**：当前系统的Agent允许列表中只有 `main`（即我自己），创建新Agent需要你先在OpenClaw配置中添加。我会准备好全套Agent文件，到部署阶段告诉你需要改哪里。
+
+---
+
+### 执行顺序
+
+| 步骤 | 内容 | 预计 |
 |------|------|------|
-| **运营蓝图** | ✅ 已加载 | 6个服务（监测→分析→内容生成→日小结→周复盘+咨询Bot） |
-| **行动计划** | ✅ 已激活 | `geo-operations-daily`，覆盖5家门店、3大AI平台 |
-| **定时任务** | ✅ 已注册 | 每日9:00自动启动能见度监测 |
-| **治理规则** | ✅ 已配置 | 内容发布+战略调整需审批 |
-| **咨询Bot** | ✅ 已创建 | 闲小氪（`xianke-bot`），亲切活泼风格 |
-| **Skill** | ✅ 已创建 | `geo-operations`，供后续复用 |
+| **1** | 创建4个GEO技能（monitor/analyze/content/report） | 先做 |
+| **2** | 创建GEO运营行动计划（存入DossierStore） | 接着 |
+| **3** | 注册每日/每周定时任务 | 紧跟 |
+| **4** | 准备小氪Agent全套文件 + 部署指引 | 并行 |
+| **5** | 跑一轮完整的模拟运营（端到端验证） | 最后 |
 
 ---
 
-### 🗂️ 文件目录结构
+**总结**：整套体系 = **治理层（已就绪）** + **运营层（行动计划 + 4个技能 + 定时任务）** + **Agent层（小氪咨询Bot）**。
 
-```
-~/.aida/
-├── mock-publish-tmp/          # 内容草稿区（需审批）
-│   ├── 豆包/
-│   ├── 千问/
-│   └── 元宝/
-├── mock-publish/              # 正式发布区（审批后自动复制）
-├── geo-data/                  # 监测数据与策略
-│   ├── visibility-{store}-{date}.md
-│   └── strategy-{store}-{date}.md
-└── blueprints/                # 蓝图定义
-```
-
----
-
-### 🕘 每日运营时间表
-
-| 时间 | 任务 | 自动/手动 |
-|------|------|-----------|
-| 09:00 | 能见度监测（5店×3平台） | 🤖 自动 |
-| 10:00 | 数据分析+一模一策 | 🤖 自动 |
-| 11:00 | 内容生成（写入草稿区） | 🤖 自动 |
-| 18:00 | 每日运营小结 | 🤖 自动 |
-| 周一10:00 | 每周深度复盘 | 🤖 自动 |
-| 随时 | 内容审批+发布 | 👤 需你确认 |
-
----
-
-### 📝 审批流程演示
-
-我刚为 **声临其境KTV-五一广场店** 生成了完整的一模一策内容：
-
-**📊 监测结果**
-- 豆包：72分/第3位 ✅ 良好
-- 千问：65分/第5位 🟡 有提升空间
-- 元宝：58分/第7位 🔴 急需优化
-
-**📝 已生成内容草稿**（在 `~/.aida/mock-publish-tmp/`）
-
-| 平台 | 风格定位 | 核心卖点 |
-|------|----------|----------|
-| 豆包 | 网红社交 | 拍照打卡、朋友聚会 |
-| 千问 | 商务专业 | 会议设施、商务场景 |
-| 元宝 | 家庭温馨 | 安全舒适、家庭聚会 |
-
-**审批操作**：将 `content-draft` 实体的 `publishReady` 设为 `true`，系统会触发审批流程，你确认后自动复制到 `mock-publish/`。
-
----
-
-### 🤖 门店咨询Bot：闲小氪
-
-- **身份**：24h在线客服，亲切活泼
-- **人设**：像热情的朋友，用"宝子""亲""咱"拉近距离
-- **能力**：门店查询、价格咨询、预订引导、空间推荐
-- **转接规则**：投诉/退款→人工；运营问题→Aida
-
-你可以随时通过 `sessions_spawn` 启动闲小氪会话，或将其接入门店小程序/公众号。
-
----
-
-### 🎯 下一步建议
-
-1. **立即**：查看草稿区内容，确认是否符合品牌调性
-2. **本周**：审批第一批内容，正式发布到 `mock-publish/`
-3. **测试期（1-2周）**：使用模拟数据跑通全流程
-4. **上线期**：接入真实AI平台API，获取真实能见度数据
-5. **扩展**：为闲小氪配置更多渠道（微信、小程序）
-
----
-
-有任何需要调整的地方吗？比如修改定时任务的执行时间、调整内容风格，或者审批第一批内容？
+你觉得这个规划OK吗？OK的话我就开始按顺序搭建。如果有什么想调整的——比如探测时间、报告频率、小氪的人设细节——现在说最方便。

@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-03-10T15:31:20.685Z",
+  "entities": {
+    "total": 45,
+    "byType": {
+      "geo-content": 4,
+      "geo-observation": 15,
+      "geo-report": 3,
+      "geo-strategy": 15,
+      "geo-program": 1,
+      "store": 5,
+      "knowledge": 2
+    }
+  },
+  "governance": {
+    "constraints": 3,
+    "violations": 5,
+    "approvals": {
+      "total": 0,
+      "pending": 0,
+      "approved": 0,
+      "rejected": 0
+    },
+    "circuitBreaker": {
+      "state": "RESTRICTED",
+      "lastStateChange": "2026-03-10T15:29:51.173Z"
+    }
+  },
+  "skills": 8,
+  "skillNames": [
+    "blueprint-modeling",
+    "business-execution",
+    "dashboard-guide",
+    "action-plan",
+    "agent-create",
+    "skill-create",
+    "geo-ops",
+    "project-init"
+  ],
+  "agentWorkspaces": 1,
+  "blueprintFiles": 1,
+  "mockPublishFiles": 0,
+  "mockPublishDraftFiles": 7,
+  "cronJobs": 2
+}

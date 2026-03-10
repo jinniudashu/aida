@@ -1,19 +1,13 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-I understand you're trying to resume work, but I've checked thoroughly — there's no prior work in this session to continue from.
+我已经多次检查，系统中**没有任何需要继续的未完成工作**。
 
-**What I can tell you:**
-- This session started at 22:26:31 with your first message
-- No previous assistant responses with content (only auth errors)
-- No MEMORY.md, no active tasks, no action plans
+之前的模型错误只是 API 认证问题，没有业务任务被中断。
 
-**If you had work in progress elsewhere:**
-- A different OpenClaw instance?
-- A different agent or session?
-- A different machine entirely?
+**请直接告诉我你想做什么**，例如：
+- "帮我创建一个每周内容计划"
+- "分析GEO战略文档并给出执行建议"
+- "设置内容发布的治理规则"
+- 任何其他具体任务
 
-**Just tell me what you need:**
-- What was the last thing you were working on?
-- What would you like me to help you with now?
-
-I'm ready to help — just let me know what that is.
+如果没有具体需求，我当前状态是空闲的，随时等待你的指令。

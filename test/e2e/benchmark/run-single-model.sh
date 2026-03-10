@@ -119,6 +119,23 @@ ssh_run '
   rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME/cron/" 2>/dev/null || true
   find "$OPENCLAW_HOME" \( -name "sessions.json" -o -name "*.session" \) -delete 2>/dev/null || true
+
+  # Reset agents.list in openclaw.json to remove stale entries from previous models
+  # (R7 fix: agent-create can leave invalid config entries like bad tools.profile)
+  if [ -f "$OPENCLAW_HOME/openclaw.json" ]; then
+    node -e "
+      const fs = require(\"fs\");
+      const f = process.argv[1];
+      try {
+        const c = JSON.parse(fs.readFileSync(f, \"utf8\"));
+        if (c.agents && c.agents.list && c.agents.list.length > 1) {
+          c.agents.list = c.agents.list.slice(0, 1);
+          fs.writeFileSync(f, JSON.stringify(c, null, 2) + \"\\n\");
+        }
+      } catch {}
+    " "$OPENCLAW_HOME/openclaw.json" 2>/dev/null || true
+  fi
+
   echo "Environment cleaned"
 '
 log "Remote environment cleaned."

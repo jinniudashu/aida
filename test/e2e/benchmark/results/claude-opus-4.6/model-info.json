@@ -3,6 +3,10 @@
   "name": "Claude Opus 4.6",
   "primary": "openrouter/anthropic/claude-opus-4.6",
   "provider": "openrouter",
-  "startedAt": "2026-03-10T13:29:06.693Z",
-  "benchmarkVersion": "R6"
+  "testScript": "test/e2e/idlex-geo-v3.sh",
+  "startedAt": "2026-03-10T15:00:52.372Z",
+  "benchmarkVersion": "R7",
+  "completedAt": "2026-03-10T15:21:44.030Z",
+  "durationSeconds": 1251,
+  "e2eResult": "38 PASS / 1 FAIL / 8 WARN"
 }
