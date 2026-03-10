@@ -203,7 +203,7 @@ try:
         # OpenAI-compatible (moonshot, dashscope, zhipu)
         base_urls = {
             'moonshot': 'https://api.moonshot.ai/v1',
-            'dashscope': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+            'dashscope': 'https://coding.dashscope.aliyuncs.com/v1',
             'zhipu': 'https://api.z.ai/api/paas/v4',
         }
         url = base_urls[provider] + '/chat/completions'

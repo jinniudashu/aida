@@ -143,7 +143,7 @@ if (env.MOONSHOT_API_KEY) {
 // DashScope (Qwen) — domestic endpoint
 if (env.DASHSCOPE_API_KEY) {
   data.providers.dashscope = {
-    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    baseUrl: "https://coding.dashscope.aliyuncs.com/v1",
     api: "openai-completions",
     models: [
       { id: "qwen3.5-plus", name: "Qwen3.5 Plus", reasoning: true, input: ["text"], cost: { input: 3, output: 12, cacheRead: 1, cacheWrite: 2 }, contextWindow: 131072, maxTokens: 8192 }

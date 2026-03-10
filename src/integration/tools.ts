@@ -5,6 +5,7 @@ import { Type } from '@sinclair/typebox';
 import { stringify as stringifyYaml } from 'yaml';
 import { loadBlueprintFromString, type LoadResult } from '../loader/yaml-loader.js';
 import { isSimplifiedFormat, compileBlueprint, type CompileResult } from '../loader/blueprint-compiler.js';
+import { loadGovernanceFile, loadGovernanceFromString } from '../governance/governance-loader.js';
 import { parse as parseYaml } from 'yaml';
 import type { ProcessTracker } from '../engine/process-tracker.js';
 import type { BlueprintStore } from '../store/blueprint-store.js';
@@ -632,6 +633,58 @@ function createGovernanceStatusTool(deps: BpsToolDeps): OpenClawAgentTool {
   };
 }
 
+// ——— 15. bps_load_governance ———
+
+const LoadGovernanceInput = Type.Object({
+  yaml: Type.Optional(Type.String({ description: 'Governance YAML content. Supports both policies[] format and flat constraints[] format. If omitted, reloads from ~/.aida/governance.yaml.' })),
+});
+
+function createLoadGovernanceTool(deps: BpsToolDeps): OpenClawAgentTool {
+  return {
+    name: 'bps_load_governance',
+    description: 'Load or reload governance constraints into the running engine. Accepts YAML content directly or reloads from ~/.aida/governance.yaml. Use after writing governance.yaml mid-session to activate constraints.',
+    parameters: LoadGovernanceInput,
+    async execute(_callId: string, input: unknown) {
+      if (!deps.governanceStore || !deps.governanceGate) {
+        return { error: 'Governance layer not configured. Cannot load governance without GovernanceStore and ActionGate.' };
+      }
+
+      const { yaml } = input as { yaml?: string };
+
+      // Load from YAML string or from default file path
+      const result = yaml
+        ? loadGovernanceFromString(yaml)
+        : loadGovernanceFile(path.join(os.homedir(), '.aida', 'governance.yaml'));
+
+      if (result.errors.length > 0) {
+        return {
+          success: false,
+          errors: result.errors,
+          hint: 'Check governance YAML format. Supports "policies[].constraints[]" or flat "constraints[]" at top level.',
+        };
+      }
+
+      // Reload constraints into the store (idempotent: clears existing, inserts new)
+      const count = deps.governanceStore.loadConstraints(result.constraints);
+
+      deps.logger?.info(`Governance reloaded: ${count} constraints`, {
+        constraints: result.constraints.map(c => c.id),
+      });
+
+      return {
+        success: true,
+        constraintsLoaded: count,
+        constraints: result.constraints.map(c => ({
+          id: c.id,
+          severity: c.severity,
+          onViolation: c.onViolation,
+          scope: c.scope,
+        })),
+      };
+    },
+  };
+}
+
 // ——— Governance wrapper ———
 
 /** Wrap a write-operation tool with governance checks.
@@ -708,9 +761,10 @@ export function createBpsTools(deps: BpsToolDeps): OpenClawAgentTool[] {
     createLoadBlueprintTool(deps),
   ];
 
-  // Add governance status tool if governance is configured
+  // Add governance tools if governance is configured
   if (deps.governanceStore) {
     tools.push(createGovernanceStatusTool(deps));
+    tools.push(createLoadGovernanceTool(deps));
   }
 
   // Wrap write-operation tools with governance if gate is provided

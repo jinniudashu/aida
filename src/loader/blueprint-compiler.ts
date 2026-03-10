@@ -27,11 +27,20 @@ export interface SimplifiedService {
   executorType?: string;
 }
 
+export interface FlowRule {
+  when: string;
+  then: string;
+}
+
+export interface FlowObject {
+  rules: FlowRule[];
+}
+
 export interface CompilerInput {
   version?: string;
   name: string;
   services?: SimplifiedService[];
-  flow?: string[];
+  flow?: string[] | FlowObject;
 }
 
 // ——— Compiled output types (what the engine consumes) ———
@@ -101,10 +110,22 @@ interface FlowEdge {
 // ——— Public API ———
 
 /**
- * Detect whether a parsed YAML object uses simplified format (has flow[], no rules[]).
+ * Detect whether a parsed YAML object uses simplified format.
+ *
+ * Supported flow formats:
+ *   1. flow: string[] — DSL arrows like "svc-a -> svc-b"
+ *   2. flow: { rules: [{when, then}] } — object with when/then rule pairs
+ *
+ * In both cases, top-level rules[] must be absent (rules[] = full engine format).
  */
 export function isSimplifiedFormat(obj: Record<string, unknown>): boolean {
-  return Array.isArray(obj.flow) && !Array.isArray(obj.rules);
+  if (Array.isArray(obj.rules)) return false; // full format
+  if (Array.isArray(obj.flow)) return true; // flow as string[]
+  // flow as object with rules[] key
+  if (obj.flow && typeof obj.flow === 'object' && !Array.isArray(obj.flow) && Array.isArray((obj.flow as Record<string, unknown>).rules)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -120,7 +141,26 @@ export function compileBlueprint(input: Record<string, unknown>): CompileResult 
   const errors: string[] = [];
 
   const services = input.services as SimplifiedService[] | undefined;
-  const flow = input.flow as string[] | undefined;
+
+  // Normalize flow: convert object format { rules: [{when, then}] } to string[] DSL arrows
+  let flow: string[] | undefined;
+  const rawFlow = input.flow;
+  if (Array.isArray(rawFlow)) {
+    flow = rawFlow as string[];
+  } else if (rawFlow && typeof rawFlow === 'object' && Array.isArray((rawFlow as FlowObject).rules)) {
+    const flowObj = rawFlow as FlowObject;
+    flow = flowObj.rules.map(rule => {
+      const when = String(rule.when ?? '').trim();
+      const then = String(rule.then ?? '').trim();
+      if (!when || !then) return '';
+      // Convert when/then to DSL: "when -> then" for sequential,
+      // or "when -> then | \"condition\"" if when contains a condition indicator
+      return `${when} -> ${then}`;
+    }).filter(line => line.length > 0);
+    if (flow.length > 0) {
+      warnings.push(`Converted ${flow.length} flow.rules (when/then) to DSL arrow format.`);
+    }
+  }
 
   if (!services?.length) {
     errors.push('No "services" array found.');

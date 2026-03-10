@@ -282,6 +282,57 @@ policies:
     expect(result.errors).toHaveLength(0);
     expect(result.constraints).toHaveLength(3);
   });
+
+  it('should accept flat constraints[] format (Aida-written)', () => {
+    const yaml = `
+constraints:
+  - id: no-double-discount
+    label: "折扣不叠加"
+    scope:
+      tools: [bps_update_entity]
+      entityTypes: [billing]
+    condition: "discountType != 'stacked'"
+    onViolation: BLOCK
+    severity: HIGH
+    message: "Stacked discounts not allowed"
+  - id: consent-required
+    label: "知情同意必签"
+    scope:
+      tools: [bps_update_entity]
+    condition: "consentSigned == true"
+    onViolation: REQUIRE_APPROVAL
+    severity: CRITICAL
+    message: "Treatment requires signed consent"
+`;
+    const result = loadGovernanceFromString(yaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.constraints).toHaveLength(2);
+    expect(result.constraints[0].policyId).toBe('auto-policy');
+    expect(result.constraints[0].id).toBe('no-double-discount');
+    expect(result.constraints[0].onViolation).toBe('BLOCK');
+    expect(result.constraints[1].id).toBe('consent-required');
+    expect(result.constraints[1].onViolation).toBe('REQUIRE_APPROVAL');
+  });
+
+  it('should normalize flat constraints with "action" field and missing scope', () => {
+    const yaml = `
+constraints:
+  - id: botox-limit
+    label: "肉毒素2月限200U"
+    condition: "totalUnits <= 200"
+    action: BLOCK
+    severity: CRITICAL
+    message: "Botox limit exceeded"
+`;
+    const result = loadGovernanceFromString(yaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.constraints).toHaveLength(1);
+    expect(result.constraints[0].onViolation).toBe('BLOCK');
+    // Should default scope.tools to all write tools
+    expect(result.constraints[0].scope.tools).toContain('bps_update_entity');
+    expect(result.constraints[0].scope.tools).toContain('bps_create_task');
+    expect(result.constraints[0].scope.tools.length).toBe(5);
+  });
 });
 
 // ——— ActionGate ———
@@ -640,6 +691,47 @@ describe('GovernanceToolWrapper', () => {
     const result = await govTool!.execute('call-1', {}) as Record<string, unknown>;
     expect(result.circuitBreakerState).toBe('NORMAL');
     expect(result.activeConstraints).toBe(0);
+  });
+
+  it('should include bps_load_governance tool when governance is configured', async () => {
+    const db = createMemoryDatabase();
+    const govStore = new GovernanceStore(db);
+    const actionGate = new ActionGate(govStore);
+
+    const { createBpsEngine } = await import('../src/index.js');
+    const engine = createBpsEngine({ db });
+    const { createBpsTools } = await import('../src/integration/tools.js');
+    const tools = createBpsTools({
+      tracker: engine.tracker,
+      blueprintStore: engine.blueprintStore,
+      processStore: engine.processStore,
+      dossierStore: engine.dossierStore,
+      governanceGate: actionGate,
+      governanceStore: govStore,
+    });
+
+    const loadGovTool = tools.find(t => t.name === 'bps_load_governance');
+    expect(loadGovTool).toBeDefined();
+
+    // Load governance from inline YAML (flat format)
+    const result = await loadGovTool!.execute('call-1', {
+      yaml: `
+constraints:
+  - id: test-constraint
+    label: Test
+    condition: "amount <= 100"
+    action: BLOCK
+    severity: HIGH
+    message: "Over limit"
+`,
+    }) as Record<string, unknown>;
+    expect(result.success).toBe(true);
+    expect(result.constraintsLoaded).toBe(1);
+
+    // Verify constraints are now active
+    const statusTool = tools.find(t => t.name === 'bps_governance_status')!;
+    const status = await statusTool.execute('call-2', {}) as Record<string, unknown>;
+    expect(status.activeConstraints).toBe(1);
   });
 
   it('should not wrap read-only tools', async () => {

@@ -42,8 +42,28 @@ export function loadGovernanceFromString(yamlContent: string): GovernanceLoadRes
     return { constraints: [], errors: ['Governance config must be a YAML object'] };
   }
 
+  // Support flat constraints[] format (what Aida writes) in addition to policies[] format
+  const rawAny2 = raw as unknown as Record<string, unknown>;
+  if (!Array.isArray(raw.policies) && Array.isArray(rawAny2.constraints)) {
+    const flatConstraints = rawAny2.constraints as Array<Record<string, unknown>>;
+    // Normalize flat constraint fields: Aida may write `action` instead of `onViolation`,
+    // and may omit `scope.tools` (default to all write tools)
+    const ALL_WRITE_TOOLS = ['bps_update_entity', 'bps_create_task', 'bps_update_task', 'bps_complete_task', 'bps_create_skill'];
+    const normalized = flatConstraints.map(c => ({
+      ...c,
+      label: c.label ?? c.id ?? 'unnamed',
+      onViolation: c.onViolation ?? c.action ?? 'BLOCK',
+      scope: c.scope ?? { tools: ALL_WRITE_TOOLS },
+    }));
+    raw.policies = [{
+      id: 'auto-policy',
+      label: 'Auto-generated policy from flat constraints',
+      constraints: normalized,
+    }] as unknown as PolicyDef[];
+  }
+
   if (!Array.isArray(raw.policies)) {
-    return { constraints: [], errors: ['Missing or invalid "policies" array'] };
+    return { constraints: [], errors: ['Missing or invalid "policies" array. Expected "policies[]" or "constraints[]" at top level.'] };
   }
 
   const constraints: ConstraintDef[] = [];

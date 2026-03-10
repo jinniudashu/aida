@@ -411,7 +411,7 @@ if (!data.providers) data.providers = {};
 // DashScope (Qwen) — primary model
 if (dashscopeKey) {
   data.providers.dashscope = {
-    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    baseUrl: "https://coding.dashscope.aliyuncs.com/v1",
     api: "openai-completions",
     models: [{
       id: "qwen3.5-plus",

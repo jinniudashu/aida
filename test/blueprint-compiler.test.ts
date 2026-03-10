@@ -478,3 +478,125 @@ describe('yaml-loader auto-compile integration', () => {
     expect(task.state).toBe('OPEN');
   });
 });
+
+// ——— flow.rules object format ———
+
+describe('flow.rules object format', () => {
+  it('should detect flow.rules as simplified format', () => {
+    const obj = {
+      name: 'test',
+      services: [{ id: 'svc-a', label: 'A' }],
+      flow: {
+        rules: [
+          { when: 'svc-a', then: 'svc-b' },
+        ],
+      },
+    };
+    expect(isSimplifiedFormat(obj as Record<string, unknown>)).toBe(true);
+  });
+
+  it('should not detect flow.rules as simplified when top-level rules[] exists', () => {
+    const obj = {
+      name: 'test',
+      services: [{ id: 'svc-a', label: 'A' }],
+      flow: {
+        rules: [{ when: 'svc-a', then: 'svc-b' }],
+      },
+      rules: [{ id: 'r1' }],
+    };
+    expect(isSimplifiedFormat(obj as Record<string, unknown>)).toBe(false);
+  });
+
+  it('should compile flow.rules when/then into edges', () => {
+    const result = compileBlueprint({
+      name: 'maor-patient-flow',
+      services: [
+        { id: 'svc-flow', label: 'Patient Flow', composite: true },
+        { id: 'svc-intake', label: 'Patient Intake' },
+        { id: 'svc-consult', label: 'Consultation' },
+        { id: 'svc-billing', label: 'Billing' },
+        { id: 'svc-treatment', label: 'Treatment' },
+      ],
+      flow: {
+        rules: [
+          { when: 'svc-intake', then: 'svc-consult' },
+          { when: 'svc-consult', then: 'svc-billing' },
+          { when: 'svc-billing', then: 'svc-treatment' },
+        ],
+      },
+    } as Record<string, unknown>);
+
+    expect(result.errors).toEqual([]);
+    expect(result.compiled).toBe(true);
+    expect(result.warnings.some(w => w.includes('flow.rules'))).toBe(true);
+
+    // Should have entry rule + 3 edge rules
+    expect(result.blueprint.rules.length).toBe(4); // 1 entry + 3 edges
+    expect(result.blueprint.events.length).toBe(2); // evt-new + evt-terminated
+
+    // Verify topology: intake → consult → billing → treatment
+    const edgeRules = result.blueprint.rules.filter(r => r.eventId === 'evt-terminated');
+    expect(edgeRules).toHaveLength(3);
+    expect(edgeRules.find(r => r.serviceId === 'svc-intake')?.operandServiceId).toBe('svc-consult');
+    expect(edgeRules.find(r => r.serviceId === 'svc-consult')?.operandServiceId).toBe('svc-billing');
+    expect(edgeRules.find(r => r.serviceId === 'svc-billing')?.operandServiceId).toBe('svc-treatment');
+  });
+
+  it('should load flow.rules YAML via loadBlueprintFromString', () => {
+    const yaml = `
+name: "maor-governance"
+services:
+  - id: svc-governance
+    label: "MAOr Governance"
+    composite: true
+    entityType: treatment
+  - id: svc-consent
+    label: "Consent Check"
+    executor: manual
+  - id: svc-treatment
+    label: "Treatment Execution"
+    executor: manual
+  - id: svc-followup
+    label: "Follow-up"
+    executor: agent
+flow:
+  rules:
+    - when: svc-consent
+      then: svc-treatment
+    - when: svc-treatment
+      then: svc-followup
+`;
+    const bpsEngine = createBpsEngine();
+    const result = loadBlueprintFromString(yaml, bpsEngine.blueprintStore);
+
+    expect(result.errors).toEqual([]);
+    expect(result.services).toBe(4);
+    expect(result.rules).toBe(3); // 1 entry + 2 edges
+
+    // Verify topology queries work
+    const nextSteps = bpsEngine.blueprintStore.getNextSteps('svc-consent');
+    expect(nextSteps).toHaveLength(1);
+    expect(nextSteps[0].operandServiceId).toBe('svc-treatment');
+  });
+
+  it('should skip empty when/then pairs in flow.rules', () => {
+    const result = compileBlueprint({
+      name: 'test',
+      services: [
+        { id: 'svc-main', label: 'Main', composite: true },
+        { id: 'svc-a', label: 'A' },
+        { id: 'svc-b', label: 'B' },
+      ],
+      flow: {
+        rules: [
+          { when: 'svc-a', then: 'svc-b' },
+          { when: '', then: 'svc-b' },
+          { when: 'svc-a', then: '' },
+        ],
+      },
+    } as Record<string, unknown>);
+
+    expect(result.errors).toEqual([]);
+    expect(result.blueprint.rules.length).toBe(2); // 1 entry + 1 valid edge
+  });
+});

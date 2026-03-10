@@ -96,7 +96,7 @@
       "envVar": "DASHSCOPE_API_KEY",
       "envFile": ".dev/model-api-keys.env",
       "providerConfig": {
-        "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "baseUrl": "https://coding.dashscope.aliyuncs.com/v1",
         "api": "openai-completions"
       },
       "modelSpec": {
