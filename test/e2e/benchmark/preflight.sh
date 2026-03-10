@@ -58,21 +58,23 @@ done
 # 2. config.json integrity
 # ============================================================
 log "Validating config.json..."
-CONFIG_OK=$(python3 -c "
-import json, sys
-try:
-    c = json.load(open('$CONFIG_JSON'))
-    models = c['models']
-    assert len(models) >= 1, 'No models defined'
-    for m in models:
-        for field in ['id', 'name', 'provider', 'primary', 'envVar', 'envFile', 'providerConfig']:
-            assert field in m, f'Model {m.get(\"id\",\"?\")} missing field: {field}'
-    assert 'scoring' in c, 'Missing scoring section'
-    assert 'server' in c, 'Missing server section'
-    print('OK')
-except Exception as e:
-    print(f'FAIL: {e}')
-" 2>&1)
+CONFIG_OK=$(node -e "
+  const fs = require('fs');
+  try {
+    const c = JSON.parse(fs.readFileSync(process.argv[1], 'utf-8'));
+    const models = c.models;
+    if (!models || models.length < 1) throw new Error('No models defined');
+    const fields = ['id','name','provider','primary','envVar','envFile','providerConfig'];
+    for (const m of models) {
+      for (const f of fields) {
+        if (!(f in m)) throw new Error('Model ' + (m.id||'?') + ' missing field: ' + f);
+      }
+    }
+    if (!c.scoring) throw new Error('Missing scoring section');
+    if (!c.server) throw new Error('Missing server section');
+    console.log('OK');
+  } catch (e) { console.log('FAIL: ' + e.message); }
+" "$CONFIG_JSON" 2>&1)
 
 if [[ "$CONFIG_OK" == "OK" ]]; then
   check_pass "config.json integrity (${#MODELS[@]} models)"
@@ -126,29 +128,21 @@ print(json.dumps({
 }))
 \"" 2>/dev/null || echo '{}')
 
-python3 -c "
-import json, sys
-status = json.loads('''$REMOTE_STATUS''')
-checks = {
-    'repo': 'Remote repo ($REMOTE_REPO)',
-    'openclaw_config': 'Remote openclaw.json',
-    'install_script': 'Remote install-aida.sh',
-    'e2e_script': 'Remote idlex-geo-v3.sh',
-    'openclaw_cli': 'Remote openclaw CLI',
-}
-for key, desc in checks.items():
-    val = status.get(key, False)
-    if val:
-        print(f'PASS {desc}')
-    else:
-        print(f'FAIL {desc}')
-
-nv = status.get('node_version', '')
-if nv:
-    print(f'PASS Node.js {nv}')
-else:
-    print(f'FAIL Node.js not found')
-" | while IFS= read -r line; do
+node -e '
+  const status = JSON.parse(process.argv[1] || "{}");
+  const checks = {
+    repo: "Remote repo ('"$REMOTE_REPO"')",
+    openclaw_config: "Remote openclaw.json",
+    install_script: "Remote install-aida.sh",
+    e2e_script: "Remote idlex-geo-v3.sh",
+    openclaw_cli: "Remote openclaw CLI",
+  };
+  for (const [key, desc] of Object.entries(checks)) {
+    console.log((status[key] ? "PASS " : "FAIL ") + desc);
+  }
+  const nv = status.node_version || "";
+  console.log(nv ? "PASS Node.js " + nv : "FAIL Node.js not found");
+' "$REMOTE_STATUS" | while IFS= read -r line; do
   if [[ "$line" == PASS* ]]; then
     check_pass "${line#PASS }"
   else

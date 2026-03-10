@@ -54,15 +54,16 @@ node -e '
 ' "$MODEL_ID" "$NAME" "$PRIMARY" "$PROVIDER" > "$OUT/model-info.json"
 
 # ============================================================
-# Step 2: Prepare API keys for remote
+# Step 2: Prepare API keys for remote (SCP env file)
 # ============================================================
 log "Loading API keys for all providers..."
-API_KEY_EXPORTS=""
+API_ENV_TMP="$BENCHMARK_DIR/.tmp-api-keys.env"
+: > "$API_ENV_TMP"
 for mid in "${MODELS[@]}"; do
   key=$(load_api_key "$mid" 2>/dev/null || echo "")
   if [[ -n "$key" ]]; then
     evar=$(model_env_var "$mid")
-    API_KEY_EXPORTS+="export $evar='$key'; "
+    echo "$evar=$key" >> "$API_ENV_TMP"
   fi
 done
 
@@ -72,60 +73,46 @@ done
 section "Step 1/5: Clean Remote Environment"
 log "Stopping services + wiping state..."
 
-ssh_run "
-  # Stop services
-  systemctl stop bps-dashboard 2>/dev/null || true
-  systemctl stop openclaw-gateway 2>/dev/null || true
-  pkill -f 'openclaw gateway' 2>/dev/null || true
-  sleep 3
+# Stop services (separate SSH calls to avoid pkill killing our own session)
+ssh_run 'systemctl stop bps-dashboard 2>/dev/null; systemctl stop openclaw-gateway 2>/dev/null; echo ok' || true
+ssh_run 'pkill -f "openclaw gate[w]ay" 2>/dev/null; echo ok' || true
+sleep 3
 
-  # Backup + wipe ~/.aida
-  AIDA_HOME=\${AIDA_HOME:-\$HOME/.aida}
-  OPENCLAW_HOME=\${OPENCLAW_HOME:-\$HOME/.openclaw}
-  [ -d \"\$AIDA_HOME\" ] && mv \"\$AIDA_HOME\" \"\$AIDA_HOME.bak.\$(date +%Y%m%d%H%M%S)\"
+ssh_run '
+  AIDA_HOME=${AIDA_HOME:-$HOME/.aida}
+  OPENCLAW_HOME=${OPENCLAW_HOME:-$HOME/.openclaw}
+  [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)" || true
 
-  # Wipe OpenClaw state (keep plugins + auth config)
-  rm -rf \"\$OPENCLAW_HOME/workspace/\" 2>/dev/null || true
-  rm -rf \"\$OPENCLAW_HOME\"/workspace-* 2>/dev/null || true
-  rm -rf \"\$OPENCLAW_HOME/agents/main/sessions/\" 2>/dev/null || true
-  find \"\$OPENCLAW_HOME\" \\( -name 'cron*.json' -o -name 'cron*.jsonl' \
-    -o -name 'sessions.json' -o -name '*.session' \\) -delete 2>/dev/null || true
-  echo 'Environment cleaned'
-"
+  rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+  find "$OPENCLAW_HOME" \( -name "cron*.json" -o -name "cron*.jsonl" \
+    -o -name "sessions.json" -o -name "*.session" \) -delete 2>/dev/null || true
+  echo "Environment cleaned"
+'
 log "Remote environment cleaned."
 
 # ============================================================
 # Step 4: Install + configure model
 # ============================================================
 section "Step 2/5: Install + Configure ($NAME)"
-log "Pulling latest code..."
-ssh_run "cd $REMOTE_REPO && git pull --recurse-submodules 2>&1 | tail -3"
+log "Pulling latest code (discarding remote local changes)..."
+ssh_run "cd $REMOTE_REPO && git checkout -- . && git pull --no-recurse-submodules 2>&1 | tail -5"
 
 log "Generating models.json..."
 MODELS_JSON_TMP="$BENCHMARK_DIR/.tmp-models.json"
 generate_models_json > "$MODELS_JSON_TMP"
 FALLBACKS_JSON=$(get_fallbacks_json)
 
-log "Uploading models.json to remote..."
+log "Uploading models.json + API keys to remote..."
 REMOTE_MODELS_JSON="$REMOTE_OPENCLAW_HOME/agents/main/agent/models.json"
-ssh_run "mkdir -p $(dirname "$REMOTE_MODELS_JSON")"
+ssh_run "mkdir -p $(dirname "$REMOTE_MODELS_JSON") $REMOTE_TMP"
 scp_to_remote "$MODELS_JSON_TMP" "$REMOTE_MODELS_JSON"
-rm -f "$MODELS_JSON_TMP"
+scp_to_remote "$API_ENV_TMP" "$REMOTE_TMP/api-keys.env"
+rm -f "$MODELS_JSON_TMP" "$API_ENV_TMP"
 
-log "Running install-benchmark.sh on remote..."
-ssh_long "
-  cd $REMOTE_REPO
-  $API_KEY_EXPORTS
-
-  # Run production install
-  bash deploy/install-aida.sh
-
-  # Overlay benchmark model config
-  BENCHMARK_PRIMARY='$PRIMARY' BENCHMARK_FALLBACK='$FALLBACKS_JSON' \
-    bash test/e2e/benchmark/install-benchmark.sh
-
-  echo '[benchmark] Install complete'
-"
+log "Running install-benchmark.sh on remote (includes install-aida.sh)..."
+ssh_long "cd $REMOTE_REPO && set -a && source $REMOTE_TMP/api-keys.env && set +a && BENCHMARK_PRIMARY='$PRIMARY' BENCHMARK_FALLBACK='$FALLBACKS_JSON' bash test/e2e/benchmark/install-benchmark.sh && echo '[benchmark] Install complete'"
 
 log "Starting OpenClaw gateway..."
 ssh_run "openclaw gateway start 2>/dev/null; echo started"
@@ -141,12 +128,7 @@ done
 
 # Verify model config
 log "Verifying model config..."
-ssh_run "
-  OC=\${OPENCLAW_HOME:-\$HOME/.openclaw}
-  node -e \"const c=JSON.parse(require('fs').readFileSync('\$OC/openclaw.json','utf8'));
-  console.log('  Primary:', c.agents?.defaults?.model?.primary || 'NOT SET');
-  console.log('  Fallbacks:', JSON.stringify(c.agents?.defaults?.model?.fallbacks || []))\" 2>/dev/null || echo '  Config read failed'
-"
+ssh_run 'OC=${OPENCLAW_HOME:-$HOME/.openclaw}; node -e "const c=JSON.parse(require(\"fs\").readFileSync(process.argv[1],\"utf8\")); console.log(\"  Primary:\",c.agents?.defaults?.model?.primary||\"NOT SET\"); console.log(\"  Fallbacks:\",JSON.stringify(c.agents?.defaults?.model?.fallbacks||[]))" "$OC/openclaw.json" 2>/dev/null || echo "  Config read failed"'
 
 # ============================================================
 # Step 5: Run E2E test
@@ -155,11 +137,7 @@ section "Step 3/5: Run E2E Test (6 turns)"
 log "Running idlex-geo-v3.sh (timeout: ${AGENT_TIMEOUT}s per turn)..."
 log "This will take ~15-30 minutes..."
 
-E2E_OUTPUT=$(ssh_long "
-  cd $REMOTE_REPO
-  $API_KEY_EXPORTS
-  bash test/e2e/idlex-geo-v3.sh 2>&1
-" 2>&1 || true)
+E2E_OUTPUT=$(ssh_long "cd $REMOTE_REPO && set -a && source $REMOTE_TMP/api-keys.env && set +a && bash test/e2e/idlex-geo-v3.sh 2>&1" 2>&1 || true)
 
 # Save full e2e output
 echo "$E2E_OUTPUT" > "$OUT/e2e-test.log"
@@ -190,26 +168,23 @@ TURN_COUNT=$(ls "$OUT/raw"/turn-*.log 2>/dev/null | wc -l)
 log "  Downloaded $TURN_COUNT turn logs"
 
 log "Creating remote snapshots..."
-ssh_run "
-  AIDA_HOME=\${AIDA_HOME:-\$HOME/.aida}
-  OPENCLAW_HOME=\${OPENCLAW_HOME:-\$HOME/.openclaw}
+ssh_run '
+  AIDA_HOME=${AIDA_HOME:-$HOME/.aida}
+  OPENCLAW_HOME=${OPENCLAW_HOME:-$HOME/.openclaw}
   mkdir -p /tmp/aida-benchmark
 
-  # Snapshot aida data
   tar czf /tmp/aida-benchmark/aida-data.tar.gz \
-    -C \"\$AIDA_HOME\" data/ blueprints/ governance.yaml project.yaml 2>/dev/null || true
+    -C "$AIDA_HOME" data/ blueprints/ governance.yaml project.yaml 2>/dev/null || true
 
-  # Snapshot workspace
   tar czf /tmp/aida-benchmark/workspace.tar.gz \
-    -C \"\$OPENCLAW_HOME\" workspace/ 2>/dev/null || true
+    -C "$OPENCLAW_HOME" workspace/ 2>/dev/null || true
 
-  # Also snapshot any extra agent workspaces
-  for ws in \"\$OPENCLAW_HOME\"/workspace-*; do
-    [ -d \"\$ws\" ] && tar czf /tmp/aida-benchmark/\$(basename \"\$ws\").tar.gz -C \"\$OPENCLAW_HOME\" \$(basename \"\$ws\")/ 2>/dev/null || true
+  for ws in "$OPENCLAW_HOME"/workspace-*; do
+    [ -d "$ws" ] && tar czf /tmp/aida-benchmark/$(basename "$ws").tar.gz -C "$OPENCLAW_HOME" $(basename "$ws")/ 2>/dev/null || true
   done
 
   ls -la /tmp/aida-benchmark/
-"
+'
 
 scp_from_remote "/tmp/aida-benchmark/aida-data.tar.gz" "$OUT/snapshot/aida-data.tar.gz" 2>/dev/null || true
 scp_from_remote "/tmp/aida-benchmark/workspace.tar.gz" "$OUT/snapshot/workspace.tar.gz" 2>/dev/null || true

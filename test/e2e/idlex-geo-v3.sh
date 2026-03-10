@@ -121,7 +121,7 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
 
   log "Updating repo..."
   cd "$AIDA_REPO"
-  git pull --recurse-submodules 2>&1 | tail -3 || true
+  git pull --no-recurse-submodules 2>&1 | tail -3 || true
 
   log "Running install-aida.sh (includes Gateway auth setup)..."
   bash deploy/install-aida.sh
