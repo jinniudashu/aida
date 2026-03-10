@@ -431,13 +431,23 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **P0 建议**：Blueprint 编译器完善、文件 I/O 治理绕过修复、Gateway 热加载
 - **SWOT 分析**：优势（理论原创+治理领先+工程扎实），劣势（业务验证有限+模型依赖），机会（市场空白+学术价值），威胁（LLM 能力进化+大厂竞争）
 
-### 六模型隔离 Benchmark（2026-03-09，进行中）
-- 新增独立测试目录 `test/e2e/model-benchmark-gpt5.4/`，与历史 `benchmark-results/` 分离，支持 preflight / 单模型运行 / 汇总报告
-- **已完成并提交推送**：GPT-5.4、Claude Opus 4.6、Gemini 3.1 Pro、Kimi K2.5、Qwen3.5-Plus、GLM-5 六个模型的独立结果目录与评测报告
+### 六模型横评测试（2026-03-09~10，已完成）
+- 测试方案：IdleX GEO E2E v3（6 turns，39 自动化检查点）
+- 测试结果目录：`test/e2e/benchmark-results/`
+- **综合报告**：`test/e2e/benchmark-results/SIX-MODEL-COMPARISON.md`
+- **排名**：
+  1. 🥇 **Gemini 3.1 Pro** (9.15/10) — 44 PASS，唯一触发治理 (5 violations)
+  2. 🥈 Opus 4.6 (8.75/10) — 43 PASS，23 entities（最多）
+  3. 🥉 Qwen3.5-Plus (8.55/10) — 41 PASS，性价比最高
+  4. GLM-5 (7.25/10) — 40 PASS，15 skills（最多）
+  5. Kimi K2.5 (7.30/10) — 40 PASS，1 FAIL，24 mock-publish（最多）
+  6. GPT-5.4 (7.05/10) — 40 PASS，无 Agent/Blueprint
 - **关键发现**：
-  - `install-aida.sh` 会覆盖 OpenClaw 默认主模型，需要 benchmark 脚本在安装阶段注入 `AIDA_BENCHMARK_PRIMARY`
-  - Gemini 样本最初失败源于 provider id 误写为 `google-generativeai`；修正为 OpenClaw 内建的 `google-generative-ai` 后复测通过，Gemini 3.1 Pro 成为当前 benchmark 第一梯队样本
-  - Claude Opus 4.6 在业务理解、实体化落地与治理触发上表现最佳之一；Kimi / Qwen 稳定性较好；GLM-5 存在明显会话承接漂移
+  - Gemini 3.1 Pro 是唯一成功触发治理拦截的模型，证明 AIDA 治理层的实际价值
+  - Opus 4.6 实体创建最多（23），架构最完整
+  - GLM-5 Skills 创建最多（15），但缺少 Agent workspace
+  - GPT-5.4 缺少 Agent 和 Blueprint，治理层无载体
+  - 推荐生产配置：`google/gemini-3.1-pro-preview`（主）+ `dashscope/qwen3.5-plus`（备）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
