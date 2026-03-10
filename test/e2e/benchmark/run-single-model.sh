@@ -86,8 +86,8 @@ ssh_run '
   rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
-  find "$OPENCLAW_HOME" \( -name "cron*.json" -o -name "cron*.jsonl" \
-    -o -name "sessions.json" -o -name "*.session" \) -delete 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/cron/" 2>/dev/null || true
+  find "$OPENCLAW_HOME" \( -name "sessions.json" -o -name "*.session" \) -delete 2>/dev/null || true
   echo "Environment cleaned"
 '
 log "Remote environment cleaned."

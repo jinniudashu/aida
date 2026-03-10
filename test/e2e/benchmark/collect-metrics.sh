@@ -91,7 +91,13 @@ REMOTE_COUNTS=$(ssh_run 'node -e "
     agentWorkspaces: parseInt(run(\"find \" + OC + \" -maxdepth 1 -name workspace-* -type d 2>/dev/null | wc -l\")) || 0,
     blueprintFiles: parseInt(run(\"find \" + AH + \"/blueprints/ -name *.yaml 2>/dev/null | wc -l\")) || 0,
     mockPublishFiles: parseInt(run(\"find \" + AH + \"/mock-publish/ -type f 2>/dev/null | wc -l\")) || 0,
-    cronJobs: parseInt(run(\"find \" + OC + \" -name cron*.json -o -name cron*.jsonl 2>/dev/null | wc -l\")) || 0,
+    cronJobs: (() => {
+      try {
+        const f = OC + \"/cron/jobs.json\";
+        const data = JSON.parse(require(\"fs\").readFileSync(f, \"utf8\"));
+        return (data.jobs || []).filter(j => j.enabled).length;
+      } catch { return 0; }
+    })(),
   }, null, 2));
 "' 2>/dev/null || echo '{}')
 

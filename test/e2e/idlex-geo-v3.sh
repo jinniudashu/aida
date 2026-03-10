@@ -98,8 +98,8 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   # Wipe session data (but keep agent auth/models config)
   rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
   # Remove cron and other state files
-  find "$OPENCLAW_HOME" -name "cron*.json" -o -name "cron*.jsonl" \
-    -o -name "sessions.json" -o -name "*.session" 2>/dev/null | while read -r sf; do
+  rm -rf "$OPENCLAW_HOME/cron/" 2>/dev/null || true
+  find "$OPENCLAW_HOME" -name "sessions.json" -o -name "*.session" 2>/dev/null | while read -r sf; do
     rm -f "$sf"
   done
   log "  State wiped (plugins, config, and auth preserved)"
