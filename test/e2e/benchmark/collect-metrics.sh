@@ -91,6 +91,7 @@ REMOTE_COUNTS=$(ssh_run 'node -e "
     agentWorkspaces: parseInt(run(\"find \" + OC + \" -maxdepth 1 -name workspace-* -type d 2>/dev/null | wc -l\")) || 0,
     blueprintFiles: parseInt(run(\"find \" + AH + \"/blueprints/ -name *.yaml 2>/dev/null | wc -l\")) || 0,
     mockPublishFiles: parseInt(run(\"find \" + AH + \"/mock-publish/ -type f 2>/dev/null | wc -l\")) || 0,
+    mockPublishDraftFiles: parseInt(run(\"find \" + AH + \"/mock-publish-tmp/ -type f 2>/dev/null | wc -l\")) || 0,
     cronJobs: (() => {
       try {
         const f = OC + \"/cron/jobs.json\";

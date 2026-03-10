@@ -20,6 +20,7 @@ OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
 AIDA_REPO="${AIDA_REPO:-$HOME/aida}"
 DASHBOARD_URL="http://localhost:3456"
 MOCK_PUBLISH="$AIDA_HOME/mock-publish"
+MOCK_PUBLISH_TMP="$AIDA_HOME/mock-publish-tmp"
 LOG_DIR="/tmp/idlex-geo-e2e-v3"
 AGENT_TIMEOUT=300
 
@@ -292,9 +293,10 @@ Content types: StoreDescription, FAQ, ScenarioStory, StructuredData.
 CTXEOF
   fi
 
-  # 1d. Mock-publish dirs
+  # 1d. Mock-publish dirs (two-stage: tmp=drafts, final=published after approval)
   log "Creating mock-publish directories..."
   mkdir -p "$MOCK_PUBLISH"/{doubao,qianwen,yuanbao,general}
+  mkdir -p "$MOCK_PUBLISH_TMP"/{doubao,qianwen,yuanbao,general}
 
   # 1e. Seed 5 store entities
   log "Seeding 5 store entities + governance via TypeScript..."
@@ -426,6 +428,7 @@ TYPESCRIPT
   CC=$(find "$AIDA_HOME/context/" -name "*.md" 2>/dev/null | wc -l)
   check "V1.3 Context docs present (got $CC)" "test $CC -ge 1"
   check "V1.4 Mock-publish dirs" "test -d $MOCK_PUBLISH/doubao"
+  check "V1.4b Mock-publish-tmp dirs" "test -d $MOCK_PUBLISH_TMP/doubao"
   check "V1.5 project.yaml" "test -f $AIDA_HOME/project.yaml"
 
   log "Phase 1 complete."
@@ -450,7 +453,7 @@ if [ "$START_PHASE" -le 2 ]; then
 1. 每天监测门店在主流AI（豆包、千问、元宝）中的能见度
 2. 分析数据制定"一模一策"战略
 3. 针对每家门店、每个AI模型生成优化内容
-4. 内容分发到 ~/.aida/mock-publish/ 目录（测试环境）
+4. 内容先写到 ~/.aida/mock-publish-tmp/ 草稿区，审批通过后自动发布到 mock-publish/
 5. 每日运营小结，每周深度复盘
 6. 我还需要一个面向顾客的24h在线门店咨询bot，语气要亲切活泼——跟你的管理风格完全不同
 
@@ -575,6 +578,12 @@ if [ "$START_PHASE" -le 5 ]; then
   soft "V5.2 Aida reported governance interception" \
     "grep -qiE 'approval|审批|governance|blocked|拦截|治理' $LOG_DIR/turn-4.log"
 
+  # Draft files in mock-publish-tmp
+  TMP_FILES=$(find "$MOCK_PUBLISH_TMP" -type f 2>/dev/null | wc -l)
+  PUB_FILES=$(find "$MOCK_PUBLISH" -type f 2>/dev/null | wc -l)
+  soft "V5.3 Draft files in mock-publish-tmp (got $TMP_FILES)" "test $TMP_FILES -ge 1"
+  log "  Content files: $TMP_FILES drafts, $PUB_FILES published"
+
   # Content entities scan
   log "GEO entity scan:"
   for et in geo-probe probe geo-content content geo-strategy strategy action-plan; do
@@ -613,6 +622,13 @@ if [ "$START_PHASE" -le 6 ]; then
       fi
     done <<< "$PENDING_IDS"
     pass "V6.1 Approved $APPROVED_N item(s)"
+
+    # Verify file promotion (two-stage publish: tmp → final)
+    sleep 2
+    PUB_AFTER=$(find "$MOCK_PUBLISH" -type f 2>/dev/null | wc -l)
+    TMP_AFTER=$(find "$MOCK_PUBLISH_TMP" -type f 2>/dev/null | wc -l)
+    soft "V6.2 Files promoted to mock-publish after approval (got $PUB_AFTER)" "test $PUB_AFTER -ge 1"
+    log "  Post-approval: $PUB_AFTER published, $TMP_AFTER remaining drafts"
   else
     warn_ "V6.1 No pending approvals to process"
   fi
@@ -683,7 +699,8 @@ if [ "$START_PHASE" -le 8 ]; then
   # Blueprints & mock-publish
   BF=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
   PF=$(find "$MOCK_PUBLISH" -type f 2>/dev/null | wc -l)
-  log "  Blueprints: $BF, Mock-publish files: $PF"
+  TF=$(find "$MOCK_PUBLISH_TMP" -type f 2>/dev/null | wc -l)
+  log "  Blueprints: $BF, Published: $PF, Drafts remaining: $TF"
 
   log "Phase 8 complete."
 fi

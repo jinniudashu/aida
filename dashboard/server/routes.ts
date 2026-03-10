@@ -23,7 +23,32 @@ function replayToolCall(
       }
       const dossier = engine.dossierStore.getOrCreate(entityType, entityId)
       const version = engine.dossierStore.commit(dossier.id, data, { message: message ?? 'Approved via governance' })
-      return { success: true, tool, dossierId: dossier.id, version: version.version }
+
+      // Two-stage publish: promote drafts from mock-publish-tmp/ to mock-publish/
+      let promotedFiles: string[] = []
+      if (data && (data.publishReady === true || data.publishReady === 1 || data.publishReady === '1')) {
+        const aidaHome = path.join(os.homedir(), '.aida')
+        const tmpDir = path.join(aidaHome, 'mock-publish-tmp')
+        const pubDir = path.join(aidaHome, 'mock-publish')
+        if (fs.existsSync(tmpDir)) {
+          for (const sub of fs.readdirSync(tmpDir)) {
+            const srcSub = path.join(tmpDir, sub)
+            if (!fs.statSync(srcSub).isDirectory()) continue
+            const dstSub = path.join(pubDir, sub)
+            fs.mkdirSync(dstSub, { recursive: true })
+            for (const file of fs.readdirSync(srcSub)) {
+              const src = path.join(srcSub, file)
+              if (!fs.statSync(src).isFile()) continue
+              const dst = path.join(dstSub, file)
+              fs.copyFileSync(src, dst)
+              fs.unlinkSync(src)
+              promotedFiles.push(path.join(sub, file))
+            }
+          }
+        }
+      }
+
+      return { success: true, tool, dossierId: dossier.id, version: version.version, promotedFiles }
     }
     case 'bps_create_task': {
       const { serviceId, entityType, entityId, operatorId, metadata } = toolInput as {

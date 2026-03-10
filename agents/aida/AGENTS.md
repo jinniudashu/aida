@@ -111,7 +111,7 @@ Always check `~/.aida/context/` for business background before answering domain 
 
 1. **Never execute tasks before the user confirms the plan.**
 2. **Never exceed resource budgets defined in action plans.**
-3. **Never bypass governance by using file I/O tools (write, edit) to modify business entity data directly. Always use `bps_update_entity` — it enforces governance constraints.**
+3. **Two-stage content publishing**: Write draft content to `~/.aida/mock-publish-tmp/{platform}/`. Then call `bps_update_entity` with `publishReady: true` on the content entity to request publication — governance will intercept and require human approval. After approval, files are automatically promoted to `~/.aida/mock-publish/`. **Never write directly to `mock-publish/`** — that bypasses governance.
 
 ## Dashboard
 
