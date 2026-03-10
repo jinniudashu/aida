@@ -315,8 +315,9 @@ if (!config.plugins.entries) config.plugins.entries = {};
 if (!config.channels) config.channels = {};
 
 if (feishuAppId && feishuAppSecret) {
-  // Enable feishu plugin
+  // Enable feishu plugin, disable telegram (feishu is the default channel)
   config.plugins.entries.feishu = { enabled: true };
+  delete config.plugins.entries.telegram;
 
   // Configure feishu channel (preserve existing groups if any)
   const existingFeishu = config.channels.feishu || {};
@@ -340,7 +341,14 @@ if (feishuAppId && feishuAppSecret) {
       }
     }
   };
-  console.error("[feishu] channel configured (appId: " + feishuAppId + ")");
+
+  // Disable telegram when feishu is configured
+  if (config.channels.telegram) {
+    config.channels.telegram.enabled = false;
+  }
+
+  console.error("[feishu] channel configured as default (appId: " + feishuAppId + ")");
+  console.error("[telegram] disabled (feishu is default channel)");
 } else {
   console.error("[feishu] FEISHU_APP_ID / FEISHU_APP_SECRET not set, skipping feishu config");
 }
@@ -403,7 +411,7 @@ if (!data.providers) data.providers = {};
 // DashScope (Qwen) — primary model
 if (dashscopeKey) {
   data.providers.dashscope = {
-    baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     api: "openai-completions",
     models: [{
       id: "qwen3.5-plus",
