@@ -1,5 +1,5 @@
 {
-  "version": "r6",
+  "version": "r7",
   "testPlan": "test/e2e/idlex-geo-v3.md",
   "testScript": "test/e2e/idlex-geo-v3.sh",
   "server": {

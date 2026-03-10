@@ -3,12 +3,13 @@
 # AIDA Benchmark — Single Model Runner
 # ============================================================
 # Full lifecycle for one model:
-#   1. Clean remote environment
-#   2. Git pull + install (via install-benchmark.sh)
-#   3. Run E2E test (configurable via --test-script)
-#   4. Collect metrics from Dashboard API
-#   5. Snapshot remote state
-#   6. Download results to local results/{model-id}/
+#   1. Write model-info.json + prepare API keys
+#   2. Clean remote environment
+#   3. Git pull + install (via install-benchmark.sh)
+#   4. Run E2E test (configurable via --test-script)
+#   5. Download session JSONL (before metrics — crash-safe)
+#   6. Collect metrics from Dashboard API (non-fatal)
+#   7. Download turn logs + snapshot to local results/{model-id}/
 #
 # Usage:
 #   bash test/e2e/benchmark/run-single-model.sh <model-id> [options]
@@ -76,7 +77,7 @@ node -e '
     provider: process.argv[4],
     testScript: process.argv[5],
     startedAt: new Date().toISOString(),
-    benchmarkVersion: "R6",
+    benchmarkVersion: "R7",
   }, null, 2));
 ' "$MODEL_ID" "$NAME" "$PRIMARY" "$PROVIDER" "$TEST_SCRIPT" > "$OUT/model-info.json"
 
@@ -97,7 +98,7 @@ done
 # ============================================================
 # Step 3: Clean remote environment
 # ============================================================
-section "Step 1/5: Clean Remote Environment"
+section "Step 1/7: Clean Remote Environment"
 log "Stopping services + wiping state..."
 
 # Kill stale test processes first (from previous model runs)
@@ -125,7 +126,7 @@ log "Remote environment cleaned."
 # ============================================================
 # Step 4: Install + configure model
 # ============================================================
-section "Step 2/5: Install + Configure ($NAME)"
+section "Step 2/7: Install + Configure ($NAME)"
 log "Pulling latest code (discarding remote local changes)..."
 ssh_run "cd $REMOTE_REPO && git checkout -- . && git pull --no-recurse-submodules 2>&1 | tail -5"
 
@@ -163,7 +164,7 @@ ssh_run 'OC=${OPENCLAW_HOME:-$HOME/.openclaw}; node -e "const c=JSON.parse(requi
 # ============================================================
 # Step 5: Run E2E test
 # ============================================================
-section "Step 3/5: Run E2E Test ($TEST_SCRIPT_NAME)"
+section "Step 3/7: Run E2E Test ($TEST_SCRIPT_NAME)"
 log "Running $TEST_SCRIPT (timeout: ${AGENT_TIMEOUT}s per turn)..."
 log "This will take ~15-30 minutes..."
 
@@ -178,15 +179,36 @@ E2E_RESULT=$(echo "$E2E_OUTPUT" | grep -oE '[0-9]+ PASS / [0-9]+ FAIL / [0-9]+ W
 log "E2E result: $E2E_RESULT"
 
 # ============================================================
-# Step 6: Collect metrics
+# Step 6: Download session JSONL (before metrics — R6 P1 fix)
 # ============================================================
-section "Step 4/5: Collect Metrics"
-bash "$SCRIPT_DIR/collect-metrics.sh" "$MODEL_ID" "$OUT"
+section "Step 4/7: Download Session JSONL"
+log "Downloading session JSONL (before metrics collection)..."
+REMOTE_SESS='${OPENCLAW_HOME:-$HOME/.openclaw}/agents/main/sessions'
+JSONL_FILE=$(ssh_run "ls -t $REMOTE_SESS/*.jsonl 2>/dev/null | head -1" || true)
+if [[ -n "$JSONL_FILE" ]]; then
+  scp_from_remote "$JSONL_FILE" "$OUT/raw/session.jsonl" 2>/dev/null || true
+  log "  Session JSONL downloaded"
+else
+  log "  No session JSONL found"
+fi
 
 # ============================================================
-# Step 7: Download raw turn logs + snapshot
+# Step 7: Collect metrics (non-fatal — R6 P0 fix)
 # ============================================================
-section "Step 5/5: Download Artifacts"
+section "Step 5/7: Collect Metrics"
+if ! bash "$SCRIPT_DIR/collect-metrics.sh" "$MODEL_ID" "$OUT"; then
+  log "  WARNING: collect-metrics.sh failed (non-fatal, continuing)"
+fi
+
+# ============================================================
+# Step 8: Download raw turn logs + snapshot
+# ============================================================
+section "Step 6/7: Download Artifacts"
+
+# Clean stale local results from previous runs (R6 P2 fix)
+log "Cleaning stale raw/ files..."
+rm -f "$OUT/raw"/turn-*.log "$OUT/raw"/all-turns.log "$OUT/raw"/report.txt "$OUT/raw"/skills-*.txt 2>/dev/null || true
+
 log "Downloading turn logs from $TEST_LOG_DIR..."
 
 # Discover all files in the remote log directory and download them
@@ -200,16 +222,6 @@ done
 
 TURN_COUNT=$(ls "$OUT/raw"/turn-*.log 2>/dev/null | wc -l || echo 0)
 log "  Downloaded $DL_COUNT files ($TURN_COUNT turn logs)"
-
-log "Downloading session JSONL..."
-REMOTE_SESS='${OPENCLAW_HOME:-$HOME/.openclaw}/agents/main/sessions'
-JSONL_FILE=$(ssh_run "ls -t $REMOTE_SESS/*.jsonl 2>/dev/null | head -1" || true)
-if [[ -n "$JSONL_FILE" ]]; then
-  scp_from_remote "$JSONL_FILE" "$OUT/raw/session.jsonl" 2>/dev/null || true
-  log "  Session JSONL downloaded"
-else
-  log "  No session JSONL found"
-fi
 
 log "Creating remote snapshots..."
 ssh_run '
@@ -239,7 +251,7 @@ for ws_file in $(ssh_run "ls /tmp/aida-benchmark/workspace-*.tar.gz 2>/dev/null"
 done
 
 # ============================================================
-# Finalize
+# Step 7/7: Finalize
 # ============================================================
 END_TS=$(date +%s)
 DURATION=$((END_TS - START_TS))

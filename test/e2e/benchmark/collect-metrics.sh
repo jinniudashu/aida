@@ -12,7 +12,9 @@
 # Requires: Dashboard API reachable at $DASHBOARD_URL
 # ============================================================
 
-set -euo pipefail
+# NOTE: intentionally NO set -e — individual failures must not
+# abort the entire collection pipeline (R6 P0 fix).
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
@@ -21,11 +23,22 @@ MODEL_ID="${1:?Usage: collect-metrics.sh <model-id> <results-dir>}"
 OUT_DIR="${2:?Usage: collect-metrics.sh <model-id> <results-dir>}"
 mkdir -p "$OUT_DIR"
 
+# Temp directory for intermediate JSON files (avoids "Argument list too long")
+METRICS_TMP=$(mktemp -d 2>/dev/null || mktemp -d -t 'metrics')
+trap 'rm -rf "$METRICS_TMP"' EXIT
+
 log "Collecting metrics for $MODEL_ID..."
 
-# -- Helper: query Dashboard API via SSH --
-dash_get() {
-  ssh_run "curl -sf http://localhost:3456$1 2>/dev/null" || echo "[]"
+# -- Helper: query Dashboard API via SSH, save to temp file --
+dash_get_file() {
+  local endpoint="$1" outfile="$2"
+  if ! ssh_run "curl -sf http://localhost:3456${endpoint} 2>/dev/null" > "$outfile" 2>/dev/null; then
+    echo "[]" > "$outfile"
+  fi
+  # Validate JSON; replace with empty array if invalid
+  if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$outfile" 2>/dev/null; then
+    echo "[]" > "$outfile"
+  fi
 }
 
 # ============================================================
@@ -33,49 +46,52 @@ dash_get() {
 # ============================================================
 log "  Querying Dashboard API..."
 
-ENTITIES=$(dash_get "/api/entities")
-GOVERNANCE_STATUS=$(dash_get "/api/governance/status")
-GOVERNANCE_VIOLATIONS=$(dash_get "/api/governance/violations?limit=100")
-GOVERNANCE_APPROVALS=$(dash_get "/api/governance/approvals")
-GOVERNANCE_CONSTRAINTS=$(dash_get "/api/governance/constraints")
+dash_get_file "/api/entities" "$METRICS_TMP/entities.json"
+dash_get_file "/api/governance/status" "$METRICS_TMP/gov-status.json"
+dash_get_file "/api/governance/violations?limit=100" "$METRICS_TMP/gov-violations.json"
+dash_get_file "/api/governance/approvals" "$METRICS_TMP/gov-approvals.json"
+dash_get_file "/api/governance/constraints" "$METRICS_TMP/gov-constraints.json"
 
-# Count entities by type, skills, agent workspaces, blueprints
-METRICS=$(node -e '
-const entities = JSON.parse(process.argv[1] || "[]");
-const govStatus = JSON.parse(process.argv[2] || "{}");
-const violations = JSON.parse(process.argv[3] || "[]");
-const approvals = JSON.parse(process.argv[4] || "[]");
-const constraints = JSON.parse(process.argv[5] || "[]");
+# Build metrics from temp files (no process.argv overflow)
+node -e '
+const fs = require("fs");
+const dir = process.argv[1];
+const read = f => { try { return JSON.parse(fs.readFileSync(dir + "/" + f, "utf8")); } catch { return []; } };
 
-// Entity breakdown
+const entities = read("entities.json");
+const govStatus = read("gov-status.json");
+const violations = read("gov-violations.json");
+const approvals = read("gov-approvals.json");
+const constraints = read("gov-constraints.json");
+
 const byType = {};
-for (const e of entities) {
+for (const e of (Array.isArray(entities) ? entities : [])) {
   const t = e.entityType || "unknown";
   byType[t] = (byType[t] || 0) + 1;
 }
 
-// Approval stats
+const appArr = Array.isArray(approvals) ? approvals : [];
 const approvalStats = {
-  total: approvals.length,
-  pending: approvals.filter(a => a.status === "PENDING").length,
-  approved: approvals.filter(a => a.status === "APPROVED").length,
-  rejected: approvals.filter(a => a.status === "REJECTED").length,
+  total: appArr.length,
+  pending: appArr.filter(a => a.status === "PENDING").length,
+  approved: appArr.filter(a => a.status === "APPROVED").length,
+  rejected: appArr.filter(a => a.status === "REJECTED").length,
 };
 
 console.log(JSON.stringify({
   timestamp: new Date().toISOString(),
   entities: {
-    total: entities.length,
+    total: Array.isArray(entities) ? entities.length : 0,
     byType,
   },
   governance: {
-    constraints: constraints.length,
-    violations: violations.length,
+    constraints: Array.isArray(constraints) ? constraints.length : 0,
+    violations: Array.isArray(violations) ? violations.length : 0,
     approvals: approvalStats,
-    circuitBreaker: govStatus.circuitBreaker || null,
+    circuitBreaker: (govStatus && !Array.isArray(govStatus)) ? govStatus.circuitBreaker || null : null,
   },
 }, null, 2));
-' "$ENTITIES" "$GOVERNANCE_STATUS" "$GOVERNANCE_VIOLATIONS" "$GOVERNANCE_APPROVALS" "$GOVERNANCE_CONSTRAINTS")
+' "$METRICS_TMP" > "$METRICS_TMP/metrics-base.json" 2>/dev/null || echo '{"timestamp":"","entities":{"total":0,"byType":{}},"governance":{}}' > "$METRICS_TMP/metrics-base.json"
 
 # Enrich with remote filesystem data (skills, agent workspaces, blueprints, mock-publish)
 REMOTE_COUNTS=$(ssh_run 'node -e "
@@ -103,11 +119,13 @@ REMOTE_COUNTS=$(ssh_run 'node -e "
 "' 2>/dev/null || echo '{}')
 
 # Merge into final metrics
+echo "$REMOTE_COUNTS" > "$METRICS_TMP/remote-counts.json"
 node -e '
-const m = JSON.parse(process.argv[1]);
-try { Object.assign(m, JSON.parse(process.argv[2])); } catch {}
-console.log(JSON.stringify(m, null, 2));
-' "$METRICS" "$REMOTE_COUNTS" > "$OUT_DIR/metrics.json"
+const fs = require("fs");
+const base = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+try { Object.assign(base, JSON.parse(fs.readFileSync(process.argv[2], "utf8"))); } catch {}
+console.log(JSON.stringify(base, null, 2));
+' "$METRICS_TMP/metrics-base.json" "$METRICS_TMP/remote-counts.json" > "$OUT_DIR/metrics.json" 2>/dev/null || cp "$METRICS_TMP/metrics-base.json" "$OUT_DIR/metrics.json"
 
 log "  metrics.json written"
 
@@ -116,8 +134,6 @@ log "  metrics.json written"
 # ============================================================
 # Approach C: parse ~/.openclaw/agents/main/sessions/*.jsonl
 # to extract actual tool calls, tool results, and timing per turn.
-# This replaces the broken regex-on-turn-logs approach (which always
-# returned 0 because openclaw agent --message stdout only has NL text).
 # ============================================================
 log "  Extracting per-turn behavior from session JSONL..."
 
