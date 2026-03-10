@@ -167,6 +167,16 @@ done
 TURN_COUNT=$(ls "$OUT/raw"/turn-*.log 2>/dev/null | wc -l)
 log "  Downloaded $TURN_COUNT turn logs"
 
+log "Downloading session JSONL..."
+REMOTE_SESS='${OPENCLAW_HOME:-$HOME/.openclaw}/agents/main/sessions'
+JSONL_FILE=$(ssh_run "ls -t $REMOTE_SESS/*.jsonl 2>/dev/null | head -1" || true)
+if [[ -n "$JSONL_FILE" ]]; then
+  scp_from_remote "$JSONL_FILE" "$OUT/raw/session.jsonl" 2>/dev/null || true
+  log "  Session JSONL downloaded"
+else
+  log "  No session JSONL found"
+fi
+
 log "Creating remote snapshots..."
 ssh_run '
   AIDA_HOME=${AIDA_HOME:-$HOME/.aida}

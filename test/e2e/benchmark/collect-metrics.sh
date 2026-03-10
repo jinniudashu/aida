@@ -105,49 +105,157 @@ console.log(JSON.stringify(m, null, 2));
 log "  metrics.json written"
 
 # ============================================================
-# L3: Per-turn behavior (timing, tool calls, timeouts)
+# L3: Per-turn behavior from OpenClaw Session JSONL
 # ============================================================
-log "  Extracting per-turn behavior..."
+# Approach C: parse ~/.openclaw/agents/main/sessions/*.jsonl
+# to extract actual tool calls, tool results, and timing per turn.
+# This replaces the broken regex-on-turn-logs approach (which always
+# returned 0 because openclaw agent --message stdout only has NL text).
+# ============================================================
+log "  Extracting per-turn behavior from session JSONL..."
 
-BEHAVIOR=$(ssh_run "
-  LOG_DIR=/tmp/idlex-geo-e2e-v3
-  node -e '
-    const fs = require(\"fs\");
-    const path = require(\"path\");
-    const logDir = process.argv[1];
-    const turns = [];
+BEHAVIOR=$(ssh_run 'node -e "
+  const fs = require(\"fs\");
+  const path = require(\"path\");
 
-    for (let i = 1; i <= 6; i++) {
-      const f = path.join(logDir, \"turn-\" + i + \".log\");
-      if (!fs.existsSync(f)) { turns.push({ turn: i, status: \"missing\" }); continue; }
-      const content = fs.readFileSync(f, \"utf-8\");
-      const lines = content.split(\"\\n\");
+  const sessDir = (process.env.OPENCLAW_HOME || process.env.HOME + \"/.openclaw\")
+    + \"/agents/main/sessions/\";
 
-      // Count tool calls (lines matching bps_* patterns)
-      const toolCalls = lines.filter(l => /bps_[a-z_]+/.test(l)).length;
-      const toolNames = [...new Set(lines.filter(l => /bps_[a-z_]+/.test(l))
-        .map(l => l.match(/bps_[a-z_]+/)?.[0]).filter(Boolean))];
+  // Find newest .jsonl file
+  let jsonlFile = null;
+  try {
+    const files = fs.readdirSync(sessDir).filter(f => f.endsWith(\".jsonl\")).sort();
+    if (files.length > 0) jsonlFile = path.join(sessDir, files[files.length - 1]);
+  } catch {}
 
-      // Detect timeout
-      const timedOut = content.includes(\"timeout\") || content.includes(\"Timed out\");
+  if (!jsonlFile || !fs.existsSync(jsonlFile)) {
+    console.log(JSON.stringify({ turns: [], error: \"no session JSONL found\", source: \"jsonl\" }));
+    process.exit(0);
+  }
 
-      // Line count as proxy for response length
-      turns.push({
-        turn: i,
-        status: lines.length > 2 ? \"ok\" : \"empty\",
-        lines: lines.length,
-        bytes: Buffer.byteLength(content),
-        toolCallMentions: toolCalls,
-        toolNames,
-        timedOut,
-      });
+  // Parse all JSONL entries
+  const lines = fs.readFileSync(jsonlFile, \"utf8\").trim().split(\"\\n\");
+  const entries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  const msgs = entries.filter(e => e.type === \"message\" && e.message);
+
+  // Group into turns: each turn starts with a user message
+  const turnGroups = [];  // array of arrays
+  let current = null;
+  for (const e of msgs) {
+    if (e.message.role === \"user\") {
+      if (current) turnGroups.push(current);
+      current = [e];
+    } else if (current) {
+      current.push(e);
+    }
+  }
+  if (current) turnGroups.push(current);
+
+  // Analyze each turn
+  const turns = turnGroups.map((group, idx) => {
+    const turnNum = idx + 1;
+    const userMsg = group[0];
+    const userContent = typeof userMsg.message.content === \"string\"
+      ? userMsg.message.content
+      : Array.isArray(userMsg.message.content)
+        ? userMsg.message.content.map(b => b.text || \"\").join(\" \")
+        : \"\";
+
+    // Tool calls from assistant content blocks
+    const toolCalls = [];
+    const toolResults = [];
+    let textBytes = 0;
+
+    for (const e of group) {
+      if (e.message.role === \"assistant\" && Array.isArray(e.message.content)) {
+        for (const block of e.message.content) {
+          if (block.name) {
+            toolCalls.push({
+              name: block.name,
+              input: block.input || block.arguments || {},
+            });
+          }
+          if (block.type === \"text\" && block.text) {
+            textBytes += Buffer.byteLength(block.text);
+          }
+        }
+      }
+      if (e.message.role === \"toolResult\") {
+        toolResults.push({
+          name: e.message.toolName || \"?\",
+          isError: !!e.message.isError,
+        });
+      }
     }
 
-    console.log(JSON.stringify({ turns, collectedAt: new Date().toISOString() }, null, 2));
-  ' \"\$LOG_DIR\"
-" 2>/dev/null || echo '{"turns":[],"error":"collection failed"}')
+    // Unique tool names
+    const toolNames = [...new Set(toolCalls.map(t => t.name))];
+    const bpsToolCalls = toolCalls.filter(t => t.name.startsWith(\"bps_\"));
+    const bpsToolNames = [...new Set(bpsToolCalls.map(t => t.name))];
+    const writeToolCalls = toolCalls.filter(t => t.name === \"write\");
+    const errorCount = toolResults.filter(r => r.isError).length;
+
+    // Timing
+    const timestamps = group.map(e => e.timestamp).filter(Boolean);
+    const startTs = timestamps.length ? Math.min(...timestamps) : null;
+    const endTs = timestamps.length ? Math.max(...timestamps) : null;
+    const durationMs = startTs && endTs ? endTs - startTs : null;
+
+    return {
+      turn: turnNum,
+      userPrompt: userContent.slice(0, 200),
+      startTime: startTs ? new Date(startTs).toISOString() : null,
+      durationMs,
+      messages: group.length,
+      textBytes,
+      toolCalls: {
+        total: toolCalls.length,
+        bps: bpsToolCalls.length,
+        write: writeToolCalls.length,
+        other: toolCalls.length - bpsToolCalls.length - writeToolCalls.length,
+        errors: errorCount,
+      },
+      toolNames,
+      bpsToolNames,
+      bpsToolDetails: bpsToolCalls.map(t => ({
+        name: t.name,
+        inputKeys: Object.keys(t.input),
+      })),
+      writeTargets: writeToolCalls.map(t => {
+        const inp = t.input || {};
+        return inp.path || inp.filePath || inp.file_path || \"?\";
+      }),
+    };
+  });
+
+  // Summary across all turns
+  const allToolCalls = turns.reduce((s, t) => s + t.toolCalls.total, 0);
+  const allBpsCalls = turns.reduce((s, t) => s + t.toolCalls.bps, 0);
+  const allWriteCalls = turns.reduce((s, t) => s + t.toolCalls.write, 0);
+  const allErrors = turns.reduce((s, t) => s + t.toolCalls.errors, 0);
+  const allBpsNames = [...new Set(turns.flatMap(t => t.bpsToolNames))];
+  const allToolNames = [...new Set(turns.flatMap(t => t.toolNames))];
+
+  console.log(JSON.stringify({
+    source: \"session-jsonl\",
+    sessionFile: path.basename(jsonlFile),
+    totalEntries: entries.length,
+    totalMessages: msgs.length,
+    collectedAt: new Date().toISOString(),
+    summary: {
+      totalToolCalls: allToolCalls,
+      bpsToolCalls: allBpsCalls,
+      writeToolCalls: allWriteCalls,
+      otherToolCalls: allToolCalls - allBpsCalls - allWriteCalls,
+      toolErrors: allErrors,
+      bpsToolNames: allBpsNames,
+      allToolNames,
+    },
+    turns,
+  }, null, 2));
+"' 2>/dev/null || echo '{"turns":[],"error":"collection failed","source":"jsonl"}')
 
 echo "$BEHAVIOR" > "$OUT_DIR/behavior.json"
-log "  behavior.json written"
+log "  behavior.json written (source: session JSONL)"
 
 log "Metric collection complete → $OUT_DIR/"
