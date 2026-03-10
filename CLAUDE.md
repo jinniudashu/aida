@@ -449,6 +449,23 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - GPT-5.4 缺少 Agent 和 Blueprint，治理层无载体
   - 推荐生产配置：`google/gemini-3.1-pro-preview`（主）+ `dashscope/qwen3.5-plus`（备）
 
+### MAOr 预处理 E2E 测评（2026-03-10）
+- **目标**：评估"原始物料 → 预处理 → AIDA 建模"端到端管线质量
+- **测评方案**：`test/e2e/maor-preprocessing-e2e.md`（6 维度 37 检查点）
+- **原始物料**：`.test-data/maor/`（63 个文件，广州颜青医疗美容诊所）
+- **预处理输出**：`.test-data/maor/processed/`（4 个 Markdown，v0.2）
+- **Round 1**（v0.1 预处理 + 6 turns, Kimi K2.5）：**8.18/10**
+  - 54 entities, 量化数据零误差(D2=8.5), 术后护理覆盖不足(5/12)
+  - PREPROCESS 归因 28.6% > 20%（未收敛）
+- **Round 2**（v0.2 预处理 + 7 turns, Kimi K2.5）：**8.66/10**（+0.48）
+  - 66 entities, consent-form 5→8(全覆盖), post-care 5→14(P0全覆盖)
+  - PREPROCESS 归因 12.5% < 20%（**已收敛** ✓）
+  - D1+D2 = 9.0/10 ≥ 7.5（**已达标** ✓）
+  - HARD 通过率 100%, FAIL 数 0
+- **剩余差距**：ARCHITECTURE 归因（governance 热加载 + blueprint 编译器 flow.rules 支持）
+- **下一步**：Round 3 预处理 Skill 提炼，将 v0.1→v0.2 改进经验沉淀为可复用规则
+- 评估报告：`test/e2e/maor-results/r1-kimi-k2.5/EVALUATION.md` (R1) + `EVALUATION-R2.md` (R2)
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
