@@ -183,7 +183,7 @@ BEHAVIOR=$(ssh_run 'node -e "
       if (e.message.role === \"toolResult\") {
         toolResults.push({
           name: e.message.toolName || \"?\",
-          isError: !!e.message.isError,
+          isError: Boolean(e.message.isError),
         });
       }
     }
