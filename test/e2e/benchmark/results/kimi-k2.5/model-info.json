@@ -1,0 +1,11 @@
+{
+  "modelId": "kimi-k2.5",
+  "name": "Kimi K2.5",
+  "primary": "moonshot/kimi-k2.5",
+  "provider": "moonshot",
+  "startedAt": "2026-03-10T05:56:27.091Z",
+  "benchmarkVersion": "R4",
+  "completedAt": "2026-03-10T06:28:00.017Z",
+  "durationSeconds": 1894,
+  "e2eResult": "38 PASS / 0 FAIL / 7 WARN"
+}

@@ -1,0 +1,59 @@
+{
+  "turns": [
+    {
+      "turn": 1,
+      "status": "ok",
+      "lines": 22,
+      "bytes": 38848,
+      "toolCallMentions": 0,
+      "toolNames": [],
+      "timedOut": false
+    },
+    {
+      "turn": 2,
+      "status": "ok",
+      "lines": 3,
+      "bytes": 270,
+      "toolCallMentions": 0,
+      "toolNames": [],
+      "timedOut": false
+    },
+    {
+      "turn": 3,
+      "status": "ok",
+      "lines": 197,
+      "bytes": 5624,
+      "toolCallMentions": 0,
+      "toolNames": [],
+      "timedOut": false
+    },
+    {
+      "turn": 4,
+      "status": "ok",
+      "lines": 114,
+      "bytes": 3421,
+      "toolCallMentions": 0,
+      "toolNames": [],
+      "timedOut": false
+    },
+    {
+      "turn": 5,
+      "status": "ok",
+      "lines": 62,
+      "bytes": 1921,
+      "toolCallMentions": 0,
+      "toolNames": [],
+      "timedOut": false
+    },
+    {
+      "turn": 6,
+      "status": "ok",
+      "lines": 112,
+      "bytes": 3563,
+      "toolCallMentions": 0,
+      "toolNames": [],
+      "timedOut": false
+    }
+  ],
+  "collectedAt": "2026-03-10T05:13:46.092Z"
+}

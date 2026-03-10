@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-03-10T05:54:20.269Z",
+  "entities": {
+    "total": 8,
+    "byType": {
+      "action-plan": 1,
+      "store": 5,
+      "knowledge": 2
+    }
+  },
+  "governance": {
+    "constraints": 3,
+    "violations": 0,
+    "approvals": {
+      "total": 0,
+      "pending": 0,
+      "approved": 0,
+      "rejected": 0
+    },
+    "circuitBreaker": {
+      "state": "NORMAL",
+      "lastStateChange": "2026-03-10T05:54:12.607Z"
+    }
+  },
+  "skills": 7,
+  "skillNames": [
+    "blueprint-modeling",
+    "business-execution",
+    "dashboard-guide",
+    "action-plan",
+    "agent-create",
+    "skill-create",
+    "project-init"
+  ],
+  "agentWorkspaces": 0,
+  "blueprintFiles": 2,
+  "mockPublishFiles": 7,
+  "cronJobs": 0
+}
