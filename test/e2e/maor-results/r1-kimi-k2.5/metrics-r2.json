@@ -1,0 +1,45 @@
+{
+  "runId": "r2-kimi-k2.5",
+  "date": "2026-03-10",
+  "model": "moonshot/kimi-k2.5",
+  "preprocessVersion": "v0.2",
+  "scriptVersion": "v0.2 (7 turns, split Turn 4)",
+  "contextFiles": [
+    "business-overview.md (v0.2 - expanded modeling hints)",
+    "service-catalog.md (v0.2 - complete SKU list)",
+    "clinical-workflow.md (unchanged)",
+    "compliance.md (v0.2 - post-care index + consent hint)"
+  ],
+  "entities": {
+    "total": 66,
+    "byType": {
+      "treatment-item": 15,
+      "service-package": 5,
+      "membership": 5,
+      "consent-form": 8,
+      "post-care-protocol": 14,
+      "follow-up-schedule": 1,
+      "staff-role": 4,
+      "product-inventory": 12,
+      "knowledge": 2
+    }
+  },
+  "blueprints": {
+    "total": 1,
+    "files": ["maor患者就诊流程.yaml"],
+    "services": 7,
+    "health": "partial",
+    "note": "flow.rules format still used (not flow DSL arrows); services loaded but blueprintId=none"
+  },
+  "governance": {
+    "constraintsOnDisk": 7,
+    "approvalPoliciesOnDisk": 2,
+    "constraintsLoaded": 0,
+    "violations": 0,
+    "circuitBreakerState": "NORMAL",
+    "note": "Same as R1: governance.yaml written mid-session, not hot-loaded"
+  },
+  "skills": 0,
+  "crons": 1,
+  "turns": 7
+}

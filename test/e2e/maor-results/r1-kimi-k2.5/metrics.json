@@ -1,0 +1,46 @@
+{
+  "runId": "r1-kimi-k2.5",
+  "date": "2026-03-10",
+  "model": "moonshot/kimi-k2.5",
+  "preprocessVersion": "v0.1",
+  "contextFiles": [
+    "business-overview.md",
+    "service-catalog.md",
+    "clinical-workflow.md",
+    "compliance.md"
+  ],
+  "entities": {
+    "total": 54,
+    "byType": {
+      "treatment-item": 19,
+      "service-package": 5,
+      "membership": 5,
+      "consent-form": 5,
+      "post-care-protocol": 5,
+      "follow-up-schedule": 1,
+      "staff-role": 4,
+      "product-inventory": 8,
+      "knowledge": 2
+    }
+  },
+  "blueprints": {
+    "total": 1,
+    "files": ["maor-patient-journey.yaml", "maor患者就诊流程.yaml"],
+    "services": 7,
+    "health": "partial",
+    "note": "Blueprint file correct on disk; services loaded but blueprintId=none (compilation partial)"
+  },
+  "governance": {
+    "constraintsOnDisk": 7,
+    "constraintsLoaded": 0,
+    "approvalPolicies": 2,
+    "violations": 0,
+    "circuitBreakerState": "NORMAL",
+    "note": "governance.yaml written mid-session via write tool; engine loads only at startup, so 0 constraints active at runtime"
+  },
+  "skills": 0,
+  "crons": 1,
+  "turns": 6,
+  "totalEntitiesCreated": 52,
+  "totalKnowledgeEntities": 2
+}
