@@ -1,0 +1,64 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到！立即生成今日运营小结。
+---
+
+## ✅ 今日运营小结完成！
+
+### 📊 执行摘要
+
+```
+✅ 能见度监测    5 家门店 × 3 平台 = 15 条数据
+✅ 一模一策分析  15 条差异化策略
+✅ 内容生成      15 条优化内容
+✅ 内容审批      5 条内容包全部通过 ✅
+✅ 内容分发      15 条已写入 mock-publish
+✅ 日报生成      已完成
+```
+
+---
+
+### 📈 核心指标
+
+| 指标 | 数值 | 状态 |
+|------|------|------|
+| 平均排名 | 2.9 | 🟢 良好 |
+| 信息完整度 | 87% | 🟢 良好 |
+| 内容生成 | 15 条 | ✅ |
+| 审批通过率 | 100% | ✅ |
+| 异常告警 | 2 条 | ✅ 已解决 |
+
+---
+
+### 🏆 表现最佳门店
+
+1. **声临其境 KTV-五一广场店** - 平均排名 2.0
+2. **静享茶空间 - 楚河汉街店** - 平均排名 2.0
+
+### 📈 重点优化门店
+
+1. **音乐盒 KTV-江汉路店** - 元宝排名第 6 → 已优化网红标签
+2. **棋乐无穷 - 岳麓山店** - 豆包价格缺失 → 已补充
+
+---
+
+### 📁 报告位置
+
+```bash
+# 完整日报
+~/.aida/mock-publish/reports/daily-20260310-final.md
+
+# 执行报告
+~/.aida/mock-publish/reports/execution-20260310-0803.md
+```
+
+---
+
+### ⏰ 下次执行
+
+- **明日 09:00** - AI 能见度监测 (自动)
+- **明日 18:00** - 每日运营小结 (自动)
+
+---
+
+**今日运营工作全部完成！** 5 家门店内容已审批通过并分发到 mock-publish 目录。🎉

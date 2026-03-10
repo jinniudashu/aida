@@ -1,0 +1,92 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我先查看一下业务资料和现有系统状态。
+好的，我已经了解了闲氪的业务背景和 5 家门店情况。现在为您规划完整的 GEO 日常运营体系。
+
+根据您的需求，这是一个**两层架构**：
+
+## 📋 整体规划
+
+### 一、Governance 层（规矩 - 审批流程）
+两条红线需要建模为审批规则：
+1. 对外发布内容 → 需您审批
+2. 战略方向调整 → 需您确认
+
+### 二、Operations 层（日常执行）
+6 项日常工作需要系统化：
+1. AI 能见度监测（豆包/千问/元宝）
+2. "一模一策"数据分析
+3. 优化内容生成
+4. 内容分发（mock-publish）
+5. 每日小结 + 每周复盘
+6. 24h 顾客咨询 bot（独立 Agent）
+
+---
+
+我先为您创建 GEO 运营蓝图和行动计划，然后详细说明每一步。
+让我用正确的简化格式重新加载蓝图：
+服务已加载。现在创建 GEO 运营行动计划：
+现在创建面向顾客的 24h 咨询 bot（独立 Agent）：
+现在创建审批流程实体和测试数据：
+现在创建 cron 任务和规划文档：
+现在创建完整的规划文档：
+现在生成一份示例日报展示效果：
+最后，生成一份格式化的日报预览：
+---
+
+## ✅ GEO 日常运营体系已规划完成
+
+### 📦 已创建内容
+
+| 类型 | 名称 | 位置/ID |
+|------|------|---------|
+| **行动计划** | GEO 日常运营体系 - 2026 Q1 | `plan-geo-operations-2026-q1` |
+| **蓝图服务** | 8 个 GEO 运营服务 | `svc-geo-*` |
+| **Skills** | geo-visibility-check | `/root/.openclaw/workspace/skills/geo-visibility-check/` |
+| | geo-strategy-analysis | `/root/.openclaw/workspace/skills/geo-strategy-analysis/` |
+| | geo-content-creation | `/root/.openclaw/workspace/skills/geo-content-creation/` |
+| | geo-reporting | `/root/.openclaw/workspace/skills/geo-reporting/` |
+| | store-consultant-bot | `/root/.openclaw/workspace/skills/store-consultant-bot/` |
+| **Cron 任务** | 每日能见度监测 (09:00) | 已注册 |
+| | 每日运营小结 (18:00) | 已注册 |
+| | 每周深度复盘 (周一 10:00) | 已注册 |
+| **测试数据** | 监测数据示例 | `geo-monitoring/monitor-20260310` |
+| | 待审批内容示例 | `geo-content/content-store-cs-mj-01-20260310` |
+| | 日报示例 | `~/.aida/mock-publish/reports/daily-20260310.md` |
+| **规划文档** | GEO 运营体系规划.md | `/root/.openclaw/workspace/` |
+
+---
+
+### 🔐 两条规矩已建模
+
+1. **内容发布审批**: 所有 `geo-content` 实体默认 `publishReady: false`，需您审批后执行
+2. **战略调整审批**: 当分析涉及新平台/预算调整/优先级变更时，触发 `svc-geo-strategy-approval`
+
+---
+
+### 🤖 顾客咨询 Bot「小氪」
+
+已创建独立 skill `store-consultant-bot`，特点：
+- **语气**: 亲切活泼（与管理风格完全不同 ✅）
+- **能力**: 门店查询、场景推荐、预订引导、FAQ
+- **部署**: 可作为独立 Agent 运行，嵌入小程序/网站
+
+如需启动测试，我可以帮您 spawn 一个独立 session 来运行小氪 bot。
+
+---
+
+### 📊 下一步建议
+
+**立即可做**:
+1. 查看规划文档：`/root/.openclaw/workspace/GEO 运营体系规划.md`
+2. 查看日报示例：`~/.aida/mock-publish/reports/daily-20260310.md`
+3. 审批测试内容（体验审批流程）
+
+**本周待确认**:
+- 是否需要接入真实 AI 平台 API？（当前用模拟数据）
+- 顾客 bot 部署渠道？（小程序/网站/其他）
+- 审批通知方式？（消息推送/邮件/其他）
+
+---
+
+需要我帮您执行哪项测试，或者对规划有任何调整建议吗？

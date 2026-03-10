@@ -1,0 +1,39 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的！👍
+
+---
+
+## 📋 Dashboard 审批指引
+
+**Dashboard URL**: `http://localhost:3456`
+
+### 待审批列表（5 条）
+
+| 审批 ID | 门店 | 目标 AI | 操作 |
+|--------|------|--------|------|
+| `approval-20260309-001` | 声临其境 KTV-五一广场店 | 豆包 | [批准] [拒绝] [查看] |
+| `approval-20260309-002` | 音乐盒 KTV-江汉路店 | 豆包 | [批准] [拒绝] [查看] |
+| `approval-20260309-003` | 静享茶空间 - 楚河汉街店 | 千问 | [批准] [拒绝] [查看] |
+| `approval-20260309-004` | 悠然茶室 - 芙蓉广场店 | 豆包 | [批准] [拒绝] [查看] |
+| `approval-20260309-005` | 棋乐无穷 - 岳麓山店 | 千问 | [批准] [拒绝] [查看] |
+
+---
+
+### 审批后流程
+
+✅ **批准** → 内容状态改为 `approved` → 发布至 `mock-publish/{date}/{storeId}/{aiModel}/`
+
+❌ **拒绝** → 内容状态改为 `rejected` → 运营人员修改后重新提交
+
+---
+
+### 快捷操作
+
+如需批量审批，也可以在聊天中回复：
+- `"批准全部"` → 一次性批准 5 条
+- `"批准 approval-20260309-001,002,003"` → 批量批准指定内容
+
+---
+
+我在 Dashboard 等您审批完成后，继续执行内容发布流程！🚀

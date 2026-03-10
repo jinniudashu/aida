@@ -1,0 +1,34 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的！您在 Dashboard 审批时可以看到：
+
+## 🖥️ Dashboard 审批中心
+
+**访问**: `http://{server}:3456`
+
+### 待审批任务 (5 条)
+| 任务 ID | 门店 | 内容 |
+|--------|------|------|
+| 4092747f... | 棋乐无穷 - 岳麓山店 | 豆包/千问/元宝 内容包 |
+| bad3445f... | 悠然茶室 - 芙蓉广场店 | 豆包/千问/元宝 内容包 |
+| c03e750a... | 声临其境 KTV-五一广场店 | 豆包/千问/元宝 内容包 |
+| 0ee3f467... | 静享茶空间 - 楚河汉街店 | 豆包/千问/元宝 内容包 |
+| 88854678... | 音乐盒 KTV-江汉路店 | 豆包/千问/元宝 内容包 |
+
+---
+
+### 审批操作
+1. 点击任务查看内容详情
+2. 选择 **批准** 或 **拒绝**
+3. 可添加审批意见
+
+---
+
+### 审批后自动流程
+```
+批准 → 内容分发 → 写入 mock-publish → 触发日报
+```
+
+---
+
+有任何问题随时叫我，审批完成告诉我即可！ 🫡

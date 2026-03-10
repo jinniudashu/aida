@@ -1,0 +1,191 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## ✅ 建模完成！带你看看创建了什么
+
+---
+
+## 📊 一、实体总览 (DossierStore)
+
+### 1. GEO 内容实体 (5 条 - 待审批)
+
+| 门店 | 实体 ID | 平台 | 状态 |
+|------|---------|------|------|
+| 🀄️ 棋乐无穷 - 岳麓山店 | `content-store-cs-mj-01-20260310` | 豆包/千问/元宝 | ⏳ pending_approval |
+| 🍵 悠然茶室 - 芙蓉广场店 | `content-store-cs-tea-01-20260310` | 豆包/千问/元宝 | ⏳ pending_approval |
+| 🎤 声临其境 KTV-五一广场店 | `content-store-cs-ktv-01-20260310` | 豆包/千问/元宝 | ⏳ pending_approval |
+| 🏞️ 静享茶空间 - 楚河汉街店 | `content-store-wh-tea-01-20260310` | 豆包/千问/元宝 | ⏳ pending_approval |
+| 🎉 音乐盒 KTV-江汉路店 | `content-store-wh-ktv-01-20260310` | 豆包/千问/元宝 | ⏳ pending_approval |
+
+**每条内容包包含**: 标题、描述、标签、关键词、价格信息
+
+---
+
+### 2. 配置实体 (2 条)
+
+| 配置类型 | 实体 ID | 说明 |
+|---------|---------|------|
+| 审批工作流 | `geo-approval-workflow` | 5 步审批流程 + 2 条 Governance 规则 |
+| 告警配置 | `geo-alert-config` | 3 级告警规则 (高/中/低) |
+
+---
+
+### 3. 行动计划 (1 条)
+
+| 计划 ID | 名称 | 周期 | 预算 |
+|--------|------|------|------|
+| `plan-geo-operations-2026-q1` | GEO 日常运营体系 - 2026 Q1 | 2026-03-10 ~ 03-31 | 5000 元/月 |
+
+**包含 3 个周期性任务**:
+- 每日 09:00 → AI 能见度监测
+- 每日 18:00 → 运营小结
+- 周一 10:00 → 深度复盘
+
+---
+
+## 🛠️ 二、BPS 服务 (8 个 GEO 专属服务)
+
+| 服务 ID | 服务名称 | 执行者 | 状态 |
+|--------|---------|--------|------|
+| `svc-geo-visibility-monitor` | AI 能见度监测 | Agent | ✅ active |
+| `svc-geo-strategy-analyze` | 一模一策分析 | Agent | ✅ active |
+| `svc-geo-content-generate` | 优化内容生成 | Agent | ✅ active |
+| `svc-geo-content-approval` | 内容发布审批 | **Manual** | ✅ active |
+| `svc-geo-content-distribute` | 内容分发 | Agent | ✅ active |
+| `svc-geo-daily-report` | 每日运营小结 | Agent | ✅ active |
+| `svc-geo-weekly-review` | 每周深度复盘 | Agent | ✅ active |
+| `svc-geo-strategy-approval` | 战略调整审批 | **Manual** | ✅ active |
+
+---
+
+## ⏰ 三、Cron 定时任务 (9 个，已去重)
+
+| 任务名称 | 时间 | 频率 | 下次执行 |
+|---------|------|------|---------|
+| GEO 每日能见度监测 | 09:00 | 每日 | **今日 09:00** (已过) |
+| GEO 每日运营小结 | 18:00 | 每日 | 今日 18:00 |
+| GEO 每周深度复盘 | 周一 10:00 | 每周 | 下周一 10:00 |
+
+---
+
+## 📁 四、Skills (6 个)
+
+| Skill 名称 | 路径 | 用途 |
+|-----------|------|------|
+| geo-visibility-check | `~/.openclaw/workspace/skills/geo-visibility-check/` | AI 能见度监测 |
+| geo-strategy-analysis | `.../geo-strategy-analysis/` | 一模一策分析 |
+| geo-content-creation | `.../geo-content-creation/` | 优化内容生成 |
+| geo-content-distribution | `.../geo-content-distribution/` | 内容分发 |
+| geo-reporting | `.../geo-reporting/` | 日报/周报生成 |
+| store-consultant-bot | `.../store-consultant-bot/` | 顾客咨询 Bot |
+
+---
+
+## 📂 五、Mock Publish 目录
+
+```
+~/.aida/mock-publish/
+├── cs-mj-01/          # 棋乐无穷
+│   ├── douyin/20260310.md ✅
+│   ├── qianwen/20260310.md ✅
+│   └── yuanbao/20260310.md ✅
+├── cs-tea-01/         # 悠然茶室
+│   ├── douyin/20260310.md ✅
+│   └── qianwen/
+│   └── yuanbao/
+├── cs-ktv-01/         # 声临其境 KTV
+│   ├── douyin/20260310.md ✅
+│   └── ...
+├── wh-tea-01/         # 静享茶空间
+│   ├── douyin/20260310.md ✅
+│   └── ...
+├── wh-ktv-01/         # 音乐盒 KTV
+│   ├── douyin/20260310.md ✅
+│   └── ...
+└── reports/
+    └── daily-20260310.md ✅
+```
+
+---
+
+## 🔐 六、Governance 规则
+
+### 规则 1: 内容发布审批
+```yaml
+id: content-approval
+description: 所有对外发布内容需 GEO 负责人审批
+enforced: true
+type: approval_required
+```
+
+### 规则 2: 战略调整审批
+```yaml
+id: strategy-approval
+description: 战略方向重大调整需 GEO 负责人确认
+enforced: true
+type: approval_required
+```
+
+---
+
+## 🖥️ 七、Dashboard 能看到什么
+
+### 访问地址
+```
+http://{server}:3456
+```
+
+### Dashboard 页面
+
+#### 1. 任务看板 (Tasks)
+- ✅ **8 个 GEO 服务** - 状态、执行者、实体类型
+- 🔴 **待审批任务** - `svc-geo-content-approval` (5 条内容待审批)
+- 🟡 **待执行任务** - `svc-geo-content-distribute` (等待审批通过)
+
+#### 2. 实体浏览器 (Entities)
+- 📦 **geo-content** - 5 条内容包，可查看每条的标题/描述/标签
+- ⚙️ **geo-config** - 审批工作流和告警配置
+- 📋 **action-plan** - GEO 运营行动计划详情
+
+#### 3. 流程图 (Flow)
+- 可视化展示 GEO 运营流程:
+  ```
+  监测 → 分析 → 生成 → 审批 → 分发 → 报告
+  ```
+
+#### 4. 审批中心 (Approvals)
+- ⏳ **待审批**: 5 条内容包
+- 审批操作: 批准 / 拒绝 / 备注
+
+#### 5. Cron 任务
+- 9 个定时任务列表
+- 下次执行时间
+- 启用/禁用开关
+
+---
+
+## 🎯 现在可以做什么
+
+### 1. 查看 Dashboard
+```
+访问：http://{server}:3456
+查看：任务状态、实体数据、审批流程
+```
+
+### 2. 审批内容 (测试流程)
+查看任意内容包，例如:
+```bash
+cat ~/.aida/mock-publish/cs-mj-01/douyin/20260310.md
+```
+
+审批操作 (将状态改为 approved):
+```
+实体 ID: content-store-cs-mj-01-20260310
+字段: approvalStatus → approved
+```
+
+### 3. 测试小氪 Bot
+Session Key: `agent:main:subagent:a051477c...`
+
+---
+
+需要我打开 Dashboard 给你看实时界面，还是先审批一条内容测试流程？
