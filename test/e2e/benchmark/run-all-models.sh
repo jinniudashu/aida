@@ -36,7 +36,7 @@ if [[ ${#SELECTED_MODELS[@]} -eq 0 ]]; then
   SELECTED_MODELS=("${MODELS[@]}")
 fi
 
-section "AIDA Multi-Model Benchmark R5"
+section "AIDA Multi-Model Benchmark R6"
 log "Models: ${SELECTED_MODELS[*]}"
 log "Date: $(date -Iseconds)"
 log "Results: $RESULTS_DIR/"

@@ -78,7 +78,13 @@ aida_say() {
 # Phase 0: Clean Environment + Install
 # ════════════════════════════════════════════════════════════
 
-if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
+if [[ "${BENCHMARK_MODE:-}" == "1" ]]; then
+  # In benchmark mode, run-single-model.sh already handled:
+  #   clean (Step 1) → install-benchmark.sh (Step 2, includes install-aida.sh + model overlay)
+  #   → gateway start (Step 2). Skip entire Phase 0, go straight to V0 checks.
+  section "0: Clean Environment + Install (BENCHMARK_MODE — skipped, verifying)"
+
+elif [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   section "0: Clean Environment + Install"
 
   log "Stopping existing services..."
@@ -124,12 +130,8 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   cd "$AIDA_REPO"
   git pull --no-recurse-submodules 2>&1 | tail -3 || true
 
-  if [[ "${BENCHMARK_MODE:-}" != "1" ]]; then
-    log "Running install-aida.sh (includes Gateway auth setup)..."
-    bash deploy/install-aida.sh
-  else
-    log "BENCHMARK_MODE=1 — skipping install-aida.sh (model overlay already configured by install-benchmark.sh)"
-  fi
+  log "Running install-aida.sh (includes Gateway auth setup)..."
+  bash deploy/install-aida.sh
 
   log "Starting OpenClaw gateway..."
   openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero"
@@ -161,33 +163,36 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   fi
 
   log "V0: Post-install checks"
-  check "V0.1 ~/.aida/blueprints/"  "test -d $AIDA_HOME/blueprints"
-  check "V0.2 ~/.aida/data/"        "test -d $AIDA_HOME/data"
-  check "V0.3 ~/.aida/context/"     "test -d $AIDA_HOME/context"
-  check "V0.4 SOUL.md"              "test -f $OPENCLAW_HOME/workspace/SOUL.md"
-  check "V0.5 AGENTS.md"            "test -f $OPENCLAW_HOME/workspace/AGENTS.md"
-  check "V0.6 HEARTBEAT.md"         "test -f $OPENCLAW_HOME/workspace/HEARTBEAT.md"
-  check "V0.7 BOOT.md"              "test -f $OPENCLAW_HOME/workspace/BOOT.md"
-  check "V0.8 USER.md"              "test -f $OPENCLAW_HOME/workspace/USER.md"
-  check "V0.9 TOOLS.md"             "test -f $OPENCLAW_HOME/workspace/TOOLS.md"
-
-  SKILL_N=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
-  check "V0.10 Skills >= 7 (found $SKILL_N)" "test $SKILL_N -ge 7"
-  check "V0.11 Dashboard /api/overview" "curl -sf $DASHBOARD_URL/api/overview >/dev/null"
-
-  # Verify USER.md content
-  soft "V0.12 USER.md has timezone" "grep -q 'Asia/Shanghai' $OPENCLAW_HOME/workspace/USER.md"
-  soft "V0.13 TOOLS.md has BPS tools" "grep -q 'bps_update_entity' $OPENCLAW_HOME/workspace/TOOLS.md"
-
-  # Verify Gateway auth (P0 fix: auth-profiles.json must have OpenRouter key)
-  check "V0.15 Gateway auth-profiles.json" "test -f $OPENCLAW_HOME/agents/main/agent/auth-profiles.json"
-  soft  "V0.16 OpenRouter auth configured" "grep -q 'openrouter' $OPENCLAW_HOME/agents/main/agent/auth-profiles.json"
-
-  # Verify SOUL.md Two-Layer is condensed (not full routing table)
-  soft "V0.14 SOUL.md Two-Layer condensed" "grep -q 'See AGENTS.md' $OPENCLAW_HOME/workspace/SOUL.md"
-
-  log "Phase 0 complete."
 fi
+
+# V0 checks run in all modes (normal install, benchmark, skip-install)
+log "V0: Verifying installation..."
+check "V0.1 ~/.aida/blueprints/"  "test -d $AIDA_HOME/blueprints"
+check "V0.2 ~/.aida/data/"        "test -d $AIDA_HOME/data"
+check "V0.3 ~/.aida/context/"     "test -d $AIDA_HOME/context"
+check "V0.4 SOUL.md"              "test -f $OPENCLAW_HOME/workspace/SOUL.md"
+check "V0.5 AGENTS.md"            "test -f $OPENCLAW_HOME/workspace/AGENTS.md"
+check "V0.6 HEARTBEAT.md"         "test -f $OPENCLAW_HOME/workspace/HEARTBEAT.md"
+check "V0.7 BOOT.md"              "test -f $OPENCLAW_HOME/workspace/BOOT.md"
+check "V0.8 USER.md"              "test -f $OPENCLAW_HOME/workspace/USER.md"
+check "V0.9 TOOLS.md"             "test -f $OPENCLAW_HOME/workspace/TOOLS.md"
+
+SKILL_N=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
+check "V0.10 Skills >= 7 (found $SKILL_N)" "test $SKILL_N -ge 7"
+check "V0.11 Dashboard /api/overview" "curl -sf $DASHBOARD_URL/api/overview >/dev/null"
+
+# Verify USER.md content
+soft "V0.12 USER.md has timezone" "grep -q 'Asia/Shanghai' $OPENCLAW_HOME/workspace/USER.md"
+soft "V0.13 TOOLS.md has BPS tools" "grep -q 'bps_update_entity' $OPENCLAW_HOME/workspace/TOOLS.md"
+
+# Verify Gateway auth (P0 fix: auth-profiles.json must have OpenRouter key)
+check "V0.15 Gateway auth-profiles.json" "test -f $OPENCLAW_HOME/agents/main/agent/auth-profiles.json"
+soft  "V0.16 OpenRouter auth configured" "grep -q 'openrouter' $OPENCLAW_HOME/agents/main/agent/auth-profiles.json"
+
+# Verify SOUL.md Two-Layer is condensed (not full routing table)
+soft "V0.14 SOUL.md Two-Layer condensed" "grep -q 'See AGENTS.md' $OPENCLAW_HOME/workspace/SOUL.md"
+
+log "Phase 0 complete."
 
 # ════════════════════════════════════════════════════════════
 # Phase 1: Data Seeding

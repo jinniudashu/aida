@@ -49,7 +49,7 @@ node -e '
     primary: process.argv[3],
     provider: process.argv[4],
     startedAt: new Date().toISOString(),
-    benchmarkVersion: "R5",
+    benchmarkVersion: "R6",
   }, null, 2));
 ' "$MODEL_ID" "$NAME" "$PRIMARY" "$PROVIDER" > "$OUT/model-info.json"
 
