@@ -3,6 +3,7 @@
   "name": "Gemini 3.1 Pro Preview",
   "primary": "google/gemini-3.1-pro-preview",
   "provider": "google",
-  "startedAt": "2026-03-10T12:51:48.196Z",
-  "benchmarkVersion": "R5"
+  "testScript": "test/e2e/idlex-geo-v3.sh",
+  "startedAt": "2026-03-10T14:41:35.947Z",
+  "benchmarkVersion": "R6"
 }

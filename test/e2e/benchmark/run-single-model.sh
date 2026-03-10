@@ -5,16 +5,25 @@
 # Full lifecycle for one model:
 #   1. Clean remote environment
 #   2. Git pull + install (via install-benchmark.sh)
-#   3. Run IdleX GEO E2E v3 test (6 turns)
+#   3. Run E2E test (configurable via --test-script)
 #   4. Collect metrics from Dashboard API
 #   5. Snapshot remote state
 #   6. Download results to local results/{model-id}/
 #
 # Usage:
-#   bash test/e2e/benchmark/run-single-model.sh <model-id>
+#   bash test/e2e/benchmark/run-single-model.sh <model-id> [options]
 #
-# Example:
+# Options:
+#   --test-script <path>    E2E test script (relative to repo root)
+#                           Default: test/e2e/idlex-geo-v3.sh
+#   --test-log-dir <path>   Remote log directory for turn logs
+#                           Default: /tmp/idlex-geo-e2e-v3
+#
+# Examples:
 #   bash test/e2e/benchmark/run-single-model.sh kimi-k2.5
+#   bash test/e2e/benchmark/run-single-model.sh kimi-k2.5 \
+#     --test-script test/e2e/maor-preprocessing-e2e.sh \
+#     --test-log-dir /tmp/maor-preprocessing-e2e
 # ============================================================
 
 set -euo pipefail
@@ -22,7 +31,23 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-MODEL_ID="${1:?Usage: run-single-model.sh <model-id>}"
+MODEL_ID="${1:?Usage: run-single-model.sh <model-id> [--test-script <path>] [--test-log-dir <dir>]}"
+shift
+
+# -- Optional flags --
+TEST_SCRIPT="test/e2e/idlex-geo-v3.sh"
+TEST_LOG_DIR="/tmp/idlex-geo-e2e-v3"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --test-script)  TEST_SCRIPT="${2:?--test-script requires a path}"; shift 2 ;;
+    --test-log-dir) TEST_LOG_DIR="${2:?--test-log-dir requires a path}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+TEST_SCRIPT_NAME="$(basename "$TEST_SCRIPT" .sh)"
+
 ensure_model_id "$MODEL_ID"
 ensure_results_dir
 
@@ -36,6 +61,7 @@ mkdir -p "$OUT/raw" "$OUT/snapshot"
 section "Benchmark: $NAME ($MODEL_ID)"
 log "Primary: $PRIMARY"
 log "Provider: $PROVIDER"
+log "Test: $TEST_SCRIPT"
 log "Results: $OUT"
 START_TS=$(date +%s)
 
@@ -48,10 +74,11 @@ node -e '
     name: process.argv[2],
     primary: process.argv[3],
     provider: process.argv[4],
+    testScript: process.argv[5],
     startedAt: new Date().toISOString(),
     benchmarkVersion: "R6",
   }, null, 2));
-' "$MODEL_ID" "$NAME" "$PRIMARY" "$PROVIDER" > "$OUT/model-info.json"
+' "$MODEL_ID" "$NAME" "$PRIMARY" "$PROVIDER" "$TEST_SCRIPT" > "$OUT/model-info.json"
 
 # ============================================================
 # Step 2: Prepare API keys for remote (SCP env file)
@@ -136,11 +163,11 @@ ssh_run 'OC=${OPENCLAW_HOME:-$HOME/.openclaw}; node -e "const c=JSON.parse(requi
 # ============================================================
 # Step 5: Run E2E test
 # ============================================================
-section "Step 3/5: Run E2E Test (6 turns)"
-log "Running idlex-geo-v3.sh (timeout: ${AGENT_TIMEOUT}s per turn)..."
+section "Step 3/5: Run E2E Test ($TEST_SCRIPT_NAME)"
+log "Running $TEST_SCRIPT (timeout: ${AGENT_TIMEOUT}s per turn)..."
 log "This will take ~15-30 minutes..."
 
-E2E_OUTPUT=$(ssh_long "cd $REMOTE_REPO && set -a && source $REMOTE_TMP/api-keys.env && set +a && BENCHMARK_MODE=1 bash test/e2e/idlex-geo-v3.sh 2>&1" 2>&1 || true)
+E2E_OUTPUT=$(ssh_long "cd $REMOTE_REPO && set -a && source $REMOTE_TMP/api-keys.env && set +a && BENCHMARK_MODE=1 bash $TEST_SCRIPT 2>&1" 2>&1 || true)
 
 # Save full e2e output
 echo "$E2E_OUTPUT" > "$OUT/e2e-test.log"
@@ -160,15 +187,19 @@ bash "$SCRIPT_DIR/collect-metrics.sh" "$MODEL_ID" "$OUT"
 # Step 7: Download raw turn logs + snapshot
 # ============================================================
 section "Step 5/5: Download Artifacts"
-log "Downloading turn logs..."
+log "Downloading turn logs from $TEST_LOG_DIR..."
 
-REMOTE_LOG="/tmp/idlex-geo-e2e-v3"
-for f in turn-1.log turn-2.log turn-3.log turn-4.log turn-5.log turn-6.log report.txt skills-before.txt skills-after.txt all-turns.log; do
-  scp_from_remote "$REMOTE_LOG/$f" "$OUT/raw/$f" 2>/dev/null || true
+# Discover all files in the remote log directory and download them
+REMOTE_FILES=$(ssh_run "ls $TEST_LOG_DIR/ 2>/dev/null" || true)
+DL_COUNT=0
+for f in $REMOTE_FILES; do
+  if scp_from_remote "$TEST_LOG_DIR/$f" "$OUT/raw/$f" 2>/dev/null; then
+    DL_COUNT=$((DL_COUNT + 1))
+  fi
 done
 
-TURN_COUNT=$(ls "$OUT/raw"/turn-*.log 2>/dev/null | wc -l)
-log "  Downloaded $TURN_COUNT turn logs"
+TURN_COUNT=$(ls "$OUT/raw"/turn-*.log 2>/dev/null | wc -l || echo 0)
+log "  Downloaded $DL_COUNT files ($TURN_COUNT turn logs)"
 
 log "Downloading session JSONL..."
 REMOTE_SESS='${OPENCLAW_HOME:-$HOME/.openclaw}/agents/main/sessions'

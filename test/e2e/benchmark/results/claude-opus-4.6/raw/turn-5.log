@@ -1,7 +1,80 @@
-Invalid config at /root/.openclaw/openclaw.json:\n- agents: Unrecognized key: "main"
-Config invalid
-File: ~/.openclaw/openclaw.json
-Problem:
-  - agents: Unrecognized key: "main"
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+好的，Dashboard已就绪。这是审批入口和待办清单：
+---
 
-Run: openclaw doctor --fix
+## 🎯 Dashboard审批入口
+
+### 📍 访问地址
+```
+BPS Dashboard: http://{server}:3456
+```
+（如本地部署则访问 `http://localhost:3456`）
+
+---
+
+### 📋 待审批内容清单（10个有效批次）
+
+| # | 实体ID | 门店 | 版本 | 平台数 | 状态 | 推荐 |
+|---|--------|------|------|--------|------|------|
+| 1 | `content-wh-tea-20260310-v2` | 静享茶空间(武汉) | v2优化 | 3 | 🟡 草稿 | ⭐ 优先 |
+| 2 | `content-wh-ktv-20260310-v2` | 音乐盒KTV(武汉) | v2优化 | 3 | 🟡 草稿 | ⭐ 优先 |
+| 3 | `content-cs-mj-20260310-v2` | 棋乐无穷(长沙) | v2优化 | 3 | 🟡 草稿 | ⭐ 优先 |
+| 4 | `content-cs-tea-20260310-v2` | 悠然茶室(长沙) | v2优化 | 3 | 🟡 草稿 | ⭐ 优先 |
+| 5 | `content-cs-ktv-20260310-v2` | 声临其境KTV(长沙) | v2优化 | 3 | 🟡 草稿 | ⭐ 优先 |
+| 6 | `content-wh-tea-20260310` | 静享茶空间(武汉) | v1初始 | 3 | 🟡 草稿 | 参考 |
+| 7 | `content-wh-ktv-20260310` | 音乐盒KTV(武汉) | v1初始 | 3 | 🟡 草稿 | 参考 |
+| 8 | `content-cs-mj-20260310` | 棋乐无穷(长沙) | v1初始 | 3 | 🟡 草稿 | 参考 |
+| 9 | `content-cs-tea-20260310` | 悠然茶室(长沙) | v1初始 | 3 | 🟡 草稿 | 参考 |
+| 10 | `content-cs-ktv-20260310` | 声临其境KTV(长沙) | v1初始 | 3 | 🟡 草稿 | 参考 |
+
+**总计**: 15篇有效内容（v2版15篇 + v1版15篇，共30篇实际文件）
+
+---
+
+### 🔑 快速审批操作
+
+#### 方式一：Dashboard图形界面
+1. 打开 Dashboard → Content Drafts
+2. 筛选 `status = draft` + `batch = v2`
+3. 勾选要审批的内容 → 点击"批准发布"
+4. 系统自动复制到 `~/.aida/mock-publish/`
+
+#### 方式二：命令行（如果你更喜欢）
+```bash
+# 审批单个门店v2版本
+openclaw bps-update entityType=content-draft entityId=content-cs-ktv-20260310-v2 publishReady=true
+
+# 审批全部v2版本（5个门店）
+openclaw bps-update entityType=content-draft entityId=content-wh-tea-20260310-v2 publishReady=true
+openclaw bps-update entityType=content-draft entityId=content-wh-ktv-20260310-v2 publishReady=true
+openclaw bps-update entityType=content-draft entityId=content-cs-mj-20260310-v2 publishReady=true
+openclaw bps-update entityType=content-draft entityId=content-cs-tea-20260310-v2 publishReady=true
+openclaw bps-update entityType=content-draft entityId=content-cs-ktv-20260310-v2 publishReady=true
+```
+
+---
+
+### 📝 v2版本优化亮点（推荐优先审）
+
+| 门店 | 平台 | 优化重点 |
+|------|------|----------|
+| 棋乐无穷-元宝 | 元宝 | 🔴 强化安全属性（针对55分低分） |
+| 声临其境-元宝 | 元宝 | 🔴 强化家庭场景（针对58分低分） |
+| 静享茶空间-千问 | 千问 | 🟡 突出会议投屏功能 |
+| 音乐盒KTV-豆包 | 豆包 | 🟢 强化主题房间打卡 |
+
+---
+
+### ✅ 审批后会发生什么
+
+1. **Governance拦截** → 弹出审批确认框
+2. **你确认通过** → 系统自动执行：
+   - 复制 `mock-publish-tmp/` → `mock-publish/`
+   - 更新实体状态 `status: published`
+   - 记录审批时间戳
+3. **实际发布** → 内容可用于AI平台投放
+
+---
+
+需要我直接在对话中帮你审批指定内容吗？告诉我**"审批全部v2"**或**"审批XX门店"**即可。

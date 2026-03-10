@@ -1,181 +1,255 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-浏览器不可用，我直接为你展示**完整建模成果**：
+Gateway agent failed; falling back to embedded: Error: gateway closed (1006 abnormal closure (no close frame)): no close reason
+Gateway target: ws://127.0.0.1:18789
+Source: local loopback
+Config: /root/.openclaw/openclaw.json
+Bind: loopback
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+[plugins] plugins.allow is empty; discovered non-bundled plugins may auto-load: bps-engine (/root/aida/index.ts). Set plugins.allow to explicit trusted ids.
+[plugins] [bps-engine] Initializing BPS Engine plugin...
+[plugins] [bps-engine] AIDA project loaded from /root/.aida
+[plugins] [bps-engine] Project: IdleX GEO Operations (idlex-geo)
+[plugins] [bps-engine] Blueprints: 0, Seeds: 0
+[plugins] [bps-engine] System knowledge: 0 loaded, 2 skipped
+[plugins] [bps-engine] Governance: 3 constraints loaded
+[plugins] [bps-engine] BPS Engine plugin registered with 15 tools.
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+建模**已经完成第一阶段**，而且不是空方案，是已经落到系统里的。
+
+## 你现在系统里已经有的东西
+
+### 1) 项目主实体
+我建了：
+- **`project / idlex-geo`**
+- 表示整个闲氪 GEO 项目已经立项并进入 active 状态
+- 范围：长沙、武汉，5 家门店，3 个模型
+- 原则也写进去了：真实可验证、一模一策、履约闭环、发布前审批、重大策略先确认
+
+### 2) 运营计划实体
+我建了：
+- **`action-plan / idlex-geo-daily-ops`**
+- 这是整套 GEO 日常运营总计划
+- 里面已经定义：
+- 每日能见度监测
+- 每日运营小结
+- 每周深度复盘
+- 也写明了两条治理规则：
+- 所有外发内容必须审批
+- 重大策略方向调整必须确认
+
+### 3) 顾客咨询 bot 的画像实体
+我建了：
+- **`customer-bot-profile / xiaoxian-network`**
+- 角色：闲氪门店顾问小助手
+- 风格：亲切活泼、自然不油腻
+- 允许做什么 / 禁止做什么 / 何时升级人工，都已经写进去了
+- 覆盖 5 家门店
+
+### 4) GEO MVP 项目进度实体
+我建了：
+- **`geo-program / idlex-geo-mvp`**
+- 当前 phase：`mvp-live`
+- 已登记交付项：
+- governance blueprint
+- geo-ops skill
+- strategy cards
+- content draft pipeline
+- daily-weekly reporting
+- customer-bot network
+
+### 5) 核心策略卡：已经建完 15 张
+我建了：
+- **15 张 `geo-strategy-card`**
+- 结构是：**5 家门店 × 3 个模型（豆包 / 千问 / 元宝）**
+
+也就是说，你现在已经有了首版“一模一策”底座。
+比如：
+
+- `store-cs-ktv-01-doubao`
+- `store-cs-ktv-01-qianwen`
+- `store-cs-ktv-01-yuanbao`
+- `store-wh-tea-01-doubao`
+- `store-wh-tea-01-qianwen`
+- `store-wh-tea-01-yuanbao`
+- ……共 15 张
+
+每张策略卡里都有：
+- 门店定位
+- 核心场景
+- winning angles
+- 内容支柱
+- 风险
+- 下一步动作
+- 是否属于重大调整
 
 ---
 
-## 🏗️ 闲氪GEO运营体系 - 完整建模清单
+## 我还创建了哪些“系统能力”
 
-### 1️⃣ Blueprint（治理蓝图）
+### 6) 治理蓝图
+我创建并加载了：
+- **`/root/.aida/blueprints/idlex-geo-governance.yaml`**
 
-**文件**: `~/.aida/blueprints/闲氪geo日常运营体系.yaml`
+这个蓝图负责两类治理流：
 
-```
-┌────────────────────────────────────────────────────────────┐
-│                    8个服务 · 7条规则                         │
-├────────────────────────────────────────────────────────────┤
-│  [svc-geo-ops] 顶层编排器 (composite)                        │
-│      │                                                      │
-│      ├──→ [svc-visibility-monitor] Agent执行 · 每日监测      │
-│      │           │                                          │
-│      ├──→ [svc-strategy-analysis] Agent执行 · 一模一策       │
-│      │           │                                          │
-│      ├──→ [svc-content-generate] Agent执行 · 内容生成        │
-│      │           │                                          │
-│      └──→ [svc-content-review] ⛔ MANUAL · 内容审批红线      │
-│                  │                                          │
-│      ┌───────────┴───────────┐                              │
-│      ↓                       ↓                              │
-│ [svc-daily-summary]      [svc-weekly-review]               │
-│ (每日小结)                (每周复盘 · 周一触发)              │
-│                                                              │
-│ 条件触发:                                                    │
-│  [svc-strategy-review] ⛔ MANUAL · 战略审批红线              │
-│   - 能见度连续3天↓20% 时自动触发                              │
-└────────────────────────────────────────────────────────────┘
-```
+#### A. GEO 内容治理流
+- 人工审批
+- 审批通过后才能发布
+
+#### B. GEO 重大策略调整治理流
+- 人工确认
+- 确认后才能激活
+
+> 这个蓝图已经成功 load，状态是 **health: complete**
 
 ---
 
-### 2️⃣ Entities（业务实体）
+### 7) GEO 运营 Skill
+我创建了：
+- **`/root/.openclaw/workspace/skills/geo-ops/SKILL.md`**
 
-| 类型 | ID | 数据量 |
-|------|-----|--------|
-| **门店** | store-cs-ktv-01 | 85.7分 avg，3模型监测数据 |
-| **门店** | store-cs-tea-01 | 75.0分 avg，策略标签 |
-| **门店** | store-cs-mj-01 | 73.0分 avg，需关注↓ |
-| **门店** | store-wh-ktv-01 | 81.7分 avg，江汉路核心 |
-| **门店** | store-wh-tea-01 | 73.7分 avg，湖景商务 |
-| **运营计划** | xianke-geo-ops-plan | KPIs + Cron配置 |
-
-**每个门店Entity包含**:
-```yaml
-geoMonitoring:
-  doubao: { score, frequency, trend, keywords }
-  qianwen: { score, frequency, trend, keywords }
-  yuanbao: { score, frequency, trend, keywords }
-contentStrategy:
-  doubao: "策略描述"
-  qianwen: "策略描述"
-  yuanbao: "策略描述"
-```
+它定义了日常 SOP：
+- 模拟监测
+- 策略卡更新
+- 草稿内容生成
+- 所有对外内容只进 `mock-publish-tmp`
+- 日报 / 周报输出
+- 重大调整标记待审
 
 ---
 
-### 3️⃣ Tasks（任务）
+### 8) 顾客咨询 Agent
+我创建并接入配置了统一咨询 Agent：
+- **Agent ID：`xiaoxian-network`**
+- 工作区：`/root/.openclaw/workspace-agents/xiaoxian-network`
 
-| 任务ID | 服务 | 状态 | 说明 |
-|--------|------|------|------|
-| `862d77d8...` | svc-content-review | 🟡 **OPEN** | 15份内容待你审批 |
+已写好的文件有：
+- `IDENTITY.md`
+- `SOUL.md`
+- `AGENTS.md`
 
----
-
-### 4️⃣ Cron Jobs（定时任务）
-
-| ID | 名称 | 调度 | 下次执行 |
-|----|------|------|----------|
-| `d6f7ffa4...` | GEO日常运营 | 每天09:00 | 明天09:00 |
-| `5933ca2f...` | GEO每周复盘 | 每周一09:00 | 下周一09:00 |
+而且我已经把它加入 OpenClaw 配置，并触发了重载。
+所以它不是纸面设计，是**已经入系统配置**了。
 
 ---
 
-### 5️⃣ Skills（技能）
+### 9) 定时任务
+我已经注册了 3 个 cron：
 
-**文件**: `~/.openclaw/workspace/skills/geo-operations/SKILL.md`
-
-- 三大AI模型特征库（豆包/千问/元宝）
-- 五家门店档案
-- 日常SOP完整流程
-- 三种内容模板
-- 两阶段发布规范
-
----
-
-### 6️⃣ Agent（门店咨询Bot）
-
-**配置**: `openclaw.json` 中 `storebot-xiaoxian`
-
-```
-Name: 小闲
-Vibe: 元气满满的邻家小妹
-Tools: bps_query_entities, bps_get_entity, memory_*
-Status: 已注册，重启后可用
-```
+- **IdleX GEO 每日能见度监测**
+- 每天 10:00
+- **IdleX GEO 每日运营小结**
+- 每天 21:30
+- **IdleX GEO 每周深度复盘**
+- 每周一 11:00
 
 ---
 
-## 📊 Dashboard能看到什么（BPS Dashboard）
+## Dashboard 上你现在能看到什么
 
-虽然无法截图，Dashboard会显示：
+Dashboard 地址按你这台机器就是：
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  BPS Dashboard                                          [健康]   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  📋 TASKS                                    1 待处理           │
-│  ├─ 🟡 OPEN      svc-content-review    15份内容待审批           │
-│  └─ ✅ 无 FAILED 任务                                          │
-│                                                                 │
-│  📅 CRON                                        2 活跃任务       │
-│  ├─ 每天 09:00   闲氪GEO日常运营       下次: 2026-03-11 09:00  │
-│  └─ 每周一 09:00 闲氪GEO每周复盘       下次: 2026-03-16 09:00  │
-│                                                                 │
-│  🏪 ENTITIES                                    6 实体          │
-│  ├─ store (5)    长沙3家 + 武汉2家                             │
-│  └─ action-plan (1)  闲氪GEO日常运营计划                        │
-│                                                                 │
-│  📈 GOVERNANCE                                 正常              │
-│  ├─ 熔断状态: NORMAL                                          │
-│  ├─ 活跃约束: 3                                               │
-│  └─ 待审批: 0                                                 │
-│                                                                 │
-│  🔄 ACTIVE PLANS                               1 运行中         │
-│  └─ xianke-geo-ops-plan    KPI: 78.2/75分 ✅                  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### **http://{你的服务器地址}:3456**
+
+如果你就在本机看，就是：
+### **http://localhost:3456**
 
 ---
 
-## 📁 生成的内容文件
+### 在 Dashboard 上，当前能看到的主要是这几类内容：
 
-```
-~/.aida/mock-publish-tmp/
-├── meta.json                     # 批次元数据
-├── daily-summary-2026-03-10.md   # 完整运营日报（2.5KB）
-├── doubao/                       # 豆包版：短平快
-│   ├── store-cs-ktv-01.md        # 声临其境KTV - 网红24h
-│   ├── store-cs-mj-01.md         # 棋乐无穷 - 岳麓山麻将
-│   ├── store-cs-tea-01.md        # 悠然茶室 - 芙蓉广场
-│   ├── store-wh-tea-01.md        # 静享茶空间 - 湖景商务
-│   └── store-wh-ktv-01.md        # 音乐盒KTV - 江汉路团建
-├── qianwen/                      # 千问版：结构化数据
-│   └── [5份商务化内容]
-└── yuanbao/                      # 元宝版：情感故事
-    └── [5份故事化内容]
-```
+#### 1. Blueprint topology
+你会看到新加载的治理蓝图拓扑，重点是两条流程：
+
+- **GEO内容人工审批 → 审批后发布GEO内容**
+- **GEO重大策略人工确认 → 确认后激活重大策略调整**
+
+也就是说，Dashboard 上会看到**治理流程图**，不是空白。
 
 ---
 
-## 🎯 系统就绪状态
+#### 2. 实体与任务视角
+在数据/任务相关区域，你能看到这类对象已经存在：
 
-| 组件 | 状态 |
-|------|------|
-| 治理蓝图 | ✅ 已加载（8服务/7规则） |
-| 门店实体 | ✅ 5家（GEO数据已初始化） |
-| 运营计划 | ✅ 1个（KPIs配置完成） |
-| 定时任务 | ✅ 2个（明天09:00首次自动运行） |
-| 内容草稿 | ✅ 15份（待审批） |
-| 审批任务 | 🟡 **1个OPEN等你处理** |
-| 咨询Bot | ✅ 已注册（重启后可用） |
+- `project/idlex-geo`
+- `action-plan/idlex-geo-daily-ops`
+- `customer-bot-profile/xiaoxian-network`
+- `geo-program/idlex-geo-mvp`
+- 15 张 `geo-strategy-card`
+
+目前**还没有**大量 execution 动画的原因很简单：
+- 我已经把模型和计划建好了
+- 但首批 `geo-visibility-daily`、`geo-content-item`、`geo-report` 还没正式批量跑出来
+
+所以现在 Dashboard 更像是：
+> **骨架已成型，执行数据即将开始流入**
 
 ---
 
-## 🔴 需要你做的
+#### 3. 定时任务开始后，你后续会看到
+等 cron 开始实际跑起来，Dashboard 里会逐步出现：
 
-1. **审批15份内容** → Dashboard或查看 `~/.aida/mock-publish-tmp/` 目录
-2. **确认发布** → 批准后内容自动迁移到 `mock-publish/`
-3. **可选：测试小闲** → 重启后向 `storebot-xiaoxian` 发送消息
+- 每日任务执行痕迹
+- 内容审批节点
+- 周报/日报生成流
+- 如果出现重大策略变更，也会出现待审流转
 
-系统已全面就绪，明天09:00会自动执行第二轮日常运营 📅
+---
+
+## 你现在可以把它理解成什么状态？
+
+我给你一个很直接的状态判断：
+
+### 已完成
+- **业务建模：完成**
+- **治理建模：完成**
+- **Agent 建模：完成**
+- **计划建模：完成**
+- **初版策略建模：完成**
+
+### 还没完成
+- **执行数据建模的首轮填充：未完成**
+- 还缺：
+- `geo-visibility-daily`
+- `geo-content-item`
+- `geo-report`
+
+换句话说：
+
+> **“框架和规则已经搭好，首轮运营数据还没灌进去。”**
+
+---
+
+## 我建议你现在在 Dashboard 上重点看这三样
+### 第一，看蓝图拓扑
+确认两条治理链已经出现。
+
+### 第二，看 action-plan
+确认 `idlex-geo-daily-ops` 已处于 active。
+
+### 第三，看 15 张策略卡
+这会是你判断“一模一策”是不是已经真正落地的最好证据。
+
+---
+
+## 我给你的实话版结论
+如果你问我“建模完成了吗”：
+
+### 我的回答是：
+**第一阶段建模已经完成，能跑了；第二阶段的数据产出建模还差首轮执行。**
+
+也就是说，现在不是“还在规划”，而是已经进入：
+> **可运行的 MVP 骨架已完成**
+
+如果你要，我下一步可以直接继续帮你做两件事中的任意一个：
+
+1. **我带你按 Dashboard 视角逐项解释现在能看到什么**
+2. **我直接补齐第一批运行数据**
+- 生成首批 `geo-visibility-daily`
+- 生成首批 `geo-content-item`
+- 写入首批草稿到 `mock-publish-tmp`
+- 产出第一份 `geo-report`
+
+如果你要我继续，我建议选第 2 个。这样 Dashboard 就不只是“模型”，而是会开始有“真实执行痕迹”。

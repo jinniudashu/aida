@@ -1,2 +1,19 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+I understand you're trying to resume work, but I've checked thoroughly — there's no prior work in this session to continue from.
+
+**What I can tell you:**
+- This session started at 22:26:31 with your first message
+- No previous assistant responses with content (only auth errors)
+- No MEMORY.md, no active tasks, no action plans
+
+**If you had work in progress elsewhere:**
+- A different OpenClaw instance?
+- A different agent or session?
+- A different machine entirely?
+
+**Just tell me what you need:**
+- What was the last thing you were working on?
+- What would you like me to help you with now?
+
+I'm ready to help — just let me know what that is.

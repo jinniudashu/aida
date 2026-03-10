@@ -1,12 +1,17 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-收到。Dashboard地址：`http://localhost:3456`
+好，你去 Dashboard 审就行。
 
-待审批任务：
-- **任务ID**: `33f772cc-1119-4bde-9b0c-e0aff337d63a`
-- **内容**: 15份差异化内容（豆包/千问/元宝各5份）
-- **位置**: `~/.aida/mock-publish-tmp/2026-03-10/`
+我这边会继续保持当前节奏：
+- 等你审批结果回流
+- 审批通过的内容再进入正式发布链路
+- 同时准备第二批内容，不会越过你的审批线
 
-审批通过后，内容会自动同步到 `mock-publish/` 正式区。
+你在 Dashboard 上重点看这两类：
+1. **待审批的 `geo-content-item`**
+2. **今日 `geo-report / 2026-03-10-daily`**
 
-有其他需要随时叫我。
+如果你审完回来，我可以立刻接着做：
+- 已批准内容的发布推进
+- 第二批内容生成
+- 或者开始做本周复盘框架

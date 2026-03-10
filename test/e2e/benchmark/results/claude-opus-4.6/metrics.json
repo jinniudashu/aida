@@ -1,46 +1,25 @@
 {
-  "timestamp": "2026-03-10T11:50:47.013Z",
+  "timestamp": "2026-03-10T13:13:18.360Z",
   "entities": {
-    "total": 14,
-    "byType": {
-      "geo-strategy": 2,
-      "geo-visibility": 2,
-      "daily-report": 2,
-      "store": 5,
-      "project-config": 1,
-      "knowledge": 2
-    }
+    "total": 0,
+    "byType": {}
   },
   "governance": {
-    "constraints": 3,
-    "violations": 2,
+    "constraints": 0,
+    "violations": 0,
     "approvals": {
-      "total": 2,
-      "pending": 2,
+      "total": 0,
+      "pending": 0,
       "approved": 0,
       "rejected": 0
     },
-    "circuitBreaker": {
-      "state": "NORMAL",
-      "lastStateChange": "2026-03-10T11:47:01.585Z"
-    }
+    "circuitBreaker": null
   },
-  "skills": 10,
-  "skillNames": [
-    "blueprint-modeling",
-    "geo-reporter",
-    "business-execution",
-    "geo-visibility-monitor",
-    "geo-content-generator",
-    "dashboard-guide",
-    "action-plan",
-    "agent-create",
-    "skill-create",
-    "project-init"
-  ],
+  "skills": 0,
+  "skillNames": [],
   "agentWorkspaces": 0,
-  "blueprintFiles": 2,
+  "blueprintFiles": 0,
   "mockPublishFiles": 0,
-  "mockPublishDraftFiles": 6,
-  "cronJobs": 2
+  "mockPublishDraftFiles": 0,
+  "cronJobs": 0
 }

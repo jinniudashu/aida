@@ -3,9 +3,7 @@
   "name": "Kimi K2.5",
   "primary": "moonshot/kimi-k2.5",
   "provider": "moonshot",
-  "startedAt": "2026-03-10T11:53:28.692Z",
-  "benchmarkVersion": "R4",
-  "completedAt": "2026-03-10T11:56:41.978Z",
-  "durationSeconds": 193,
-  "e2eResult": "? PASS / ? FAIL / ? WARN"
+  "testScript": "test/e2e/idlex-geo-v3.sh",
+  "startedAt": "2026-03-10T13:49:07.625Z",
+  "benchmarkVersion": "R6"
 }

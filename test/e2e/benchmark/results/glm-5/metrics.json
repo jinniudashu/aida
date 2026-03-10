@@ -1,11 +1,14 @@
 {
-  "timestamp": "2026-03-10T11:58:45.103Z",
+  "timestamp": "2026-03-10T14:28:32.162Z",
   "entities": {
-    "total": 0,
-    "byType": {}
+    "total": 7,
+    "byType": {
+      "store": 5,
+      "knowledge": 2
+    }
   },
   "governance": {
-    "constraints": 0,
+    "constraints": 3,
     "violations": 0,
     "approvals": {
       "total": 0,
@@ -13,10 +16,21 @@
       "approved": 0,
       "rejected": 0
     },
-    "circuitBreaker": null
+    "circuitBreaker": {
+      "state": "NORMAL",
+      "lastStateChange": "2026-03-10T14:28:29.957Z"
+    }
   },
-  "skills": 0,
-  "skillNames": [],
+  "skills": 7,
+  "skillNames": [
+    "blueprint-modeling",
+    "business-execution",
+    "dashboard-guide",
+    "action-plan",
+    "agent-create",
+    "skill-create",
+    "project-init"
+  ],
   "agentWorkspaces": 0,
   "blueprintFiles": 0,
   "mockPublishFiles": 0,

@@ -299,15 +299,18 @@ test/e2e/maor-results/{run-id}/
 
 ## 8. 差距归因框架
 
-每个缺失要素归因到三个环节之一：
+每个缺失要素归因到四个环节之一：
 
 | 归因 | 含义 | 优化方向 |
 |------|------|----------|
 | **PREPROCESS** | 预处理输出中缺失或模糊 | 改进预处理文档 |
 | **COMPREHENSION** | 预处理输出中存在但 AIDA 未理解 | 改进 context/ 文档的表述方式 |
 | **EXECUTION** | AIDA 理解了但未执行工具调用 | 改进 Workspace/Skill/Prompt |
+| **ARCHITECTURE** | AIDA 引擎/工具缺少所需能力 | 修复引擎代码（新 tool、格式支持等） |
 
 归因分布是本测评的**核心产出** —— 它决定了优化资源投向哪个环节。
+
+**ARCHITECTURE 归因示例**：Blueprint 编译器不支持 `flow.rules` 对象格式、治理约束无法热加载（缺少 `bps_load_governance` tool）。这类问题需要引擎代码修复而非预处理或提示词优化。
 
 ## 9. 迭代计划
 
@@ -321,7 +324,15 @@ Round 3: 如果 PREPROCESS 归因收敛，开始提炼预处理 Skill
 Round N: 预处理 Skill 移植到 AIDA，自动化整个管线
 ```
 
-**收敛判据**：当 PREPROCESS 归因占比 < 20% 且 D1+D2 加权分 ≥ 7.5/10 时，预处理质量达标。
+**收敛判据**（全部条件同时满足）：
+
+| # | 条件 | 说明 |
+|---|------|------|
+| C1 | PREPROCESS 归因占比 < 20% | 预处理不再是主要瓶颈 |
+| C2 | ARCHITECTURE 归因 = 0 | 引擎层无阻断性缺陷 |
+| C3 | 8 个 HARD 检查点 100% 通过 | 核心业务要素全部存在 |
+| C4 | D1+D2 加权分 ≥ 7.5/10 | 覆盖率+保真度达到可用水平 |
+| C5 | D4 运行时 > 0（至少 1 条 governance 约束被加载） | 合规体系不为空壳 |
 
 ## 10. 与现有测评的关系
 
@@ -333,6 +344,6 @@ Round N: 预处理 Skill 移植到 AIDA，自动化整个管线
 
 新增的：
 - Ground Truth 检查清单（从源物料提取，而非预设）
-- 差距归因框架（PREPROCESS / COMPREHENSION / EXECUTION 三类）
+- 差距归因框架（PREPROCESS / COMPREHENSION / EXECUTION / ARCHITECTURE 四类）
 - 覆盖率报告（源物料要素 vs AIDA 产出的逐项对照）
 - 迭代反馈环（归因分布驱动优化方向）

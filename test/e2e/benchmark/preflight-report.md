@@ -1,12 +1,12 @@
 # Benchmark Preflight Report
 
-**Generated**: 2026-03-10T19:28:47+08:00
+**Generated**: 2026-03-10T21:29:02+08:00
 **Server**: root@47.236.109.62
 
 ## Summary
 
-- PASS: 19
-- FAIL: 1
+- PASS: 14
+- FAIL: 0
 - WARN: 0
 
 ## Models

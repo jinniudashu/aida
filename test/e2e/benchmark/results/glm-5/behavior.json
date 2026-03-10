@@ -1,1 +1,276 @@
-{"turns":[],"error":"no session JSONL found","source":"jsonl"}
+{
+  "source": "session-jsonl",
+  "sessionFile": "140542d8-cb0a-4d7d-a488-4a8bc9fcf432.jsonl",
+  "totalEntries": 58,
+  "totalMessages": 43,
+  "collectedAt": "2026-03-10T14:28:34.425Z",
+  "summary": {
+    "totalToolCalls": 13,
+    "bpsToolCalls": 1,
+    "writeToolCalls": 0,
+    "otherToolCalls": 12,
+    "toolErrors": 0,
+    "bpsToolNames": [
+      "bps_scan_work"
+    ],
+    "allToolNames": [
+      "bps_scan_work",
+      "memory_search",
+      "sessions_list",
+      "sessions_history",
+      "exec",
+      "read",
+      "subagents",
+      "process"
+    ]
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 2,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 16,
+      "textBytes": 1673,
+      "toolCalls": {
+        "total": 10,
+        "bps": 1,
+        "write": 0,
+        "other": 9,
+        "errors": 0
+      },
+      "toolNames": [
+        "bps_scan_work",
+        "memory_search",
+        "sessions_list",
+        "sessions_history",
+        "exec",
+        "read"
+      ],
+      "bpsToolNames": [
+        "bps_scan_work"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_scan_work",
+          "inputKeys": []
+        }
+      ],
+      "writeTargets": []
+    },
+    {
+      "turn": 3,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 4,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 4,
+      "textBytes": 1505,
+      "toolCalls": {
+        "total": 1,
+        "bps": 0,
+        "write": 0,
+        "other": 1,
+        "errors": 0
+      },
+      "toolNames": [
+        "read"
+      ],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 5,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 6,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 794,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 7,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 8,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 652,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 9,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 10,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 5,
+      "textBytes": 277,
+      "toolCalls": {
+        "total": 2,
+        "bps": 0,
+        "write": 0,
+        "other": 2,
+        "errors": 0
+      },
+      "toolNames": [
+        "subagents",
+        "process"
+      ],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 11,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    },
+    {
+      "turn": 12,
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 320,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
+      "toolNames": [],
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
+    }
+  ]
+}
