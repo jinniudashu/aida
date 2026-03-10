@@ -1,46 +1,25 @@
 {
-  "timestamp": "2026-03-10T06:27:14.065Z",
+  "timestamp": "2026-03-10T11:56:15.657Z",
   "entities": {
-    "total": 17,
-    "byType": {
-      "action-plan": 2,
-      "geo-content": 2,
-      "geo-strategy": 1,
-      "partner-store": 5,
-      "store": 5,
-      "knowledge": 2
-    }
+    "total": 0,
+    "byType": {}
   },
   "governance": {
-    "constraints": 3,
-    "violations": 1,
+    "constraints": 0,
+    "violations": 0,
     "approvals": {
       "total": 0,
       "pending": 0,
       "approved": 0,
       "rejected": 0
     },
-    "circuitBreaker": {
-      "state": "NORMAL",
-      "lastStateChange": "2026-03-10T06:08:35.169Z"
-    }
+    "circuitBreaker": null
   },
-  "skills": 11,
-  "skillNames": [
-    "geo-monitor",
-    "blueprint-modeling",
-    "business-execution",
-    "dashboard-guide",
-    "action-plan",
-    "agent-create",
-    "content-creator",
-    "skill-create",
-    "project-init",
-    "xiaoke-store-bot",
-    "report-generator"
-  ],
+  "skills": 0,
+  "skillNames": [],
   "agentWorkspaces": 0,
-  "blueprintFiles": 2,
-  "mockPublishFiles": 10,
+  "blueprintFiles": 0,
+  "mockPublishFiles": 0,
+  "mockPublishDraftFiles": 0,
   "cronJobs": 0
 }

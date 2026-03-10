@@ -3,9 +3,9 @@
   "name": "Qwen3.5 Plus",
   "primary": "dashscope/qwen3.5-plus",
   "provider": "dashscope",
-  "startedAt": "2026-03-10T06:28:49.813Z",
+  "startedAt": "2026-03-10T12:13:30.156Z",
   "benchmarkVersion": "R4",
-  "completedAt": "2026-03-10T06:46:44.446Z",
-  "durationSeconds": 1075,
-  "e2eResult": "38 PASS / 1 FAIL / 6 WARN"
+  "completedAt": "2026-03-10T12:34:57.958Z",
+  "durationSeconds": 1287,
+  "e2eResult": "47 PASS / 0 FAIL / 1 WARN"
 }

@@ -1,0 +1,7 @@
+Invalid config at /root/.openclaw/openclaw.json:\n- agents: Unrecognized key: "main"
+Config invalid
+File: ~/.openclaw/openclaw.json
+Problem:
+  - agents: Unrecognized key: "main"
+
+Run: openclaw doctor --fix

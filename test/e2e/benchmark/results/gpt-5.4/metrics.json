@@ -1,11 +1,10 @@
 {
-  "timestamp": "2026-03-10T05:30:28.501Z",
+  "timestamp": "2026-03-10T12:12:35.569Z",
   "entities": {
-    "total": 11,
+    "total": 9,
     "byType": {
-      "geo-monitoring": 1,
+      "action-plan": 1,
       "geo-content": 1,
-      "action-plan": 2,
       "store": 5,
       "knowledge": 2
     }
@@ -21,23 +20,23 @@
     },
     "circuitBreaker": {
       "state": "NORMAL",
-      "lastStateChange": "2026-03-10T05:30:25.990Z"
+      "lastStateChange": "2026-03-10T12:12:32.991Z"
     }
   },
-  "skills": 9,
+  "skills": 8,
   "skillNames": [
     "blueprint-modeling",
-    "content-geo-generator",
+    "geo-operations",
     "business-execution",
     "dashboard-guide",
     "action-plan",
     "agent-create",
     "skill-create",
-    "customer-consultation-bot",
     "project-init"
   ],
-  "agentWorkspaces": 0,
-  "blueprintFiles": 4,
-  "mockPublishFiles": 14,
-  "cronJobs": 0
+  "agentWorkspaces": 1,
+  "blueprintFiles": 1,
+  "mockPublishFiles": 18,
+  "mockPublishDraftFiles": 34,
+  "cronJobs": 2
 }

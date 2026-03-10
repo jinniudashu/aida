@@ -1,59 +1,93 @@
 {
+  "source": "session-jsonl",
+  "sessionFile": "e839a271-ca21-4ede-95fe-28f448078615.jsonl",
+  "totalEntries": 24,
+  "totalMessages": 18,
+  "collectedAt": "2026-03-10T12:34:34.915Z",
+  "summary": {
+    "totalToolCalls": 9,
+    "bpsToolCalls": 2,
+    "writeToolCalls": 3,
+    "otherToolCalls": 4,
+    "toolErrors": 0,
+    "bpsToolNames": [
+      "bps_update_entity"
+    ],
+    "allToolNames": [
+      "read",
+      "bps_update_entity",
+      "exec",
+      "write"
+    ]
+  },
   "turns": [
     {
       "turn": 1,
-      "status": "ok",
-      "lines": 4,
-      "bytes": 373,
-      "toolCallMentions": 0,
+      "userPrompt": "[Tue 2026-03-10 20:18 GMT+8] [Subagent Context] You are running as a subagent (depth 1/1). Results auto-announce to your requester; do not busy-poll for status.\n\n[Subagent Task]: 执行GEO运营测试流程：\n1. 使用geo",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 2,
+      "textBytes": 0,
+      "toolCalls": {
+        "total": 0,
+        "bps": 0,
+        "write": 0,
+        "other": 0,
+        "errors": 0
+      },
       "toolNames": [],
-      "timedOut": false
+      "bpsToolNames": [],
+      "bpsToolDetails": [],
+      "writeTargets": []
     },
     {
       "turn": 2,
-      "status": "ok",
-      "lines": 3,
-      "bytes": 270,
-      "toolCallMentions": 0,
-      "toolNames": [],
-      "timedOut": false
-    },
-    {
-      "turn": 3,
-      "status": "ok",
-      "lines": 3,
-      "bytes": 270,
-      "toolCallMentions": 0,
-      "toolNames": [],
-      "timedOut": false
-    },
-    {
-      "turn": 4,
-      "status": "ok",
-      "lines": 71,
-      "bytes": 2339,
-      "toolCallMentions": 0,
-      "toolNames": [],
-      "timedOut": false
-    },
-    {
-      "turn": 5,
-      "status": "ok",
-      "lines": 41,
-      "bytes": 1211,
-      "toolCallMentions": 0,
-      "toolNames": [],
-      "timedOut": false
-    },
-    {
-      "turn": 6,
-      "status": "ok",
-      "lines": 66,
-      "bytes": 1943,
-      "toolCallMentions": 0,
-      "toolNames": [],
-      "timedOut": false
+      "userPrompt": "Continue where you left off. The previous model attempt failed or timed out.",
+      "startTime": null,
+      "durationMs": null,
+      "messages": 16,
+      "textBytes": 374,
+      "toolCalls": {
+        "total": 9,
+        "bps": 2,
+        "write": 3,
+        "other": 4,
+        "errors": 0
+      },
+      "toolNames": [
+        "read",
+        "bps_update_entity",
+        "exec",
+        "write"
+      ],
+      "bpsToolNames": [
+        "bps_update_entity"
+      ],
+      "bpsToolDetails": [
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        },
+        {
+          "name": "bps_update_entity",
+          "inputKeys": [
+            "entityType",
+            "entityId",
+            "data",
+            "message"
+          ]
+        }
+      ],
+      "writeTargets": [
+        "~/.aida/mock-publish-tmp/douyin/store-cs-chess-01-doubao.md",
+        "~/.aida/mock-publish-tmp/zhihu/store-cs-chess-01-qianwen.md",
+        "~/.aida/mock-publish-tmp/zhihu/store-cs-tea-01-qianwen.md"
+      ]
     }
-  ],
-  "collectedAt": "2026-03-10T06:46:25.967Z"
+  ]
 }

@@ -3,9 +3,9 @@
   "name": "GLM-5",
   "primary": "zhipu/glm-5",
   "provider": "zhipu",
-  "startedAt": "2026-03-10T06:47:16.692Z",
+  "startedAt": "2026-03-10T11:56:05.458Z",
   "benchmarkVersion": "R4",
-  "completedAt": "2026-03-10T07:09:52.097Z",
-  "durationSeconds": 1356,
-  "e2eResult": "34 PASS / 1 FAIL / 10 WARN"
+  "completedAt": "2026-03-10T11:59:13.072Z",
+  "durationSeconds": 188,
+  "e2eResult": "? PASS / ? FAIL / ? WARN"
 }

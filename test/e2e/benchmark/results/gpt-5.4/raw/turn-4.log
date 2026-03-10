@@ -1,0 +1,64 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。立即执行今日GEO运营——能见度探测 + 内容生成。
+能见度探测完成 ✅ 所有门店分数均有提升。现在生成**今日15份差异化内容**：
+15份内容全部生成 ✅ 现在创建元数据、日报和审批任务：
+---
+
+## ✅ 今日GEO运营完成
+
+### 📊 能见度探测结果
+
+| 指标 | 结果 |
+|------|------|
+| **平均能见度** | **78.8/100** (↑+0.6) |
+| **门店状态** | 5/5 全部上升 🟢 |
+| **最高分** | 声临其境KTV (86.7 avg) |
+| **提升最大** | 悠然茶室 (+1.3分) |
+
+### 📈 能见度变化对比
+
+| 门店 | 早间 | 晚间 | 变化 |
+|------|------|------|------|
+| 声临其境KTV | 85.7 | 86.7 | ↑+1.0 |
+| 音乐盒KTV | 81.7 | 82.7 | ↑+1.0 |
+| 悠然茶室 | 75.0 | 76.3 | ↑+1.3 |
+| 静享茶空间 | 73.7 | 75.3 | ↑+1.6 |
+| 棋乐无穷 | 73.0 | 74.0 | ↑+1.0 |
+
+### ✍️ 内容生成产出
+
+```
+~/.aida/mock-publish-tmp/2026-03-10/
+├── meta.json              # 批次元数据
+├── daily-summary.md       # 完整运营日报
+├── doubao/                # 5份（短平快、热点、打卡）
+│   ├── store-cs-ktv-01.md  🎤 声临其境KTV - 凌晨3点嗨
+│   ├── store-cs-mj-01.md   🀄 棋乐无穷 - 爬山后搓一把
+│   ├── store-cs-tea-01.md  🍵 悠然茶室 - 打工人回血站
+│   ├── store-wh-tea-01.md  🍃 静享茶空间 - 湖景天花板
+│   └── store-wh-ktv-01.md  🎵 音乐盒KTV - 欢乐盒子
+├── qianwen/               # 5份（结构化、数据、商务）
+└── yuanbao/               # 5份（情感、故事、共鸣）
+```
+
+### 🟡 待审批状态
+
+| 批次 | 任务ID | 内容数量 | 状态 |
+|------|--------|----------|------|
+| 2026-03-10-v2 | `33f772cc-1119-4bde-9b0c-e0aff337d63a` | 15份 | 🟡 **待审批** |
+
+**审批后操作**：内容将自动迁移至 `mock-publish/` 正式区
+
+### 📋 完整日报
+
+查看详细报告：
+```bash
+cat ~/.aida/mock-publish-tmp/2026-03-10/daily-summary.md
+```
+
+---
+
+**今日运营全部完成** ✅  
+**15份内容等待你的审批** 🟡  
+**明日09:00自动执行下一轮** 📅

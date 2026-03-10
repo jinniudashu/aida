@@ -1,0 +1,587 @@
+=== Combined Turn Logs ===
+
+=== TURN 1 ===
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+我先读取业务资料，了解现有门店情况，然后为你规划这套GEO运营体系。
+已了解业务背景。闲氪是"闲置空间的AI心智入口"，5家门店覆盖长沙（3家）和武汉（2家），业态包括茶室、KTV、棋牌。
+
+这是一个**治理+运营混合**场景，我来为你规划完整方案：
+现在我来为你构建这套完整的GEO运营体系。规划如下：
+
+---
+
+## 📋 系统架构
+
+| 组件 | 类型 | 说明 |
+|------|------|------|
+| **治理蓝图** | Blueprint | 内容审批 + 战略确认两条红线 |
+| **GEO运营** | Skill | 日常监测、分析、内容生成、报告 |
+| **门店咨询Bot** | Agent | 24h在线，亲切活泼，独立人格 |
+
+---
+
+## 第一步：治理蓝图（两条红线）
+治理规则采用拦截配置更合适。让我调整策略，先创建完整的GEO运营蓝图（包含审批节点），同时配置治理拦截：
+GEO运营蓝图加载成功 ✅（8个服务，7条规则）
+
+---
+
+## 第二步：创建GEO运营技能
+GEO运营技能创建完成 ✅
+
+---
+
+## 第三步：创建门店咨询Bot（独立Agent）
+
+这个Bot需要24h在线，语气亲切活泼——跟我的管理风格完全不同。
+门店咨询Bot配置完成 ✅
+
+现在让我将它注册到系统：
+发现已有两个类似agent。让我添加新的"小闲"Bot，并配置其工具权限：
+配置已更新 ✅
+
+让我创建GEO内容草稿目录结构，并验证整个系统：
+系统架构已完成！以下是完整的**闲氪GEO运营体系**总结：
+
+---
+
+## 🎯 系统总览
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    闲氪GEO运营体系                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
+│  │   治理蓝图    │    │   GEO运营    │    │  门店咨询Bot │  │
+│  │  (两条红线)   │    │   (技能)     │    │   (小闲)     │  │
+│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘  │
+│         │                    │                    │         │
+│    内容审批 ✋          每日监测 🤖          24h在线 💬    │
+│    战略确认 ✋          内容生成 ✍️          亲切活泼 🎤    │
+│                        一模一策 📊                            │
+│                        报告输出 📈                            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## ✅ 已完成配置
+
+### 1️⃣ GEO运营蓝图（8个服务，7条规则）
+
+| 服务ID | 功能 | 执行者 |
+|--------|------|--------|
+| `svc-visibility-monitor` | 每日监测5店×3模型能见度 | Agent |
+| `svc-strategy-analysis` | 一模一策差异化分析 | Agent |
+| `svc-content-generate` | 生成15份差异化内容 | Agent |
+| `svc-content-review` | ⛔ **内容发布审批**（红线1） | Manual |
+| `svc-daily-summary` | 每日运营小结 | Agent |
+| `svc-weekly-review` | 每周深度复盘 | Agent |
+| `svc-strategy-review` | ⛔ **战略调整确认**（红线2） | Manual |
+
+**触发规则：**
+- 能见度连续3天下降>20% → 自动触发战略确认
+- 内容生成后 → 必须人工审批才能发布
+
+### 2️⃣ GEO运营技能 (`geo-operations`)
+
+文件位置：`~/.openclaw/workspace/skills/geo-operations/SKILL.md`
+
+包含：
+- 三大AI模型特征（豆包/千问/元宝）
+- 五家门店详细档案
+- 日常SOP（监测→分析→生成→审批→报告）
+- 内容模板（3种风格）
+- 两阶段发布规范（tmp/ → mock-publish/）
+
+### 3️⃣ 门店咨询Bot — 小闲 🎤
+
+| 属性 | 配置 |
+|------|------|
+| Agent ID | `storebot-xiaoxian` |
+| 定位 | 元气满满的邻家小妹 |
+| 语气 | 亲切活泼，用emoji，称呼"宝子" |
+| 知识 | 5家门店的每个角落 |
+| 工具 | 门店查询、记忆读取 |
+
+已配置到 `openclaw.json`，重启后生效。
+
+### 4️⃣ 目录结构
+
+```
+~/.aida/
+├── mock-publish-tmp/          # 内容草稿区（审批前）
+│   ├── doubao/
+│   ├── qianwen/
+│   └── yuanbao/
+├── mock-publish/              # 正式发布区（审批后）
+│   ├── doubao/
+│   ├── qianwen/
+│   └── yuanbao/
+└── blueprints/
+    └── 闲氪geo日常运营体系.yaml
+```
+
+---
+
+## 🚀 启动运营
+
+### 方案A：手动触发每日运营
+
+```bash
+# 创建今日运营任务
+bps_create_task(
+  serviceId: "svc-geo-ops",
+  entityType: "store",
+  entityId: "daily-2026-03-10"
+)
+```
+
+### 方案B：设置定时Cron（推荐）
+
+是否需要我为每日09:00和每周一09:00设置自动运营cron？
+
+### 方案C：即刻试运行
+
+我现在可以为你运行一次完整的GEO日常运营，包括：
+1. 生成5店×3模型的模拟能见度数据
+2. 输出一模一策分析
+3. 生成15份差异化内容草稿
+4. 提交审批任务
+
+---
+
+## ⚠️ 治理红线提醒
+
+| 红线 | 触发条件 | 处理方式 |
+|------|----------|----------|
+| **内容审批** | 所有对外发布内容 | 写入tmp/ → 创建审批任务 → 批准后迁移到mock-publish/ |
+| **战略确认** | 能见度连续3天↓20% 或 建议重大调整 | 创建确认任务 → 批准后执行 |
+
+Dashboard查看审批：`http://localhost:3456`
+
+---
+
+**下一步你希望：**
+1. 🔄 立即试运行一次完整的GEO日常运营？
+2. ⏰ 设置自动cron定时执行？
+3. 💬 测试门店咨询Bot"小闲"？
+4. 📋 先审阅我生成的第一批内容草稿？
+
+=== TURN 2 ===
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。立即开始全系统落地——创建实体、完善数据、设置定时任务、运行首次运营。
+5家门店GEO数据初始化完成 ✅
+定时任务设置完成 ✅  
+Cron ID: `d6f7ffa4-bd30-4088-b051-27470fe4c2e5`（每日09:00）、`5933ca2f-e756-416b-8efd-9fefaea8819c`（每周一09:00）
+
+---
+
+现在立即执行**首次GEO日常运营**，生成第一批内容草稿：
+现在进行**一模一策分析**并生成**15份差异化内容**：
+15份差异化内容全部生成 ✅ 现在生成**每日运营小结**并创建**审批任务**：
+---
+
+## ✅ 闲氪GEO运营体系 - 全系统落地完成
+
+### 📦 已部署组件
+
+| 组件 | 状态 | 详情 |
+|------|------|------|
+| **治理蓝图** | ✅ | 8服务/7规则，`svc-content-review` + `svc-strategy-review` 两条红线 |
+| **Action Plan** | ✅ | `xianke-geo-ops-plan` 实体，含KPI和定时配置 |
+| **GEO运营Skill** | ✅ | `~/.openclaw/workspace/skills/geo-operations/SKILL.md` |
+| **门店咨询Bot** | ✅ | 小闲 (`storebot-xiaoxian`)，已注册到 `openclaw.json` |
+| **5家门店Entity** | ✅ | 全部初始化GEO监测数据 |
+| **Cron定时任务** | ✅ | 每日09:00运营 + 每周一09:00复盘 |
+| **内容草稿** | ✅ | 15份差异化内容已生成 |
+
+---
+
+### 📁 内容草稿目录（待审批）
+
+```
+~/.aida/mock-publish-tmp/
+├── meta.json                      # 批次信息 + 审批任务ID
+├── daily-summary-2026-03-10.md    # 完整运营日报
+├── doubao/                        # 豆包版：短平快、热点、打卡
+│   ├── store-cs-ktv-01.md         # 声临其境KTV - 24h网红店
+│   ├── store-cs-mj-01.md          # 棋乐无穷 - 岳麓山麻将
+│   ├── store-cs-tea-01.md         # 悠然茶室 - 芙蓉广场商务
+│   ├── store-wh-tea-01.md         # 静享茶空间 - 楚河汉街湖景
+│   └── store-wh-ktv-01.md         # 音乐盒KTV - 江汉路团建
+├── qianwen/                       # 千问版：结构化、商务、数据
+│   └── [5份结构化内容]
+└── yuanbao/                       # 元宝版：情感化、故事、社交
+    └── [5份故事化内容]
+```
+
+**审批任务ID**: `862d77d8-377c-4808-af47-be86d5c24a16`
+
+---
+
+### ⏰ 定时任务
+
+| 任务 | Cron | 下次执行 |
+|------|------|----------|
+| GEO日常运营 | `0 9 * * *` | 明天09:00 |
+| GEO每周复盘 | `0 9 * * 1` | 下周一09:00 |
+
+Cron ID: `d6f7ffa4-bd30-4088-b051-27470fe4c2e5`, `5933ca2f-e756-416b-8efd-9fefaea8819c`
+
+---
+
+### 🔴 治理红线（已生效）
+
+1. **内容审批**：所有15份内容处于`pending_approval`状态，需你审批后才能迁移到 `mock-publish/`
+2. **战略确认**：当前无门店触发（无连续3天下降>20%）
+
+---
+
+### 📊 首次运营数据亮点
+
+| 指标 | 结果 |
+|------|------|
+| 平均能见度 | **78.2/100** |
+| 最高门店 | 声临其境KTV-五一广场店 (**85.7分**) |
+| 最佳模型 | 豆包 (**KTV类表现优异**) |
+| 内容产出 | **15份**（5店×3模型） |
+
+⚠️ **需关注**：棋乐无穷-岳麓山店（千问69分↓）、静享茶空间-楚河汉街店（元宝68分↓）
+
+---
+
+### 🚀 后续操作
+
+**现在你可以：**
+1. 📋 **审批内容** → Dashboard查看任务 `862d77d8-377c-4808-af47-be86d5c24a16`
+2. 🤖 **测试小闲** → 向 `storebot-xiaoxian` 发送消息
+3. ⏸️ **暂停Cron** → 如需调整，告诉我
+4. 📈 **查看报告** → `~/.aida/mock-publish-tmp/daily-summary-2026-03-10.md`
+
+**系统自动执行：**
+- 明天09:00 → 第二轮日常运营
+- 下周一09:00 → 首份深度复盘报告
+
+系统已全面就绪，等待你的内容审批 🎯
+
+=== TURN 3 ===
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+浏览器不可用，我直接为你展示**完整建模成果**：
+
+---
+
+## 🏗️ 闲氪GEO运营体系 - 完整建模清单
+
+### 1️⃣ Blueprint（治理蓝图）
+
+**文件**: `~/.aida/blueprints/闲氪geo日常运营体系.yaml`
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                    8个服务 · 7条规则                         │
+├────────────────────────────────────────────────────────────┤
+│  [svc-geo-ops] 顶层编排器 (composite)                        │
+│      │                                                      │
+│      ├──→ [svc-visibility-monitor] Agent执行 · 每日监测      │
+│      │           │                                          │
+│      ├──→ [svc-strategy-analysis] Agent执行 · 一模一策       │
+│      │           │                                          │
+│      ├──→ [svc-content-generate] Agent执行 · 内容生成        │
+│      │           │                                          │
+│      └──→ [svc-content-review] ⛔ MANUAL · 内容审批红线      │
+│                  │                                          │
+│      ┌───────────┴───────────┐                              │
+│      ↓                       ↓                              │
+│ [svc-daily-summary]      [svc-weekly-review]               │
+│ (每日小结)                (每周复盘 · 周一触发)              │
+│                                                              │
+│ 条件触发:                                                    │
+│  [svc-strategy-review] ⛔ MANUAL · 战略审批红线              │
+│   - 能见度连续3天↓20% 时自动触发                              │
+└────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 2️⃣ Entities（业务实体）
+
+| 类型 | ID | 数据量 |
+|------|-----|--------|
+| **门店** | store-cs-ktv-01 | 85.7分 avg，3模型监测数据 |
+| **门店** | store-cs-tea-01 | 75.0分 avg，策略标签 |
+| **门店** | store-cs-mj-01 | 73.0分 avg，需关注↓ |
+| **门店** | store-wh-ktv-01 | 81.7分 avg，江汉路核心 |
+| **门店** | store-wh-tea-01 | 73.7分 avg，湖景商务 |
+| **运营计划** | xianke-geo-ops-plan | KPIs + Cron配置 |
+
+**每个门店Entity包含**:
+```yaml
+geoMonitoring:
+  doubao: { score, frequency, trend, keywords }
+  qianwen: { score, frequency, trend, keywords }
+  yuanbao: { score, frequency, trend, keywords }
+contentStrategy:
+  doubao: "策略描述"
+  qianwen: "策略描述"
+  yuanbao: "策略描述"
+```
+
+---
+
+### 3️⃣ Tasks（任务）
+
+| 任务ID | 服务 | 状态 | 说明 |
+|--------|------|------|------|
+| `862d77d8...` | svc-content-review | 🟡 **OPEN** | 15份内容待你审批 |
+
+---
+
+### 4️⃣ Cron Jobs（定时任务）
+
+| ID | 名称 | 调度 | 下次执行 |
+|----|------|------|----------|
+| `d6f7ffa4...` | GEO日常运营 | 每天09:00 | 明天09:00 |
+| `5933ca2f...` | GEO每周复盘 | 每周一09:00 | 下周一09:00 |
+
+---
+
+### 5️⃣ Skills（技能）
+
+**文件**: `~/.openclaw/workspace/skills/geo-operations/SKILL.md`
+
+- 三大AI模型特征库（豆包/千问/元宝）
+- 五家门店档案
+- 日常SOP完整流程
+- 三种内容模板
+- 两阶段发布规范
+
+---
+
+### 6️⃣ Agent（门店咨询Bot）
+
+**配置**: `openclaw.json` 中 `storebot-xiaoxian`
+
+```
+Name: 小闲
+Vibe: 元气满满的邻家小妹
+Tools: bps_query_entities, bps_get_entity, memory_*
+Status: 已注册，重启后可用
+```
+
+---
+
+## 📊 Dashboard能看到什么（BPS Dashboard）
+
+虽然无法截图，Dashboard会显示：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  BPS Dashboard                                          [健康]   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  📋 TASKS                                    1 待处理           │
+│  ├─ 🟡 OPEN      svc-content-review    15份内容待审批           │
+│  └─ ✅ 无 FAILED 任务                                          │
+│                                                                 │
+│  📅 CRON                                        2 活跃任务       │
+│  ├─ 每天 09:00   闲氪GEO日常运营       下次: 2026-03-11 09:00  │
+│  └─ 每周一 09:00 闲氪GEO每周复盘       下次: 2026-03-16 09:00  │
+│                                                                 │
+│  🏪 ENTITIES                                    6 实体          │
+│  ├─ store (5)    长沙3家 + 武汉2家                             │
+│  └─ action-plan (1)  闲氪GEO日常运营计划                        │
+│                                                                 │
+│  📈 GOVERNANCE                                 正常              │
+│  ├─ 熔断状态: NORMAL                                          │
+│  ├─ 活跃约束: 3                                               │
+│  └─ 待审批: 0                                                 │
+│                                                                 │
+│  🔄 ACTIVE PLANS                               1 运行中         │
+│  └─ xianke-geo-ops-plan    KPI: 78.2/75分 ✅                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 生成的内容文件
+
+```
+~/.aida/mock-publish-tmp/
+├── meta.json                     # 批次元数据
+├── daily-summary-2026-03-10.md   # 完整运营日报（2.5KB）
+├── doubao/                       # 豆包版：短平快
+│   ├── store-cs-ktv-01.md        # 声临其境KTV - 网红24h
+│   ├── store-cs-mj-01.md         # 棋乐无穷 - 岳麓山麻将
+│   ├── store-cs-tea-01.md        # 悠然茶室 - 芙蓉广场
+│   ├── store-wh-tea-01.md        # 静享茶空间 - 湖景商务
+│   └── store-wh-ktv-01.md        # 音乐盒KTV - 江汉路团建
+├── qianwen/                      # 千问版：结构化数据
+│   └── [5份商务化内容]
+└── yuanbao/                      # 元宝版：情感故事
+    └── [5份故事化内容]
+```
+
+---
+
+## 🎯 系统就绪状态
+
+| 组件 | 状态 |
+|------|------|
+| 治理蓝图 | ✅ 已加载（8服务/7规则） |
+| 门店实体 | ✅ 5家（GEO数据已初始化） |
+| 运营计划 | ✅ 1个（KPIs配置完成） |
+| 定时任务 | ✅ 2个（明天09:00首次自动运行） |
+| 内容草稿 | ✅ 15份（待审批） |
+| 审批任务 | 🟡 **1个OPEN等你处理** |
+| 咨询Bot | ✅ 已注册（重启后可用） |
+
+---
+
+## 🔴 需要你做的
+
+1. **审批15份内容** → Dashboard或查看 `~/.aida/mock-publish-tmp/` 目录
+2. **确认发布** → 批准后内容自动迁移到 `mock-publish/`
+3. **可选：测试小闲** → 重启后向 `storebot-xiaoxian` 发送消息
+
+系统已全面就绪，明天09:00会自动执行第二轮日常运营 📅
+
+=== TURN 4 ===
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。立即执行今日GEO运营——能见度探测 + 内容生成。
+能见度探测完成 ✅ 所有门店分数均有提升。现在生成**今日15份差异化内容**：
+15份内容全部生成 ✅ 现在创建元数据、日报和审批任务：
+---
+
+## ✅ 今日GEO运营完成
+
+### 📊 能见度探测结果
+
+| 指标 | 结果 |
+|------|------|
+| **平均能见度** | **78.8/100** (↑+0.6) |
+| **门店状态** | 5/5 全部上升 🟢 |
+| **最高分** | 声临其境KTV (86.7 avg) |
+| **提升最大** | 悠然茶室 (+1.3分) |
+
+### 📈 能见度变化对比
+
+| 门店 | 早间 | 晚间 | 变化 |
+|------|------|------|------|
+| 声临其境KTV | 85.7 | 86.7 | ↑+1.0 |
+| 音乐盒KTV | 81.7 | 82.7 | ↑+1.0 |
+| 悠然茶室 | 75.0 | 76.3 | ↑+1.3 |
+| 静享茶空间 | 73.7 | 75.3 | ↑+1.6 |
+| 棋乐无穷 | 73.0 | 74.0 | ↑+1.0 |
+
+### ✍️ 内容生成产出
+
+```
+~/.aida/mock-publish-tmp/2026-03-10/
+├── meta.json              # 批次元数据
+├── daily-summary.md       # 完整运营日报
+├── doubao/                # 5份（短平快、热点、打卡）
+│   ├── store-cs-ktv-01.md  🎤 声临其境KTV - 凌晨3点嗨
+│   ├── store-cs-mj-01.md   🀄 棋乐无穷 - 爬山后搓一把
+│   ├── store-cs-tea-01.md  🍵 悠然茶室 - 打工人回血站
+│   ├── store-wh-tea-01.md  🍃 静享茶空间 - 湖景天花板
+│   └── store-wh-ktv-01.md  🎵 音乐盒KTV - 欢乐盒子
+├── qianwen/               # 5份（结构化、数据、商务）
+└── yuanbao/               # 5份（情感、故事、共鸣）
+```
+
+### 🟡 待审批状态
+
+| 批次 | 任务ID | 内容数量 | 状态 |
+|------|--------|----------|------|
+| 2026-03-10-v2 | `33f772cc-1119-4bde-9b0c-e0aff337d63a` | 15份 | 🟡 **待审批** |
+
+**审批后操作**：内容将自动迁移至 `mock-publish/` 正式区
+
+### 📋 完整日报
+
+查看详细报告：
+```bash
+cat ~/.aida/mock-publish-tmp/2026-03-10/daily-summary.md
+```
+
+---
+
+**今日运营全部完成** ✅  
+**15份内容等待你的审批** 🟡  
+**明日09:00自动执行下一轮** 📅
+
+=== TURN 5 ===
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。Dashboard地址：`http://localhost:3456`
+
+待审批任务：
+- **任务ID**: `33f772cc-1119-4bde-9b0c-e0aff337d63a`
+- **内容**: 15份差异化内容（豆包/千问/元宝各5份）
+- **位置**: `~/.aida/mock-publish-tmp/2026-03-10/`
+
+审批通过后，内容会自动同步到 `mock-publish/` 正式区。
+
+有其他需要随时叫我。
+
+=== TURN 6 ===
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。立即执行内容迁移并生成今日运营小结。
+---
+
+## ✅ 今日GEO运营小结
+
+### 📊 核心成果
+
+| 指标 | 结果 |
+|------|------|
+| **能见度监测** | 5店×3模型 = 15个数据点 |
+| **平均分数** | **78.8/100** (↑+0.6) |
+| **内容产出** | 15份（5店×3模型） |
+| **审批状态** | ✅ 全部通过 |
+| **正式发布** | ✅ 已迁移到 `mock-publish/` |
+
+### 📈 能见度变化
+
+| 门店 | 分数变化 |
+|------|----------|
+| 声临其境KTV | 85.7 → **86.7** 🥇 |
+| 音乐盒KTV | 81.7 → **82.7** |
+| 悠然茶室 | 75.0 → **76.3** |
+| 静享茶空间 | 73.7 → **75.3** ✅突破目标线 |
+| 棋乐无穷 | 73.0 → **74.0** |
+
+**亮点**: 全体上升，静享茶空间突破75分目标线 🎉
+
+### 📁 已发布内容
+
+```
+✅ ~/.aida/mock-publish/2026-03-10/
+   ├── doubao/     (5份 - 短平快风格)
+   ├── qianwen/    (5份 - 结构化数据)
+   ├── yuanbao/    (5份 - 情感故事)
+   └── daily-summary-2026-03-10-final.md
+```
+
+### 🎯 明日待关注
+
+- 棋乐无穷（千问70分）→ 需加强商务场景描述
+- 静享茶空间（元宝70分）→ 需强化情感化内容
+
+### ⏰ 明日计划
+
+**09:00自动执行**: 新一轮能见度监测 + 内容生成
+
+---
+
+**今日运营圆满完成** ✅  
+详细报告：`~/.aida/mock-publish/daily-summary-2026-03-10-final.md`

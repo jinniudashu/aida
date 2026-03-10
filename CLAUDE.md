@@ -236,8 +236,8 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **业务场景端到端验证**：`server/simulate.ts` 注入晨光咖啡三店标准化运营完整场景
   - 测试服务器 `http://47.236.109.62:3456` 全部页面数据可见
   - 三频操作全景 + HITL 审批闭环 + 动态 Skill 创建记录
-- **工具总览**：14 BPS tools + 3 MCP tools
-  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_governance_status
+- **工具总览**：15 BPS tools + 3 MCP tools
+  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_governance_status, bps_load_governance
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### 端到端能力验证 -- 基础设施级（2026-03-05）
@@ -463,8 +463,34 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - D1+D2 = 9.0/10 ≥ 7.5（**已达标** ✓）
   - HARD 通过率 100%, FAIL 数 0
 - **剩余差距**：ARCHITECTURE 归因（governance 热加载 + blueprint 编译器 flow.rules 支持）
+- **架构修复已落地**（2026-03-10）：
+  - `bps_load_governance` tool (#15)：运行时重载 governance.yaml，支持 `policies[]` 和 flat `constraints[]` 两种格式
+  - `governance-loader.ts` 增强：flat `constraints[]` 自动包装为 policy + 字段规范化（`action` → `onViolation`，缺省 `scope.tools` → 全部写操作工具）
+  - Blueprint compiler `flow.rules` 支持：`isSimplifiedFormat()` 检测 `flow: { rules: [{when, then}] }` 对象格式，`compileBlueprint()` 自动转换为 DSL arrows
+  - 8 新测试（governance loader flat format 2 + bps_load_governance tool 1 + flow.rules 5），总计 399 tests
+- **BPS tools**：15 个（+bps_load_governance）
 - **下一步**：Round 3 预处理 Skill 提炼，将 v0.1→v0.2 改进经验沉淀为可复用规则
 - 评估报告：`test/e2e/maor-results/r1-kimi-k2.5/EVALUATION.md` (R1) + `EVALUATION-R2.md` (R2)
+
+### 多模型基准测试 R4（2026-03-10）
+- 综合报告：`test/e2e/benchmark/results/R4-BENCHMARK-REPORT-CN.md`
+- **方法论改进**：固定评估者（Claude Opus 4.6）+ 干净环境 + 制品导向评分
+- **排名**：Kimi K2.5 (6.40) > Qwen3.5+ (5.85) > GPT-5.4 (4.75) > GLM-5 (4.15) > Claude (2.80) > Gemini (2.40)
+- **关键发现**：Kimi K2.5 唯一触发真实治理拦截；所有模型 0 cron；behavior.json 工具调用观测方法失效
+- **横向问题**：「说而不做」反模式普遍；治理绕过（文件 I/O）连续 4 轮复现
+
+### 多模型基准测试 R5 — 框架验证轮（2026-03-10）
+- 综合报告：`test/e2e/benchmark/results/R5-BENCHMARK-REPORT-CN.md`
+- **目标**：验证 R4→R5 的 5 项框架修正（Session JSONL 解析、Cron 检测、进程清理、两阶段发布、模型覆盖）
+- **框架验证**：4/5 修正确认生效，Session JSONL 解析首次捕获真实工具调用数据（84 calls / 11 BPS tool types）
+- **P0 Bug**：模型覆盖（overlay）机制失效 — `idlex-geo-v3.sh` Phase 0 重新运行 `install-aida.sh` 覆盖了 benchmark overlay，导致全 6 模型均以 Qwen3.5-Plus 运行
+  - 修复已落地：`BENCHMARK_MODE=1` 环境变量跳过重复安装
+- **Qwen3.5-Plus 3 次独立运行方差分析**：
+  - 运行 A (GPT标签): 84 calls, 18 published, 0 governance — 产出驱动型
+  - 运行 B (Claude标签): 64 calls, 11 BPS types, 2 violations — 架构驱动型
+  - 运行 C (Qwen标签): 47P/0F/1W, 2 violations + 2 approved — **均衡型，首次完整治理闭环**
+- **最佳成绩**：运行 C 加权评分 **7.75/10**（AIDA 基准测试历史最高），6 维度全 8 分
+  - **突破**：Cron 100% 创建成功（R4 全军覆没）、治理闭环首次端到端验证（trigger→approve→publish）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

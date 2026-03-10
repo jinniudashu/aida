@@ -3,9 +3,6 @@
   "name": "Claude Opus 4.6",
   "primary": "openrouter/anthropic/claude-opus-4.6",
   "provider": "openrouter",
-  "startedAt": "2026-03-10T04:57:19.466Z",
-  "benchmarkVersion": "R4",
-  "completedAt": "2026-03-10T05:14:02.900Z",
-  "durationSeconds": 1003,
-  "e2eResult": "38 PASS / 1 FAIL / 6 WARN"
+  "startedAt": "2026-03-10T12:35:29.985Z",
+  "benchmarkVersion": "R4"
 }

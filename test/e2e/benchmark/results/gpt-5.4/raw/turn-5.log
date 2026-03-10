@@ -1,0 +1,12 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。Dashboard地址：`http://localhost:3456`
+
+待审批任务：
+- **任务ID**: `33f772cc-1119-4bde-9b0c-e0aff337d63a`
+- **内容**: 15份差异化内容（豆包/千问/元宝各5份）
+- **位置**: `~/.aida/mock-publish-tmp/2026-03-10/`
+
+审批通过后，内容会自动同步到 `mock-publish/` 正式区。
+
+有其他需要随时叫我。

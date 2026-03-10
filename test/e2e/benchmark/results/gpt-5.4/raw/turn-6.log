@@ -1,0 +1,52 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+收到。立即执行内容迁移并生成今日运营小结。
+---
+
+## ✅ 今日GEO运营小结
+
+### 📊 核心成果
+
+| 指标 | 结果 |
+|------|------|
+| **能见度监测** | 5店×3模型 = 15个数据点 |
+| **平均分数** | **78.8/100** (↑+0.6) |
+| **内容产出** | 15份（5店×3模型） |
+| **审批状态** | ✅ 全部通过 |
+| **正式发布** | ✅ 已迁移到 `mock-publish/` |
+
+### 📈 能见度变化
+
+| 门店 | 分数变化 |
+|------|----------|
+| 声临其境KTV | 85.7 → **86.7** 🥇 |
+| 音乐盒KTV | 81.7 → **82.7** |
+| 悠然茶室 | 75.0 → **76.3** |
+| 静享茶空间 | 73.7 → **75.3** ✅突破目标线 |
+| 棋乐无穷 | 73.0 → **74.0** |
+
+**亮点**: 全体上升，静享茶空间突破75分目标线 🎉
+
+### 📁 已发布内容
+
+```
+✅ ~/.aida/mock-publish/2026-03-10/
+   ├── doubao/     (5份 - 短平快风格)
+   ├── qianwen/    (5份 - 结构化数据)
+   ├── yuanbao/    (5份 - 情感故事)
+   └── daily-summary-2026-03-10-final.md
+```
+
+### 🎯 明日待关注
+
+- 棋乐无穷（千问70分）→ 需加强商务场景描述
+- 静享茶空间（元宝70分）→ 需强化情感化内容
+
+### ⏰ 明日计划
+
+**09:00自动执行**: 新一轮能见度监测 + 内容生成
+
+---
+
+**今日运营圆满完成** ✅  
+详细报告：`~/.aida/mock-publish/daily-summary-2026-03-10-final.md`

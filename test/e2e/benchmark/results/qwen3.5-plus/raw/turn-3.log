@@ -1,0 +1,180 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+建模完成！以下是完整的系统架构和Dashboard视图：
+
+---
+
+## 🏗️ 已创建的完整系统架构
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        闲氪GEO运营体系 - 建模完成                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  📦 实体层 (Entities)                                                    │
+│  ├─ store × 5         门店基础信息（长沙3家+武汉2家）                       │
+│  ├─ action-plan × 1   GEO日常运营体系总计划                               │
+│  ├─ geo-strategy × 2  Q1总战略 + 今日策略                                 │
+│  └─ geo-content × N   内容批次（触发审批中）                               │
+│                                                                         │
+│  🔧 服务层 (Services)                                                    │
+│  ├─ svc-geo-daily-monitor        每日能见度监测（agent执行）               │
+│  ├─ svc-geo-strategy-analysis    一模一策分析（agent执行）                 │
+│  ├─ svc-geo-content-generate     内容生成（agent执行）                     │
+│  ├─ svc-geo-report-daily         日报生成（agent执行）                     │
+│  ├─ svc-geo-report-weekly        周报生成（agent执行）                     │
+│  ├─ svc-geo-content-approval     内容发布审批（manual人工）                │
+│  └─ svc-geo-strategy-approval    战略调整审批（manual人工）                │
+│                                                                         │
+│  🛠️ 技能层 (Skills)                                                     │
+│  ├─ geo-monitoring    能见度监测逻辑                                      │
+│  ├─ geo-strategy      一模一策算法                                        │
+│  ├─ geo-content       内容生成引擎                                        │
+│  └─ geo-reporting     报告生成器                                          │
+│                                                                         │
+│  🤖 Agent层                                                             │
+│  └─ 闲氪小助手        门店咨询Bot（workspace-store-bot）                  │
+│                                                                         │
+│  ⏰ 调度层 (Cron)                                                        │
+│  ├─ 每日09:00         完整运营流程自动执行                                │
+│  └─ 每周一10:00       深度复盘自动执行                                    │
+│                                                                         │
+│  🔒 治理层 (Governance)                                                  │
+│  ├─ 内容发布审批规则  publishReady=true → 拦截 → 人工审批                 │
+│  └─ 战略调整审批规则  major change → 拦截 → 人工审批                      │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Dashboard 能看到什么
+
+**Dashboard URL**: `http://{server}:3456`
+
+### 1. 工作全景视图 (`bps_scan_work`)
+
+| 区域 | 当前状态 |
+|------|----------|
+| 🔴 Failed Tasks | 0 （无失败任务） |
+| 📋 Open Tasks | 0 （无待处理任务） |
+| 🔄 In Progress | 0 （无进行中任务） |
+| ✅ Recently Completed | 0 （最近完成） |
+| 📅 Active Plans | **1** （GEO日常运营体系） |
+
+### 2. 服务目录 (22个服务)
+
+**GEO专属服务（7个）**：
+| 服务ID | 类型 | 执行者 | 状态 |
+|--------|------|--------|------|
+| svc-geo-daily-monitor | atomic | agent | ✅ active |
+| svc-geo-strategy-analysis | atomic | agent | ✅ active |
+| svc-geo-content-generate | atomic | agent | ✅ active |
+| svc-geo-report-daily | atomic | agent | ✅ active |
+| svc-geo-report-weekly | atomic | agent | ✅ active |
+| svc-geo-content-approval | atomic | **manual** | ✅ active |
+| svc-geo-strategy-approval | atomic | **manual** | ✅ active |
+
+### 3. 实体数据
+
+**门店实体 (store)**: 5家
+- store-cs-ktv-01: 声临其境KTV-五一广场店
+- store-cs-tea-01: 悠然茶室-芙蓉广场店
+- store-cs-mj-01: 棋乐无穷-岳麓山店
+- store-wh-ktv-01: 音乐盒KTV-江汉路店
+- store-wh-tea-01: 静享茶空间-楚河汉街店
+
+**战略实体 (geo-strategy)**: 2个
+- master-strategy-2026Q1: Q1总战略
+- strategy-2026-03-10: 今日策略
+
+### 4. 定时任务状态
+
+| 任务ID | 名称 | 调度 | 下次执行 | 状态 |
+|--------|------|------|----------|------|
+| aae0fd23... | GEO每日运营-监测 | 每天09:00 | 明天09:00 | ✅ enabled |
+| 1affe5aa... | GEO每周复盘 | 每周一10:00 | 下周一10:00 | ✅ enabled |
+
+### 5. 审批队列 (Approval Queue)
+
+**当前待审批**: 
+- 审批ID: `42b7dc9f-f060-46f9-b27b-936520c59d90`
+- 类型: 内容发布
+- 内容: 5条GEO优化内容草稿
+- 提交时间: 2026-03-10
+- 状态: ⏳ 等待你的审批
+
+---
+
+## 📁 文件系统视图
+
+```
+~/.aida/
+├── INDEX.md                    # 📘 系统总索引
+├── GEO-OPS-GUIDE.md            # 📗 运营指南
+├── governance.yaml             # 🔒 治理规则配置
+├── geo-reports/
+│   ├── daily/2026-03-10.md     # 📊 今日日报
+│   ├── weekly/2026-W10.md      # 📈 本周周报
+│   └── data/monitor-2026-03-10.json  # 原始数据
+├── mock-publish-tmp/           # 📝 草稿区
+│   ├── douyin/                 # 豆包内容
+│   ├── zhihu/                  # 千问内容
+│   ├── wechat/                 # 元宝内容
+│   └── APPROVAL-QUEUE.md       # 审批队列
+└── blueprints/
+    └── blueprint.yaml          # GEO蓝图
+
+~/.openclaw/workspace/
+└── skills/
+    ├── geo-monitoring/SKILL.md
+    ├── geo-strategy/SKILL.md
+    ├── geo-content/SKILL.md
+    └── geo-reporting/SKILL.md
+
+~/.openclaw/workspace-store-bot/  # 🤖 门店Bot
+    ├── IDENTITY.md
+    ├── SOUL.md
+    ├── AGENTS.md
+    └── agent-config.json
+```
+
+---
+
+## 🎯 今日策略详情 (Dashboard可查看)
+
+### 高优先级行动（已自动生成）
+
+| 优先级 | 门店 | 模型 | 能见度 | 策略 | 动作 |
+|--------|------|------|--------|------|------|
+| 🔴 HIGH | 棋乐无穷-岳麓山店 | 豆包 | 52 | 重点突破 | 增加短视频曝光、绑定岳麓山旅游场景 |
+| 🔴 HIGH | 棋乐无穷-岳麓山店 | 千问 | 48 | 基础重建 | 重新提交Schema数据、修复地址准确性 |
+| 🟡 MEDIUM | 悠然茶室-芙蓉广场店 | 千问 | 58 | 针对性优化 | 增加实用攻略内容 |
+
+### 表现优异（无需干预）
+
+| 门店 | 模型 | 能见度 | 策略 |
+|------|------|--------|------|
+| 声临其境KTV | 豆包 | 78 | 巩固优势 |
+| 声临其境KTV | 元宝 | 75 | 巩固优势 |
+| 音乐盒KTV | 元宝 | 73 | 巩固优势 |
+
+---
+
+## 🚀 你现在可以通过Dashboard做
+
+1. **查看审批队列** → 审批/拒绝待发布内容
+2. **监控任务状态** → 查看每日运营执行进度
+3. **查看实体数据** → 浏览门店、策略、内容实体
+4. **管理服务** → 查看22个服务的状态和配置
+5. **查看报告** → 直接阅读日报/周报
+
+**或让我帮你**：
+- "展示今日生成的内容草稿"
+- "审批通过这批内容"
+- "启动门店咨询Bot"
+- "查看棋乐无穷的详细策略"
+
+---
+
+**系统建模100%完成！** 🎉

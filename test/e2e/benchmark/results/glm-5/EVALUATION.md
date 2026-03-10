@@ -1,3 +1,5 @@
+> **R5 说明**: R5 测试因模型覆盖 bug 导致错误模型运行，本模型的 R5 数据无效。以下内容为 R4 评估结果，保持不变。
+
 # GLM-5 Benchmark Evaluation
 
 **Benchmark Version**: R4

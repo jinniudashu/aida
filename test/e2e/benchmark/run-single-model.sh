@@ -49,7 +49,7 @@ node -e '
     primary: process.argv[3],
     provider: process.argv[4],
     startedAt: new Date().toISOString(),
-    benchmarkVersion: "R4",
+    benchmarkVersion: "R5",
   }, null, 2));
 ' "$MODEL_ID" "$NAME" "$PRIMARY" "$PROVIDER" > "$OUT/model-info.json"
 
@@ -73,9 +73,12 @@ done
 section "Step 1/5: Clean Remote Environment"
 log "Stopping services + wiping state..."
 
+# Kill stale test processes first (from previous model runs)
+ssh_run 'ps aux | grep -E "idlex-geo|openclaw.agent" | grep -v grep | while read u p rest; do kill -9 "$p" 2>/dev/null; done; echo ok' || true
+
 # Stop services (separate SSH calls to avoid pkill killing our own session)
 ssh_run 'systemctl stop bps-dashboard 2>/dev/null; systemctl stop openclaw-gateway 2>/dev/null; echo ok' || true
-ssh_run 'pkill -f "openclaw gate[w]ay" 2>/dev/null; echo ok' || true
+ssh_run 'ps aux | grep -E "openclaw-gateway|openclaw-agent" | grep -v grep | while read u p rest; do kill -9 "$p" 2>/dev/null; done; echo ok' || true
 sleep 3
 
 ssh_run '
@@ -137,7 +140,7 @@ section "Step 3/5: Run E2E Test (6 turns)"
 log "Running idlex-geo-v3.sh (timeout: ${AGENT_TIMEOUT}s per turn)..."
 log "This will take ~15-30 minutes..."
 
-E2E_OUTPUT=$(ssh_long "cd $REMOTE_REPO && set -a && source $REMOTE_TMP/api-keys.env && set +a && bash test/e2e/idlex-geo-v3.sh 2>&1" 2>&1 || true)
+E2E_OUTPUT=$(ssh_long "cd $REMOTE_REPO && set -a && source $REMOTE_TMP/api-keys.env && set +a && BENCHMARK_MODE=1 bash test/e2e/idlex-geo-v3.sh 2>&1" 2>&1 || true)
 
 # Save full e2e output
 echo "$E2E_OUTPUT" > "$OUT/e2e-test.log"

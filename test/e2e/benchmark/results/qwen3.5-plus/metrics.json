@@ -1,9 +1,11 @@
 {
-  "timestamp": "2026-03-10T06:46:23.423Z",
+  "timestamp": "2026-03-10T12:34:32.998Z",
   "entities": {
     "total": 13,
     "byType": {
-      "geo-store": 5,
+      "geo-content": 2,
+      "geo-strategy": 2,
+      "geo-monitoring": 1,
       "action-plan": 1,
       "store": 5,
       "knowledge": 2
@@ -11,7 +13,7 @@
   },
   "governance": {
     "constraints": 3,
-    "violations": 0,
+    "violations": 2,
     "approvals": {
       "total": 0,
       "pending": 0,
@@ -20,32 +22,26 @@
     },
     "circuitBreaker": {
       "state": "NORMAL",
-      "lastStateChange": "2026-03-10T06:46:21.407Z"
+      "lastStateChange": "2026-03-10T12:31:31.653Z"
     }
   },
-  "skills": 18,
+  "skills": 11,
   "skillNames": [
     "geo-strategy",
-    "geo-monitor",
-    "geo-strategy-analyzer",
     "blueprint-modeling",
+    "geo-reporting",
     "geo-content",
-    "geo-daily-report",
     "business-execution",
-    "geo-visibility-monitor",
-    "geo-weekly-review",
-    "geo-content-generator",
     "dashboard-guide",
-    "geo-publish",
     "action-plan",
-    "geo-report",
     "agent-create",
-    "geo-content-publisher",
+    "geo-monitoring",
     "skill-create",
     "project-init"
   ],
   "agentWorkspaces": 1,
-  "blueprintFiles": 3,
-  "mockPublishFiles": 73,
-  "cronJobs": 0
+  "blueprintFiles": 1,
+  "mockPublishFiles": 10,
+  "mockPublishDraftFiles": 2,
+  "cronJobs": 2
 }

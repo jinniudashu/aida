@@ -124,8 +124,12 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   cd "$AIDA_REPO"
   git pull --no-recurse-submodules 2>&1 | tail -3 || true
 
-  log "Running install-aida.sh (includes Gateway auth setup)..."
-  bash deploy/install-aida.sh
+  if [[ "${BENCHMARK_MODE:-}" != "1" ]]; then
+    log "Running install-aida.sh (includes Gateway auth setup)..."
+    bash deploy/install-aida.sh
+  else
+    log "BENCHMARK_MODE=1 — skipping install-aida.sh (model overlay already configured by install-benchmark.sh)"
+  fi
 
   log "Starting OpenClaw gateway..."
   openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero"
