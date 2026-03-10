@@ -494,21 +494,21 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 
 ### 多模型基准测试 R6 — 首轮真正跨模型对比（2026-03-10）
 - 综合报告：`test/e2e/benchmark/results/R6-BENCHMARK-REPORT-CN.md`
-- **目标**：修复 R5 模型 overlay bug 后的首轮真正跨模型对比（5/6 模型完成，Gemini 框架安装崩溃）
+- **目标**：修复 R5 模型 overlay bug 后的首轮真正跨模型对比（6/6 模型完成，Gemini 重跑后成功）
 - **框架修复**：`BENCHMARK_MODE=1` 时跳过整个 Phase 0 body（R5 修复不完整：仅跳过 install-aida.sh，Phase 0 清理步骤仍摧毁 benchmark 环境）
 - **排名**：
-  1. **Kimi K2.5** (8.70/10) — 45P/0F/3W，**唯一完成完整治理闭环**（violations→approval→publish）
-  2. GPT-5.4 (7.85/10) — 44P/0F/3W，最多实体(47)，业务理解出色
-  3. Claude Opus 4.6 (7.55/10) — 43P/1F/4W，最强响应质量，发布最多(15)
-  3. Qwen3.5-Plus (7.55/10) — 42P/0F/5W，最多蓝图(2)，最强自进化
-  5. GLM-5 (1.10/10) — 33P/1F/13W，陷入诊断循环（12 turns 仅 1 次 BPS 调用）
-- **R4→R6 验证**：排名趋势一致（Kimi 保持第一），GPT 提升最大(+3.10)，前 4 名均达 7.5+ 生产可用水平
+  1. **Kimi K2.5** (8.70/10) — 45P/0F/3W，零 FAIL + 完整治理闭环
+  2. **Gemini 3.1 Pro** (8.30/10) — 45P/1F/2W，最多治理触发(14)，完整闭环
+  3. GPT-5.4 (7.85/10) — 44P/0F/3W，最多实体(47)，业务理解出色
+  4. Claude Opus 4.6 (7.55/10) — 43P/1F/4W，最强响应质量，发布最多(15)
+  4. Qwen3.5-Plus (7.55/10) — 42P/0F/5W，最多蓝图(2)，最强自进化
+  6. GLM-5 (1.10/10) — 33P/1F/13W，陷入诊断循环
 - **关键发现**：
-  - 治理闭环是最大分化维度：Kimi 完整 > Claude 大部分 > Qwen/GLM 未闭合
-  - 执行完整度 > 创建数量：Qwen 创建最多实体/蓝图但 0 发布，Claude 创建较少但发布 15 个
-  - GLM-5 的"诊断循环"模式：将 retry 解释为"调查前次失败"而非"继续执行"
-- **残留问题（R7）**：`collect-metrics.sh` SSH 崩溃（仅最后模型有 metrics）、Session JSONL 未下载（Step 7 依赖 Step 6）
-- **推荐生产配置**：`moonshot/kimi-k2.5`（主）+ `dashscope/qwen3.5-plus`（备）
+  - 治理闭环是最大分化维度：Gemini(14 violations) + Kimi 完整 > Claude 大部分 > 其余未闭合
+  - 治理合规度 > 创建数量：GPT 创建最多实体(47)但 0 发布，Gemini 最少实体(3)但治理链最完整
+  - 前 5 名均达 7.5+/10 生产可用水平
+- **残留问题（R7）**：`collect-metrics.sh` SSH 崩溃 + "Argument list too long"
+- **推荐生产配置**：`moonshot/kimi-k2.5`（主）+ `google/gemini-3.1-pro-preview`（备）+ `dashscope/qwen3.5-plus`（替补）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

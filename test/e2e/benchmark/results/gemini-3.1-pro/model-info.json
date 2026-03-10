@@ -5,5 +5,8 @@
   "provider": "google",
   "testScript": "test/e2e/idlex-geo-v3.sh",
   "startedAt": "2026-03-10T14:41:35.947Z",
-  "benchmarkVersion": "R6"
+  "benchmarkVersion": "R6",
+  "completedAt": "2026-03-10T14:50:15.409Z",
+  "durationSeconds": 520,
+  "e2eResult": "45 PASS / 1 FAIL / 2 WARN"
 }
