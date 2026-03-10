@@ -3,3 +3,4 @@ dist/
 *.db
 .env
 .dev/
+.test-data/
