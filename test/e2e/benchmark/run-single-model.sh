@@ -247,7 +247,7 @@ ssh_run '
   mkdir -p /tmp/aida-benchmark
 
   tar czf /tmp/aida-benchmark/aida-data.tar.gz \
-    -C "$AIDA_HOME" data/ blueprints/ governance.yaml project.yaml 2>/dev/null || true
+    -C "$AIDA_HOME" data/ blueprints/ management.yaml project.yaml 2>/dev/null || true
 
   tar czf /tmp/aida-benchmark/workspace.tar.gz \
     -C "$OPENCLAW_HOME" workspace/ 2>/dev/null || true

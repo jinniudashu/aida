@@ -15,6 +15,6 @@ export const router = createRouter({
     { path: '/agent-log', component: () => import('./pages/AgentLogPage.vue') },
     { path: '/business-goals', component: () => import('./pages/BusinessGoalsPage.vue') },
     { path: '/approvals', component: () => import('./pages/ApprovalsPage.vue') },
-    { path: '/governance', component: () => import('./pages/GovernancePage.vue') },
+    { path: '/management', component: () => import('./pages/ManagementPage.vue') },
   ],
 })

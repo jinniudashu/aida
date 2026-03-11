@@ -7,7 +7,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { useOverviewStore, useAlertStore, useGovernanceStore, useBusinessGoalsStore, useApprovalsStore } from '../stores'
+import { useOverviewStore, useAlertStore, useManagementStore, useBusinessGoalsStore, useApprovalsStore } from '../stores'
 import { formatDate } from '../utils'
 import type { RecentChange } from '../api'
 
@@ -15,7 +15,7 @@ use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent
 
 const store = useOverviewStore()
 const alertStore = useAlertStore()
-const govStore = useGovernanceStore()
+const mgmtStore = useManagementStore()
 const goalsStore = useBusinessGoalsStore()
 const approvalsStore = useApprovalsStore()
 const interval = ref<'hour' | 'day' | 'week'>('day')
@@ -24,7 +24,7 @@ let unsubs: Array<(() => void) | null> = []
 onMounted(() => {
   unsubs.push(store.subscribe())
   unsubs.push(alertStore.subscribe())
-  unsubs.push(govStore.subscribe())
+  unsubs.push(mgmtStore.subscribe())
   unsubs.push(goalsStore.subscribe())
   unsubs.push(approvalsStore.subscribe('pending'))
   store.fetchTimeSeries(interval.value)
@@ -51,7 +51,7 @@ const byStateEntries = computed(() => Object.entries(store.data?.processes.bySta
 const byTypeEntries = computed(() => Object.entries(store.data?.entities.byType ?? {}))
 
 // Circuit breaker display
-const cbState = computed(() => govStore.status?.circuitBreaker?.state ?? 'NORMAL')
+const cbState = computed(() => mgmtStore.status?.circuitBreaker?.state ?? 'NORMAL')
 const cbTagType = computed(() => {
   const s = cbState.value
   if (s === 'DISCONNECTED') return 'error'
@@ -127,13 +127,13 @@ const chartOption = computed(() => {
               </NTag>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e6">
-              <span style="font-size: 12px; color: #666">Governance:</span>
+              <span style="font-size: 12px; color: #666">Management:</span>
               <NTag :type="cbTagType" size="small">{{ cbState }}</NTag>
-              <span v-if="govStore.status?.constraintCount" style="font-size: 12px; color: #999">
-                {{ govStore.status.constraintCount }} constraint{{ govStore.status.constraintCount > 1 ? 's' : '' }}
+              <span v-if="mgmtStore.status?.constraintCount" style="font-size: 12px; color: #999">
+                {{ mgmtStore.status.constraintCount }} constraint{{ mgmtStore.status.constraintCount > 1 ? 's' : '' }}
               </span>
-              <NBadge v-if="(govStore.status?.recentViolations?.length ?? 0) > 0"
-                :value="govStore.status?.recentViolations?.length"
+              <NBadge v-if="(mgmtStore.status?.recentViolations?.length ?? 0) > 0"
+                :value="mgmtStore.status?.recentViolations?.length"
                 :max="9"
                 type="warning"
                 style="margin-left: auto"
@@ -181,7 +181,7 @@ const chartOption = computed(() => {
                 </NTag>
               </div>
             </div>
-            <!-- Pending governance approvals -->
+            <!-- Pending management approvals -->
             <div v-if="approvalsStore.items.length > 0" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e0e6">
               <div style="font-size: 12px; color: #666; margin-bottom: 4px">
                 Pending Approvals
@@ -195,10 +195,10 @@ const chartOption = computed(() => {
                 +{{ approvalsStore.items.length - 3 }} more...
               </div>
             </div>
-            <!-- Governance violations -->
-            <div v-if="(govStore.status?.recentViolations?.length ?? 0) > 0" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e0e6">
+            <!-- Management violations -->
+            <div v-if="(mgmtStore.status?.recentViolations?.length ?? 0) > 0" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e0e0e6">
               <div style="font-size: 12px; color: #666; margin-bottom: 4px">Recent Violations</div>
-              <div v-for="v in govStore.status?.recentViolations?.slice(0, 3)" :key="v.id"
+              <div v-for="v in mgmtStore.status?.recentViolations?.slice(0, 3)" :key="v.id"
                 style="font-size: 12px; padding: 4px 0; border-bottom: 1px solid #f0f0f0">
                 <NTag :type="v.severity === 'CRITICAL' ? 'error' : v.severity === 'HIGH' ? 'warning' : 'default'" size="tiny" style="margin-right: 4px">
                   {{ v.severity }}
@@ -206,7 +206,7 @@ const chartOption = computed(() => {
                 {{ v.message }}
               </div>
             </div>
-            <NEmpty v-if="activeTasks === 0 && approvalsStore.items.length === 0 && (govStore.status?.recentViolations?.length ?? 0) === 0"
+            <NEmpty v-if="activeTasks === 0 && approvalsStore.items.length === 0 && (mgmtStore.status?.recentViolations?.length ?? 0) === 0"
               description="All clear" size="small" />
           </NCard>
         </NGi>

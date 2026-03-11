@@ -5,7 +5,7 @@
 ## Changes from v2
 
 - Tests new Workspace files: USER.md (language/timezone), TOOLS.md (BPS tool reference)
-- Tests Two-Layer routing: mixed governance + operations requirements in same turn
+- Tests Two-Layer routing: mixed management + operations requirements in same turn
 - Tests self-evolution: Skill creation (prospective gap) + Agent creation (persona isolation)
 - Goal-based conversation style ("I want X") not instruction-based ("do X then Y")
 - Consolidated Two-Layer Architecture (SOUL.md -> AGENTS.md single source)
@@ -14,13 +14,13 @@
 
 - Clean server: `root@47.236.109.62`
 - 5 mock stores: 3 Changsha + 2 Wuhan (same as v2)
-- 3 governance constraints (content publish, content archive, strategy change)
+- 3 management constraints (content publish, content archive, strategy change)
 - 7 business context docs from `~/idlekr/docs/`
 - Mock publish directory: `~/.aida/mock-publish/`
 
 ## Conversation Script (6 turns)
 
-### Turn 1: Business Introduction + Requirements (mixed governance/operations)
+### Turn 1: Business Introduction + Requirements (mixed management/operations)
 
 > 我是闲氪的GEO负责人。闲氪帮合作门店在AI时代"被看见"。
 > 请先看一下 ~/.aida/context/ 里的业务资料，系统里已有5家合作门店（长沙3家+武汉2家）。
@@ -42,7 +42,7 @@
 **Expected**:
 - Aida reads context docs, understands IdleX business
 - Proposes an action plan
-- Identifies "审批/确认" requirements as Governance (not Operations)
+- Identifies "审批/确认" requirements as Management (not Operations)
 - Identifies chatbot as Agent gap (persona isolation)
 - Identifies recurring GEO tasks as Skill gaps
 
@@ -56,7 +56,7 @@
 - Creates Skills for recurring GEO tasks (probe, content gen, etc.)
 - Creates Agent workspace for chatbot (persona isolation)
 - Registers cron jobs for periodic items
-- Models governance constraints (governance.yaml already seeded, or Blueprint for approval flow)
+- Models management constraints (management.yaml already seeded, or Blueprint for approval flow)
 
 ### Turn 3: Review Modeling
 
@@ -65,7 +65,7 @@
 **Expected**:
 - Lists created entities, Skills, Agent
 - Mentions Dashboard URL
-- Explains governance setup
+- Explains management setup
 
 ### Turn 4: Daily Execution
 
@@ -74,12 +74,12 @@
 **Expected**:
 - Executes probe (simulated data)
 - Generates GEO content per store/model
-- Attempts content publish → governance intercepts
+- Attempts content publish → management intercepts
 - Reports interception + approval ID + Dashboard link
 
 ### Turn 5: Dashboard Approval (programmatic)
 
-Programmatic: POST /api/governance/approvals/:id/decide
+Programmatic: POST /api/management/approvals/:id/decide
 
 ### Turn 6: Daily Summary
 
@@ -94,11 +94,11 @@ Programmatic: POST /api/governance/approvals/:id/decide
 | ID | Check | Type |
 |----|-------|------|
 | V0.1-V0.9 | Post-install: dirs, workspace files (incl USER.md/TOOLS.md), skills, dashboard | HARD |
-| V1.1-V1.5 | Post-seed: 5 stores, governance constraints, context docs, mock-publish, project.yaml | HARD |
+| V1.1-V1.5 | Post-seed: 5 stores, management constraints, context docs, mock-publish, project.yaml | HARD |
 | V2.1 | Turn 1 produces response | HARD |
 | V2.2 | Mentions plan/strategy | SOFT |
 | V2.3 | Identifies skill/agent gaps | SOFT |
-| V2.4 | Distinguishes governance vs operations | SOFT |
+| V2.4 | Distinguishes management vs operations | SOFT |
 | V3.1 | New entities created >= 2 | HARD |
 | V3.2 | Action plan entity exists | SOFT |
 | V3.3 | Strategy entity exists | SOFT |
@@ -106,9 +106,9 @@ Programmatic: POST /api/governance/approvals/:id/decide
 | V3.5 | Agent workspace created | SOFT |
 | V4.1 | Review response produced | HARD |
 | V4.2 | Mentions Dashboard | SOFT |
-| V5.1 | Governance triggered (violations or pending approvals) | HARD |
-| V5.2 | Aida reports governance interception | SOFT |
+| V5.1 | Management triggered (violations or pending approvals) | HARD |
+| V5.2 | Aida reports management interception | SOFT |
 | V6.1 | Approvals processed | SOFT |
 | V7.1 | Summary produced | HARD |
 | V7.2 | Summary has business content | SOFT |
-| V8.1-V8.5 | Final: entities >= 7, skills >= 7, dashboard pages, governance stats | HARD/SOFT |
+| V8.1-V8.5 | Final: entities >= 7, skills >= 7, dashboard pages, management stats | HARD/SOFT |

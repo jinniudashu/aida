@@ -96,11 +96,11 @@
     },
     "twoLayerRouting": {
       "weight": 0.15,
-      "description": "Correctly distinguishes Governance vs Operations"
+      "description": "Correctly distinguishes Management vs Operations"
     },
-    "governanceCompliance": {
+    "managementCompliance": {
       "weight": 0.15,
-      "description": "Handles governance constraints and approval flows"
+      "description": "Handles management constraints and approval flows"
     },
     "selfEvolution": {
       "weight": 0.10,

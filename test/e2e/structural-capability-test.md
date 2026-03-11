@@ -21,13 +21,13 @@ A GEO负责人 (GEO Operations Lead) works with Aida to run daily AI visibility 
 - Store types: self-serve KTV, tea rooms, mahjong rooms
 - Management rules: content publish requires approval; strategy changes require confirmation
 
-**Test flow**: Background briefing → Authorization → Business modeling → Content generation → Governance trigger → Approval → Skill/Agent creation → Daily summary
+**Test flow**: Background briefing → Authorization → Business modeling → Content generation → Management trigger → Approval → Skill/Agent creation → Daily summary
 
 ## Coverage Matrix
 
 | Dimension | # Checks | Features Tested |
 |-----------|----------|-----------------|
-| D1: Governance Gating | 10 | 9 tool coverage, PASS/BLOCK/REQUIRE_APPROVAL verdicts, error throwing, scope matching |
+| D1: Management Gating | 10 | 9 tool coverage, PASS/BLOCK/REQUIRE_APPROVAL verdicts, error throwing, scope matching |
 | D2: Circuit Breaker | 6 | Escalation (NORMAL→WARNING→DISCONNECTED), cooldown recovery, oscillation detection |
 | D3: Information Summary | 6 | topN shape, summary string, brief mode, recommendation, sortByUrgency, outcomeDistribution |
 | D4: Process Groups | 4 | groupId creation, batch update, filterState, non-matching preservation |
@@ -35,8 +35,8 @@ A GEO负责人 (GEO Operations Lead) works with Aida to run daily AI visibility 
 | D6: Skill Metrics | 3 | metric recording, summary aggregation, dormant detection |
 | D7: Constraint Analytics | 3 | effectiveness stats, field completeness, violation count accuracy |
 | D8: Tool Registration | 2 | total tool count, DEFAULT_SCOPE_WRITE_TOOLS exclusion |
-| D9: Dashboard API | 11 | governance endpoints shape, entity listing, circuit breaker reset, approval decide, page accessibility |
-| B: Business Scenario | 25 | modeling, management routing, content gen, governance trigger, skill/agent creation, daily ops |
+| D9: Dashboard API | 11 | management endpoints shape, entity listing, circuit breaker reset, approval decide, page accessibility |
+| B: Business Scenario | 25 | modeling, management routing, content gen, management trigger, skill/agent creation, daily ops |
 | **Total** | **~80** | |
 
 ## Execution
@@ -58,7 +58,7 @@ Checks workspace files, skills, dashboard health. Unchanged from R1/R2.
 
 ### Phase 1: Data Seeding
 Seeds IdleX GEO business data:
-- **Governance**: 3 constraints (content publish approval [HIGH], archive block [CRITICAL], strategy change approval [HIGH])
+- **Management**: 3 constraints (content publish approval [HIGH], archive block [CRITICAL], strategy change approval [HIGH])
 - **Stores**: 5 partner stores (长沙 KTV/茶室/麻将 + 武汉 KTV/茶室) with full business data (rooms, hours, features)
 - **Strategy**: GEO master strategy (三大AI平台, 一模一策)
 - **Action Plan**: GEO operations action plan
@@ -89,9 +89,9 @@ All dialogue uses business-language goal statements ("我要什么"), NOT techni
 > "开始今天的GEO运营。先做能见度探测，然后为长沙3家门店各生成一份面向豆包的GEO优化内容。草稿写到 ~/.aida/mock-publish-tmp/ 目录。"
 - Verify: content/probe entities, mock-publish-tmp files
 
-**Turn 4: Governance Trigger**
+**Turn 4: Management Trigger**
 > "草稿我过目了，质量不错。把这些内容标记为发布就绪。"
-- Verify: governance violations or approvals increased
+- Verify: management violations or approvals increased
 
 **Step 5: Programmatic Approval (no agent turn)**
 > Script queries Dashboard API for pending approvals and approves them
@@ -107,10 +107,10 @@ All dialogue uses business-language goal statements ("我要什么"), NOT techni
 
 **Turn 8: Management Review**
 > "看看管理制度执行得怎么样——违规记录、约束效能、熔断器状态。"
-- Verify: governance details reported
+- Verify: management details reported
 
 ### Phase 5: Final Verification + Report
-Enhanced metrics: entity count, business entity types, content files, governance stats, new skills, agent workspaces.
+Enhanced metrics: entity count, business entity types, content files, management stats, new skills, agent workspaces.
 
 ## Check ID Convention
 

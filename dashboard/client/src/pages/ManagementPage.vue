@@ -2,11 +2,11 @@
 import { ref, onMounted, onUnmounted, h, computed } from 'vue'
 import { NDataTable, NTag, NSpin, NButton, NModal, NSpace, NEmpty, NCard, NStatistic, NGrid, NGi, NAlert, NDescriptions, NDescriptionsItem, NPopconfirm } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
-import { useGovernanceStore } from '../stores'
+import { useManagementStore } from '../stores'
 import { formatDate } from '../utils'
-import type { GovernanceConstraint, GovernanceViolation, GovernanceApproval } from '../api'
+import type { ManagementConstraint, ManagementViolation, ManagementApproval } from '../api'
 
-const store = useGovernanceStore()
+const store = useManagementStore()
 let unsub: (() => void) | null = null
 
 onMounted(() => { unsub = store.subscribe() })
@@ -25,11 +25,11 @@ const cbStateType = computed<'default' | 'success' | 'warning' | 'error' | 'info
 // --- Approval decision modal ---
 
 const showDecisionModal = ref(false)
-const selectedApproval = ref<GovernanceApproval | null>(null)
+const selectedApproval = ref<ManagementApproval | null>(null)
 const executionResult = ref<Record<string, unknown> | null>(null)
 const showResultModal = ref(false)
 
-function openDecision(row: GovernanceApproval) {
+function openDecision(row: ManagementApproval) {
   selectedApproval.value = row
   showDecisionModal.value = true
 }
@@ -48,7 +48,7 @@ async function submitDecision(decision: 'APPROVED' | 'REJECTED') {
 
 // --- Constraint columns ---
 
-const constraintColumns: DataTableColumns<GovernanceConstraint> = [
+const constraintColumns: DataTableColumns<ManagementConstraint> = [
   { title: 'ID', key: 'id', width: 180 },
   { title: 'Policy', key: 'policyId', width: 140 },
   { title: 'Label', key: 'label', ellipsis: { tooltip: true } },
@@ -78,7 +78,7 @@ const constraintColumns: DataTableColumns<GovernanceConstraint> = [
 
 // --- Violation columns ---
 
-const violationColumns: DataTableColumns<GovernanceViolation> = [
+const violationColumns: DataTableColumns<ManagementViolation> = [
   {
     title: 'Severity', key: 'severity', width: 100,
     render: (r) => {
@@ -103,7 +103,7 @@ const violationColumns: DataTableColumns<GovernanceViolation> = [
 
 // --- Approval columns ---
 
-const approvalColumns: DataTableColumns<GovernanceApproval> = [
+const approvalColumns: DataTableColumns<ManagementApproval> = [
   {
     title: 'Status', key: 'status', width: 100,
     render: (r) => {
@@ -129,7 +129,7 @@ const approvalColumns: DataTableColumns<GovernanceApproval> = [
 
 <template>
   <div>
-    <h2 style="margin-top: 0">Governance</h2>
+    <h2 style="margin-top: 0">Management</h2>
 
     <NSpin :show="store.loading">
       <!-- Panel 1: Circuit Breaker -->
@@ -178,21 +178,21 @@ const approvalColumns: DataTableColumns<GovernanceApproval> = [
           :columns="constraintColumns"
           :data="store.constraints"
           :bordered="false"
-          :row-key="(r: GovernanceConstraint) => r.id"
+          :row-key="(r: ManagementConstraint) => r.id"
           size="small"
           :max-height="300"
         />
       </NCard>
 
-      <!-- Panel 3: Governance Approvals -->
-      <NCard title="Governance Approvals" size="small" style="margin-bottom: 16px">
-        <NEmpty v-if="store.approvals.length === 0" description="No pending governance approvals" />
+      <!-- Panel 3: Management Approvals -->
+      <NCard title="Management Approvals" size="small" style="margin-bottom: 16px">
+        <NEmpty v-if="store.approvals.length === 0" description="No pending management approvals" />
         <NDataTable
           v-else
           :columns="approvalColumns"
           :data="store.approvals"
           :bordered="false"
-          :row-key="(r: GovernanceApproval) => r.id"
+          :row-key="(r: ManagementApproval) => r.id"
           size="small"
           :max-height="300"
         />
@@ -206,7 +206,7 @@ const approvalColumns: DataTableColumns<GovernanceApproval> = [
           :columns="violationColumns"
           :data="store.violations"
           :bordered="false"
-          :row-key="(r: GovernanceViolation) => r.id"
+          :row-key="(r: ManagementViolation) => r.id"
           size="small"
           :max-height="400"
         />
@@ -214,7 +214,7 @@ const approvalColumns: DataTableColumns<GovernanceApproval> = [
     </NSpin>
 
     <!-- Decision modal -->
-    <NModal v-model:show="showDecisionModal" preset="card" title="Governance Approval Decision" style="width: 600px">
+    <NModal v-model:show="showDecisionModal" preset="card" title="Management Approval Decision" style="width: 600px">
       <div v-if="selectedApproval">
         <NDescriptions bordered :column="1" size="small">
           <NDescriptionsItem label="Constraint">{{ selectedApproval.constraintId }}</NDescriptionsItem>

@@ -136,8 +136,8 @@
     "dimensions": {
       "business_understanding": { "weight": 0.20, "description": "Understands IdleX business, GEO strategy, reads context docs, differentiates stores/platforms" },
       "tool_invocation":        { "weight": 0.25, "description": "BPS tool call density and correctness (entities, skills, blueprints created)" },
-      "two_layer_routing":      { "weight": 0.15, "description": "Correctly classifies Governance (Blueprint/constraints) vs Operations (Entity/Skill)" },
-      "governance_closure":     { "weight": 0.15, "description": "Triggers governance interception, reports approval ID, Dashboard approval->replay" },
+      "two_layer_routing":      { "weight": 0.15, "description": "Correctly classifies Management (Blueprint/constraints) vs Operations (Entity/Skill)" },
+      "management_closure":     { "weight": 0.15, "description": "Triggers management interception, reports approval ID, Dashboard approval->replay" },
       "self_evolution":         { "weight": 0.15, "description": "Creates Skills for recurring patterns, Agent for persona isolation, Cron for periodic tasks" },
       "response_quality":       { "weight": 0.10, "description": "Business-oriented output quality, actionability, content differentiation" }
     }

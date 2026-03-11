@@ -2,7 +2,7 @@
 
 ## Tool Groups
 
-### Read-only (safe, no governance check)
+### Read-only (safe, no management check)
 | Tool | Purpose |
 |------|---------|
 | `bps_list_services` | List blueprint services (filter by entityType/executor/status) |
@@ -12,9 +12,9 @@
 | `bps_query_entities` | Query entities (filter by entityType). Use `brief: true` to get compact listing without full data |
 | `bps_next_steps` | Get downstream services from rules + `recommendation` field for next action |
 | `bps_scan_work` | Scan work landscape: top-5 per group (overdue/failed/open/in-progress) with `{total, showing}` metadata + `summary` string + outcome distribution + action-plans + dormant skills (90d unused) |
-| `bps_governance_status` | Query circuit breaker state, violations, pending approvals |
+| `bps_management_status` | Query circuit breaker state, violations, pending approvals |
 
-### Write (governance-gated — ActionGate checks constraints before execution)
+### Write (management-gated — ActionGate checks constraints before execution)
 | Tool | Purpose |
 |------|---------|
 | `bps_create_task` | Create a new task (accepts `priority` int + `deadline` ISO 8601 + `groupId`) |
@@ -25,7 +25,7 @@
 | `bps_create_skill` | Create a new Skill file in the workspace |
 | `bps_load_blueprint` | Load/compile a YAML blueprint (simplified format: services + flow) |
 | `bps_register_agent` | Create a new Agent: workspace files + openclaw.json registration (validates config) |
-| `bps_load_governance` | Reload governance constraints from YAML (meta-governance: requires explicit scope) |
+| `bps_load_management` | Reload management constraints from YAML (meta-management: requires explicit scope) |
 
 ## Common Patterns
 
@@ -34,18 +34,18 @@
 - **Batch operations**: `bps_create_task` with `groupId` → ... → `bps_batch_update` to cancel/complete all
 - **Task flow**: `bps_create_task` → `bps_update_task` → `bps_complete_task` → `bps_next_steps`
 - **Blueprint load**: write simplified YAML (services + flow) → `bps_load_blueprint` → verify `health: "complete"`
-- **Content publish**: When content is ready for external distribution, mark the entity with `publishReady: true` via `bps_update_entity` — governance will intercept if a constraint is configured
+- **Content publish**: When content is ready for external distribution, mark the entity with `publishReady: true` via `bps_update_entity` — management will intercept if a constraint is configured
 
 ## Known Behaviors
 
 - `bps_update_entity` uses **smartMerge**: arrays are appended (not replaced), objects are deep-merged. To replace an array, set it to `null` first then set the new value.
 - `bps_load_blueprint` auto-compiles simplified format (services + flow) into full schema (events + instructions + rules). If the YAML already has events/instructions/rules, it loads directly without compilation.
 - `bps_next_steps` returns downstream services based on rule topology + a `recommendation` field suggesting the best next action. For non-deterministic events (natural language conditions), evaluate the condition yourself before proceeding.
-- Write tools may return an approval ID instead of executing — this means governance requires human review. Report the approval ID and Dashboard link to the user.
+- Write tools may return an approval ID instead of executing — this means management requires human review. Report the approval ID and Dashboard link to the user.
 
-## Governance Constraint Syntax
+## Management Constraint Syntax
 
-When writing constraint conditions for `governance.yaml` or `bps_load_governance`:
+When writing constraint conditions for `management.yaml` or `bps_load_management`:
 
 ### Available context variables
 | Variable | Source | Always present |

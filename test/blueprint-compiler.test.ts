@@ -544,10 +544,10 @@ describe('flow.rules object format', () => {
 
   it('should load flow.rules YAML via loadBlueprintFromString', () => {
     const yaml = `
-name: "maor-governance"
+name: "maor-management"
 services:
-  - id: svc-governance
-    label: "MAOr Governance"
+  - id: svc-management
+    label: "MAOr Management"
     composite: true
     entityType: treatment
   - id: svc-consent

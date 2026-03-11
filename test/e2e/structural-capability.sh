@@ -194,9 +194,9 @@ GEO不是AI版SEO。核心区别：
 核心KPI："被看见"指标上升——在AI平台的能见度持续提升
 CTXEOF
 
-  # 1b. governance.yaml — 3 constraints covering different verdicts
-  log "Creating governance.yaml..."
-  cat > "$AIDA_HOME/governance.yaml" << 'YAML'
+  # 1b. management.yaml — 3 constraints covering different verdicts
+  log "Creating management.yaml..."
+  cat > "$AIDA_HOME/management.yaml" << 'YAML'
 policies:
   - id: p-publish
     label: "Content Publication Controls"
@@ -256,18 +256,18 @@ circuit_breaker:
   cooldown: 30m
 YAML
 
-  # 1c. Seed entities, blueprint, tasks, governance via TypeScript
+  # 1c. Seed entities, blueprint, tasks, management via TypeScript
   log "Seeding test data via TypeScript..."
   cd "$AIDA_REPO"
 
   cat > .tmp-structural-seed.ts << 'TYPESCRIPT'
 import path from 'node:path';
 import fs from 'node:fs';
-import { createBpsEngine, createDatabase, GovernanceStore, loadGovernanceFile } from './src/index.js';
+import { createBpsEngine, createDatabase, ManagementStore, loadManagementFile } from './src/index.js';
 
 const HOME = process.env.HOME || '/root';
 const DB_PATH = path.resolve(HOME, '.aida', 'data', 'bps.db');
-const GOV_PATH = path.resolve(HOME, '.aida', 'governance.yaml');
+const GOV_PATH = path.resolve(HOME, '.aida', 'management.yaml');
 
 console.log(`[seed] DB: ${DB_PATH}`);
 const db = createDatabase(DB_PATH);
@@ -440,13 +440,13 @@ if (ktvDossier) {
   console.log('[seed] + relations on store-cs-ktv-01 (2 relations)');
 }
 
-// --- Load governance ---
+// --- Load management ---
 if (fs.existsSync(GOV_PATH)) {
-  const govStore = new GovernanceStore(db);
-  const result = loadGovernanceFile(GOV_PATH);
+  const mgmtStore = new ManagementStore(db);
+  const result = loadManagementFile(GOV_PATH);
   if (result.errors.length > 0) console.log(`[seed] WARN: ${result.errors.join(', ')}`);
-  govStore.loadConstraints(result.constraints);
-  console.log(`[seed] + ${result.constraints.length} governance constraints`);
+  mgmtStore.loadConstraints(result.constraints);
+  console.log(`[seed] + ${result.constraints.length} management constraints`);
 }
 
 // --- Summary ---
@@ -476,8 +476,8 @@ TYPESCRIPT
   SC=$(api_get "/api/entities?entityType=store" | jlen)
   check "V1.1 5 store entities (got $SC)" "test $SC -ge 5"
 
-  GC=$(api_get "/api/governance/constraints" | jlen)
-  check "V1.2 >= 3 governance constraints (got $GC)" "test $GC -ge 3"
+  GC=$(api_get "/api/management/constraints" | jlen)
+  check "V1.2 >= 3 management constraints (got $GC)" "test $GC -ge 3"
 
   check "V1.3 project.yaml" "test -f $AIDA_HOME/project.yaml"
   check "V1.4 Blueprint file"  "test -f $AIDA_HOME/blueprints/structural-test-blueprint.yaml"
@@ -505,30 +505,30 @@ import os from 'node:os';
 import {
   createBpsEngine,
   createDatabase,
-  GovernanceStore,
+  ManagementStore,
   SkillMetricsStore,
 } from './src/index.js';
-import { ActionGate } from './src/governance/action-gate.js';
-import { loadGovernanceFile } from './src/governance/governance-loader.js';
-import { GATED_WRITE_TOOLS, DEFAULT_SCOPE_WRITE_TOOLS } from './src/governance/constants.js';
+import { ActionGate } from './src/management/action-gate.js';
+import { loadManagementFile } from './src/management/management-loader.js';
+import { GATED_WRITE_TOOLS, DEFAULT_SCOPE_WRITE_TOOLS } from './src/management/constants.js';
 import { createBpsTools } from './src/integration/tools.js';
 
 const HOME = process.env.HOME || '/root';
 const DB_PATH = path.resolve(HOME, '.aida', 'data', 'bps.db');
-const GOV_PATH = path.resolve(HOME, '.aida', 'governance.yaml');
+const GOV_PATH = path.resolve(HOME, '.aida', 'management.yaml');
 const SKILLS_DIR = path.resolve(HOME, '.openclaw', 'workspace', 'skills');
 
 const db = createDatabase(DB_PATH);
 const engine = createBpsEngine({ db });
-const govStore = new GovernanceStore(db);
+const mgmtStore = new ManagementStore(db);
 const skillMetrics = new SkillMetricsStore(db);
 
-// Load governance constraints
-const govResult = loadGovernanceFile(GOV_PATH);
-govStore.loadConstraints(govResult.constraints);
+// Load management constraints
+const govResult = loadManagementFile(GOV_PATH);
+mgmtStore.loadConstraints(govResult.constraints);
 
 // Create ActionGate with test-friendly config
-const gate = new ActionGate(govStore, {
+const gate = new ActionGate(mgmtStore, {
   thresholds: [
     { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
     { severity: 'HIGH', maxViolations: 5, window: '1h', action: 'RESTRICTED' },
@@ -537,15 +537,15 @@ const gate = new ActionGate(govStore, {
   cooldown: '1s', // Short cooldown for test
 });
 
-// Create tools with governance
+// Create tools with management
 const tools = createBpsTools({
   tracker: engine.tracker,
   blueprintStore: engine.blueprintStore,
   processStore: engine.processStore,
   dossierStore: engine.dossierStore,
   skillsDir: SKILLS_DIR,
-  governanceGate: gate,
-  governanceStore: govStore,
+  managementGate: gate,
+  managementStore: mgmtStore,
   skillMetricsStore: skillMetrics,
 });
 
@@ -564,27 +564,27 @@ function assert(id: string, desc: string, condition: boolean, detail?: string) {
   console.log(`  ${icon} ${id} ${desc}${detail ? ` — ${detail}` : ''}`);
 }
 
-// Helper: fully reset governance state (CB + violations + approvals)
-function resetGovernance() {
-  db.exec('DELETE FROM bps_governance_violations');
-  db.exec('DELETE FROM bps_governance_approvals');
-  govStore.resetCircuitBreaker();
+// Helper: fully reset management state (CB + violations + approvals)
+function resetManagement() {
+  db.exec('DELETE FROM bps_management_violations');
+  db.exec('DELETE FROM bps_management_approvals');
+  mgmtStore.resetCircuitBreaker();
 }
 
 // ═════════════════════════════════════════════
-// D1: Governance Gating
+// D1: Management Gating
 // ═════════════════════════════════════════════
-console.log('\n--- D1: Governance Gating ---');
+console.log('\n--- D1: Management Gating ---');
 
 // S2.01: All 9 GATED_WRITE_TOOLS are defined
 assert('S2.01', 'GATED_WRITE_TOOLS has 9 entries',
   GATED_WRITE_TOOLS.length === 9,
   `got ${GATED_WRITE_TOOLS.length}: ${GATED_WRITE_TOOLS.join(', ')}`);
 
-// S2.02: Read-only tool bypasses governance
+// S2.02: Read-only tool bypasses management
 {
   const result = gate.check('bps_list_services', {});
-  assert('S2.02', 'Read-only tool bypasses governance',
+  assert('S2.02', 'Read-only tool bypasses management',
     result.verdict === 'PASS' && result.checks.length === 0);
 }
 
@@ -602,11 +602,11 @@ assert('S2.01', 'GATED_WRITE_TOOLS has 9 entries',
 }
 
 // Reset circuit breaker after CRITICAL violation
-resetGovernance();
+resetManagement();
 
 // S2.04: REQUIRE_APPROVAL verdict for HIGH constraint
 {
-  const gate2 = new ActionGate(govStore); // fresh gate, reset state
+  const gate2 = new ActionGate(mgmtStore); // fresh gate, reset state
   const result = gate2.check('bps_update_entity', {
     entityType: 'content',
     entityId: 'test-content-02',
@@ -619,8 +619,8 @@ resetGovernance();
 
 // S2.05: PASS verdict for non-matching tool call
 {
-  resetGovernance();
-  const gate3 = new ActionGate(govStore);
+  resetManagement();
+  const gate3 = new ActionGate(mgmtStore);
   // Update a store entity (no constraints on 'store' entityType)
   const result = gate3.check('bps_update_entity', {
     entityType: 'store',
@@ -634,8 +634,8 @@ resetGovernance();
 
 // S2.06: Constraint scope - entityType filter
 {
-  resetGovernance();
-  const gate4 = new ActionGate(govStore);
+  resetManagement();
+  const gate4 = new ActionGate(mgmtStore);
   // strategy entityType with majorChange should trigger c-strategy-approval
   const result = gate4.check('bps_update_entity', {
     entityType: 'strategy',
@@ -649,8 +649,8 @@ resetGovernance();
 
 // S2.07: Constraint scope - dataFields filter
 {
-  resetGovernance();
-  const gate5 = new ActionGate(govStore);
+  resetManagement();
+  const gate5 = new ActionGate(mgmtStore);
   // content entity but without publishReady or lifecycle field → no constraint matches
   const result = gate5.check('bps_update_entity', {
     entityType: 'content',
@@ -664,16 +664,16 @@ resetGovernance();
 
 // S2.08: New tools are in GATED_WRITE_TOOLS
 {
-  const newTools = ['bps_batch_update', 'bps_load_blueprint', 'bps_register_agent', 'bps_load_governance'];
+  const newTools = ['bps_batch_update', 'bps_load_blueprint', 'bps_register_agent', 'bps_load_management'];
   const allPresent = newTools.every(t => GATED_WRITE_TOOLS.includes(t as any));
-  assert('S2.08', 'New tools (batch_update, load_blueprint, register_agent, load_governance) are gated',
+  assert('S2.08', 'New tools (batch_update, load_blueprint, register_agent, load_management) are gated',
     allPresent,
     `missing: ${newTools.filter(t => !GATED_WRITE_TOOLS.includes(t as any)).join(', ') || 'none'}`);
 }
 
-// S2.08b: Governance wrapper throws Error (not returns {success:false})
+// S2.08b: Management wrapper throws Error (not returns {success:false})
 {
-  resetGovernance();
+  resetManagement();
   const wrappedTool = tools.find(t => t.name === 'bps_update_entity');
   let threwError = false;
   let errorMsg = '';
@@ -687,14 +687,14 @@ resetGovernance();
     threwError = true;
     errorMsg = e.message;
   }
-  assert('S2.08b', 'Governance BLOCK throws Error (not {success:false})',
-    threwError && errorMsg.includes('GOVERNANCE BLOCKED'),
-    `threw=${threwError}, msg contains GOVERNANCE BLOCKED: ${errorMsg.includes('GOVERNANCE BLOCKED')}`);
+  assert('S2.08b', 'Management BLOCK throws Error (not {success:false})',
+    threwError && errorMsg.includes('MANAGEMENT BLOCKED'),
+    `threw=${threwError}, msg contains MANAGEMENT BLOCKED: ${errorMsg.includes('MANAGEMENT BLOCKED')}`);
 }
 
 // S2.08c: REQUIRE_APPROVAL throws Error with approval ID
 {
-  resetGovernance();
+  resetManagement();
   const wrappedTool = tools.find(t => t.name === 'bps_update_entity');
   let threwError = false;
   let errorMsg = '';
@@ -709,7 +709,7 @@ resetGovernance();
     errorMsg = e.message;
   }
   assert('S2.08c', 'REQUIRE_APPROVAL throws Error with approval ID',
-    threwError && errorMsg.includes('GOVERNANCE APPROVAL REQUIRED') && errorMsg.includes('Approval ID:'),
+    threwError && errorMsg.includes('MANAGEMENT APPROVAL REQUIRED') && errorMsg.includes('Approval ID:'),
     `threw=${threwError}`);
 }
 
@@ -720,13 +720,13 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.09: CRITICAL violation → DISCONNECTED
 {
-  resetGovernance();
-  const gateC = new ActionGate(govStore);
+  resetManagement();
+  const gateC = new ActionGate(mgmtStore);
   gateC.check('bps_update_entity', {
     entityType: 'content', entityId: 'cb-test-1',
     data: { lifecycle: 'ARCHIVED' },
   });
-  const cb = govStore.getCircuitBreakerState();
+  const cb = mgmtStore.getCircuitBreakerState();
   assert('S2.09', 'CRITICAL violation → DISCONNECTED',
     cb.state === 'DISCONNECTED',
     `state=${cb.state}`);
@@ -734,7 +734,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.10: DISCONNECTED blocks all writes immediately
 {
-  const gateD = new ActionGate(govStore); // inherits DISCONNECTED state
+  const gateD = new ActionGate(mgmtStore); // inherits DISCONNECTED state
   const result = gateD.check('bps_create_task', { serviceId: 'svc-probe' });
   assert('S2.10', 'DISCONNECTED blocks all writes immediately',
     result.verdict === 'BLOCK' && result.circuitBreakerState === 'DISCONNECTED',
@@ -743,12 +743,12 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.11: HIGH violations accumulate → WARNING
 {
-  resetGovernance();
-  const gateH = new ActionGate(govStore);
+  resetManagement();
+  const gateH = new ActionGate(mgmtStore);
   // Trigger 2 HIGH violations (threshold for WARNING)
   gateH.check('bps_update_entity', { entityType: 'content', entityId: 'high-1', data: { publishReady: true } });
   gateH.check('bps_update_entity', { entityType: 'content', entityId: 'high-2', data: { publishReady: true } });
-  const cb = govStore.getCircuitBreakerState();
+  const cb = mgmtStore.getCircuitBreakerState();
   assert('S2.11', 'HIGH violations → WARNING',
     cb.state === 'WARNING',
     `state=${cb.state}`);
@@ -756,13 +756,13 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.12: Cooldown recovery auto-downgrades
 {
-  resetGovernance();
+  resetManagement();
   // Set state to WARNING manually
-  govStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: new Date().toISOString() });
+  mgmtStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: new Date().toISOString() });
 
   // Backdate lastStateChange to trigger cooldown
   // Using a gate with 1s cooldown
-  const gateR = new ActionGate(govStore, {
+  const gateR = new ActionGate(mgmtStore, {
     thresholds: [
       { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
       { severity: 'HIGH', maxViolations: 5, window: '1h', action: 'RESTRICTED' },
@@ -772,15 +772,15 @@ console.log('\n--- D2: Circuit Breaker ---');
 
   // Backdate: set lastStateChange to 2 seconds ago
   const twoSecsAgo = new Date(Date.now() - 2000).toISOString();
-  govStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: twoSecsAgo });
+  mgmtStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: twoSecsAgo });
   // Manually update last_state_change in the DB
-  db.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${twoSecsAgo}' WHERE id = 'singleton'`);
+  db.exec(`UPDATE bps_management_circuit_breaker SET last_state_change = '${twoSecsAgo}' WHERE id = 'singleton'`);
 
   // Next check should trigger cooldown: WARNING → NORMAL
   const result = gateR.check('bps_update_entity', {
     entityType: 'store', entityId: 'cooldown-test', data: { status: 'ok' },
   });
-  const cb = govStore.getCircuitBreakerState();
+  const cb = mgmtStore.getCircuitBreakerState();
   assert('S2.12', 'Cooldown recovery: WARNING → NORMAL',
     cb.state === 'NORMAL',
     `state=${cb.state}, verdict=${result.verdict}`);
@@ -788,8 +788,8 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.13: No recovery if new violations in window
 {
-  resetGovernance();
-  const gateNR = new ActionGate(govStore, {
+  resetManagement();
+  const gateNR = new ActionGate(mgmtStore, {
     thresholds: [
       { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
       { severity: 'HIGH', maxViolations: 2, window: '1h', action: 'WARNING' },
@@ -799,14 +799,14 @@ console.log('\n--- D2: Circuit Breaker ---');
   // Trigger WARNING via 2 HIGH violations
   gateNR.check('bps_update_entity', { entityType: 'content', entityId: 'nr-1', data: { publishReady: true } });
   gateNR.check('bps_update_entity', { entityType: 'content', entityId: 'nr-2', data: { publishReady: true } });
-  const cbBefore = govStore.getCircuitBreakerState();
+  const cbBefore = mgmtStore.getCircuitBreakerState();
 
   // Backdate, but violations exist in window, so no recovery
   const twoSecsAgo = new Date(Date.now() - 2000).toISOString();
-  db.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${twoSecsAgo}' WHERE id = 'singleton'`);
+  db.exec(`UPDATE bps_management_circuit_breaker SET last_state_change = '${twoSecsAgo}' WHERE id = 'singleton'`);
 
   gateNR.check('bps_update_entity', { entityType: 'store', entityId: 'nr-check', data: { status: 'ok' } });
-  const cbAfter = govStore.getCircuitBreakerState();
+  const cbAfter = mgmtStore.getCircuitBreakerState();
   assert('S2.13', 'No recovery if violations exist in window',
     cbAfter.state === 'WARNING',
     `before=${cbBefore.state}, after=${cbAfter.state}`);
@@ -814,8 +814,8 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.14: Oscillation detection
 {
-  resetGovernance();
-  const gateOsc = new ActionGate(govStore, {
+  resetManagement();
+  const gateOsc = new ActionGate(mgmtStore, {
     thresholds: [
       { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
     ],
@@ -825,19 +825,19 @@ console.log('\n--- D2: Circuit Breaker ---');
   // Simulate rapid oscillations by:
   // Repeatedly setting WARNING, backdating, and triggering recovery
   let detected = false;
-  govStore.on('governance:oscillation_detected', () => { detected = true; });
+  mgmtStore.on('management:oscillation_detected', () => { detected = true; });
 
   for (let i = 0; i < 5; i++) {
-    govStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: new Date().toISOString() });
+    mgmtStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: new Date().toISOString() });
     const ago = new Date(Date.now() - 2000).toISOString();
-    db.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${ago}' WHERE id = 'singleton'`);
+    db.exec(`UPDATE bps_management_circuit_breaker SET last_state_change = '${ago}' WHERE id = 'singleton'`);
     gateOsc.check('bps_update_entity', { entityType: 'store', entityId: `osc-${i}`, data: { x: 1 } });
   }
 
   assert('S2.14', 'Oscillation detection (>3 transitions/1h → lock)',
     detected,
     `oscillation_detected event fired: ${detected}`);
-  govStore.removeAllListeners('governance:oscillation_detected');
+  mgmtStore.removeAllListeners('management:oscillation_detected');
 }
 
 // ═════════════════════════════════════════════
@@ -845,7 +845,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 // ═════════════════════════════════════════════
 console.log('\n--- D3: Information Summary ---');
 
-resetGovernance();
+resetManagement();
 
 // S2.15: scan_work topN shape
 {
@@ -1099,9 +1099,9 @@ console.log('\n--- D6: Skill Metrics ---');
 console.log('\n--- D7: Constraint Analytics ---');
 
 // Seed violations for analytics testing
-resetGovernance();
+resetManagement();
 {
-  const analyticsGate = new ActionGate(govStore);
+  const analyticsGate = new ActionGate(mgmtStore);
   // Trigger c-publish-approval (REQUIRE_APPROVAL) 3 times
   analyticsGate.check('bps_update_entity', { entityType: 'content', entityId: 'analytics-1', data: { publishReady: true } });
   analyticsGate.check('bps_update_entity', { entityType: 'content', entityId: 'analytics-2', data: { publishReady: true } });
@@ -1110,7 +1110,7 @@ resetGovernance();
 
 // S2.31: getConstraintEffectiveness returns stats
 {
-  const effectiveness = govStore.getConstraintEffectiveness();
+  const effectiveness = mgmtStore.getConstraintEffectiveness();
   assert('S2.31', 'getConstraintEffectiveness returns per-constraint stats',
     Array.isArray(effectiveness) && effectiveness.length >= 3,
     `constraints: ${effectiveness.length}`);
@@ -1118,7 +1118,7 @@ resetGovernance();
 
 // S2.32: Stats include correct fields
 {
-  const effectiveness = govStore.getConstraintEffectiveness();
+  const effectiveness = mgmtStore.getConstraintEffectiveness();
   const first = effectiveness[0];
   assert('S2.32', 'Effectiveness stats include required fields',
     first &&
@@ -1131,7 +1131,7 @@ resetGovernance();
 
 // S2.33: Violation count reflects actual violations
 {
-  const effectiveness = govStore.getConstraintEffectiveness();
+  const effectiveness = mgmtStore.getConstraintEffectiveness();
   const publishConstraint = effectiveness.find(e => e.constraintId === 'c-publish-approval');
   assert('S2.33', 'Constraint effectiveness reflects actual violations',
     publishConstraint !== undefined && publishConstraint.violationCount > 0,
@@ -1143,17 +1143,17 @@ resetGovernance();
 // ═════════════════════════════════════════════
 console.log('\n--- D8: Tool Registration ---');
 
-// S2.34: Total tool count with governance
+// S2.34: Total tool count with management
 {
-  assert('S2.34', 'Total tools = 17 (15 base + 2 governance)',
+  assert('S2.34', 'Total tools = 17 (15 base + 2 management)',
     tools.length === 17,
     `got ${tools.length}: ${tools.map(t => t.name).join(', ')}`);
 }
 
-// S2.35: DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_governance
+// S2.35: DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_management
 {
-  assert('S2.35', 'DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_governance',
-    !DEFAULT_SCOPE_WRITE_TOOLS.includes('bps_load_governance' as any)
+  assert('S2.35', 'DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_management',
+    !DEFAULT_SCOPE_WRITE_TOOLS.includes('bps_load_management' as any)
     && DEFAULT_SCOPE_WRITE_TOOLS.length === GATED_WRITE_TOOLS.length - 1,
     `count: ${DEFAULT_SCOPE_WRITE_TOOLS.length} (GATED: ${GATED_WRITE_TOOLS.length})`);
 }
@@ -1212,12 +1212,12 @@ fi
 if [ "$START_PHASE" -le 3 ]; then
   section "3: Dashboard API Structural Tests"
 
-  # S3.01: Governance status endpoint shape
-  GOV_STATUS=$(api_get "/api/governance/status" 2>/dev/null || echo "{}")
+  # S3.01: Management status endpoint shape
+  GOV_STATUS=$(api_get "/api/management/status" 2>/dev/null || echo "{}")
   HAS_EFFECTIVENESS=$(echo "$GOV_STATUS" | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     console.log(Array.isArray(d.constraintEffectiveness)?'yes':'no')}catch{console.log('no')}" 2>/dev/null)
-  check "S3.01 Governance status has constraintEffectiveness[]" "test '$HAS_EFFECTIVENESS' = 'yes'"
+  check "S3.01 Management status has constraintEffectiveness[]" "test '$HAS_EFFECTIVENESS' = 'yes'"
 
   # S3.02: Circuit breaker state is string
   CB_STATE=$(echo "$GOV_STATUS" | node -e "
@@ -1226,21 +1226,21 @@ if [ "$START_PHASE" -le 3 ]; then
   check "S3.02 circuitBreakerState is string" "test '$CB_STATE' = 'string'"
 
   # S3.03: Violations array with severity
-  VIOLATIONS=$(api_get "/api/governance/violations?limit=5" 2>/dev/null || echo "[]")
+  VIOLATIONS=$(api_get "/api/management/violations?limit=5" 2>/dev/null || echo "[]")
   HAS_SEV=$(echo "$VIOLATIONS" | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     console.log(d.length>0&&d[0].severity?'yes':'no')}catch{console.log('no')}" 2>/dev/null)
   check "S3.03 Violations array has severity field" "test '$HAS_SEV' = 'yes'"
 
   # S3.04: Constraints array with scope object
-  CONSTRAINTS=$(api_get "/api/governance/constraints" 2>/dev/null || echo "[]")
+  CONSTRAINTS=$(api_get "/api/management/constraints" 2>/dev/null || echo "[]")
   HAS_SCOPE=$(echo "$CONSTRAINTS" | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     console.log(d.length>0&&d[0].scope?'yes':'no')}catch{console.log('no')}" 2>/dev/null)
   check "S3.04 Constraints array has scope object" "test '$HAS_SCOPE' = 'yes'"
 
   # S3.05: Approvals array with status
-  APPROVALS=$(api_get "/api/governance/approvals" 2>/dev/null || echo "[]")
+  APPROVALS=$(api_get "/api/management/approvals" 2>/dev/null || echo "[]")
   APP_COUNT=$(echo "$APPROVALS" | jlen)
   # May be 0 if engine tests didn't create persistent approvals via the dashboard
   soft "S3.05 Approvals endpoint returns array (count=$APP_COUNT)" "echo '$APPROVALS' | node -e 'JSON.parse(require(\"fs\").readFileSync(0,\"utf8\"))'"
@@ -1250,17 +1250,17 @@ if [ "$START_PHASE" -le 3 ]; then
   check "S3.06 Entity count >= 7 (got $ENTITY_COUNT)" "test $ENTITY_COUNT -ge 7"
 
   # S3.07: Circuit breaker reset endpoint returns valid JSON
-  RESET_OK=$(api_post "/api/governance/circuit-breaker/reset" '{}' 2>/dev/null | node -e "
+  RESET_OK=$(api_post "/api/management/circuit-breaker/reset" '{}' 2>/dev/null | node -e "
     try{JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('yes')}catch{console.log('no')}" 2>/dev/null || echo 'no')
   check "S3.07 Circuit breaker reset returns valid JSON" "test '$RESET_OK' = 'yes'"
 
   # S3.08: Approvals decide endpoint
-  FIRST_APPROVAL_ID=$(api_get "/api/governance/approvals" 2>/dev/null | node -e "
+  FIRST_APPROVAL_ID=$(api_get "/api/management/approvals" 2>/dev/null | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     const p=d.find(a=>a.status==='PENDING');
     console.log(p?p.id:'')}catch{console.log('')}" 2>/dev/null)
   if [ -n "$FIRST_APPROVAL_ID" ]; then
-    DECIDE_OK=$(api_post "/api/governance/approvals/$FIRST_APPROVAL_ID/decide" '{"decision":"REJECTED","reason":"structural test"}' 2>/dev/null | node -e "
+    DECIDE_OK=$(api_post "/api/management/approvals/$FIRST_APPROVAL_ID/decide" '{"decision":"REJECTED","reason":"structural test"}' 2>/dev/null | node -e "
       try{JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('yes')}catch{console.log('no')}" 2>/dev/null || echo 'no')
     check "S3.08 Approvals decide endpoint works" "test '$DECIDE_OK' = 'yes'"
   else
@@ -1268,7 +1268,7 @@ if [ "$START_PHASE" -le 3 ]; then
   fi
 
   # S3.09: Dashboard pages accessible
-  for page in "/" "/business-goals" "/governance"; do
+  for page in "/" "/business-goals" "/management"; do
     check "S3.09 Dashboard page $page" "curl -sf $DASHBOARD_URL$page >/dev/null"
   done
 
@@ -1287,7 +1287,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
 
   # Capture baseline metrics before business scenario
   BASELINE_ENTITIES=$(api_get "/api/entities" | jlen)
-  BASELINE_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
+  BASELINE_VIOLATIONS=$(api_get "/api/management/violations" | jlen)
   BASELINE_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
   BASELINE_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
   BASELINE_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
@@ -1310,7 +1310,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   check "B4.01 Turn 1 produced response" "test -s $LOG_DIR/turn-1.log"
   soft  "B4.02 Mentions plan/strategy" "grep -qiE '计划|方案|策略|运营|plan|strategy' $LOG_DIR/turn-1.log"
   soft  "B4.03 Mentions GEO/stores/platforms" "grep -qiE '门店|GEO|能见度|豆包|千问|元宝|被看见' $LOG_DIR/turn-1.log"
-  soft  "B4.04 Mentions management/governance" "grep -qiE '审批|管理|治理|governance|approval|约束|规矩' $LOG_DIR/turn-1.log"
+  soft  "B4.04 Mentions management/management" "grep -qiE '审批|管理|治理|management|approval|约束|规矩' $LOG_DIR/turn-1.log"
 
   # ── Turn 2: Authorization + Modeling ────────────────────
   log "Turn 2: Authorization to model..."
@@ -1372,25 +1372,25 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
 
   soft "B4.13 Response mentions specific stores" "grep -qiE '声临其境|悠然茶室|棋乐无穷|store-cs' $LOG_DIR/turn-3.log"
 
-  # ── Turn 4: Governance Trigger — Content Publish ────────
-  log "Turn 4: Governance trigger — content publish..."
+  # ── Turn 4: Management Trigger — Content Publish ────────
+  log "Turn 4: Management trigger — content publish..."
   aida_say 4 "草稿内容我过目了，质量不错。请把今天生成的GEO内容全部标记为发布就绪（publishReady: true），准备对外分发。"
 
   check "B4.14 Turn 4 produced response" "test -s $LOG_DIR/turn-4.log"
 
   sleep 3
 
-  # Check governance triggered
-  POST_GOV_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
+  # Check management triggered
+  POST_GOV_VIOLATIONS=$(api_get "/api/management/violations" | jlen)
   GOV_NEW_VIOLATIONS=$((POST_GOV_VIOLATIONS - BASELINE_VIOLATIONS))
-  POST_GOV_APPROVALS=$(api_get "/api/governance/approvals" | jlen)
-  soft "B4.15 Governance violations increased (new=$GOV_NEW_VIOLATIONS)" "test $GOV_NEW_VIOLATIONS -ge 1"
-  soft "B4.16 Aida reports governance interception" "grep -qiE '审批|approval|拦截|governance|blocked|REQUIRE_APPROVAL|等待' $LOG_DIR/turn-4.log"
+  POST_GOV_APPROVALS=$(api_get "/api/management/approvals" | jlen)
+  soft "B4.15 Management violations increased (new=$GOV_NEW_VIOLATIONS)" "test $GOV_NEW_VIOLATIONS -ge 1"
+  soft "B4.16 Aida reports management interception" "grep -qiE '审批|approval|拦截|management|blocked|REQUIRE_APPROVAL|等待' $LOG_DIR/turn-4.log"
   soft "B4.17 Aida mentions approval ID or Dashboard" "grep -qiE 'Approval|Dashboard|3456|审批单|审批.*ID|id.*审批' $LOG_DIR/turn-4.log"
 
   # ── Step 5: Programmatic Approval (no agent turn) ───────
   log "Step 5: Programmatic approval via Dashboard API..."
-  PENDING_IDS=$(api_get "/api/governance/approvals" 2>/dev/null | node -e "
+  PENDING_IDS=$(api_get "/api/management/approvals" 2>/dev/null | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     const pending=d.filter(a=>a.status==='PENDING').map(a=>a.id);
     console.log(pending.join(' '))}catch{console.log('')}" 2>/dev/null || echo "")
@@ -1401,7 +1401,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   APPROVED_COUNT=0
   for aid in $PENDING_IDS; do
     if [ -n "$aid" ]; then
-      RESULT=$(api_post "/api/governance/approvals/$aid/decide" '{"decision":"APPROVED","decidedBy":"geo-lead","reason":"R3 test: content quality verified"}' 2>/dev/null || echo '{}')
+      RESULT=$(api_post "/api/management/approvals/$aid/decide" '{"decision":"APPROVED","decidedBy":"geo-lead","reason":"R3 test: content quality verified"}' 2>/dev/null || echo '{}')
       if echo "$RESULT" | node -e "try{JSON.parse(require('fs').readFileSync(0,'utf8'));process.exit(0)}catch{process.exit(1)}" 2>/dev/null; then
         APPROVED_COUNT=$((APPROVED_COUNT + 1))
       fi
@@ -1446,7 +1446,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   aida_say 8 "看看管理制度执行得怎么样——有没有违规记录、约束效能分析、熔断器什么状态。我要知道管理规矩有没有被有效执行。"
 
   check "B4.26 Turn 8 produced response" "test -s $LOG_DIR/turn-8.log"
-  soft  "B4.27 Mentions governance details" "grep -qiE 'violation|constraint|熔断|circuit|违规|约束|效能|effectiveness' $LOG_DIR/turn-8.log"
+  soft  "B4.27 Mentions management details" "grep -qiE 'violation|constraint|熔断|circuit|违规|约束|效能|effectiveness' $LOG_DIR/turn-8.log"
 
   log "Phase 4 complete."
 fi
@@ -1461,14 +1461,14 @@ section "5: Final Verification + Report"
 log "Collecting final metrics..."
 
 FINAL_ENTITIES=$(api_get "/api/entities" | jlen)
-FINAL_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
-FINAL_CONSTRAINTS=$(api_get "/api/governance/constraints" | jlen)
+FINAL_VIOLATIONS=$(api_get "/api/management/violations" | jlen)
+FINAL_CONSTRAINTS=$(api_get "/api/management/constraints" | jlen)
 FINAL_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
 FINAL_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
 FINAL_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
 
 check "V5.1 Final entity count stable (got $FINAL_ENTITIES)" "test $FINAL_ENTITIES -ge 7"
-check "V5.2 Governance constraints loaded (got $FINAL_CONSTRAINTS)" "test $FINAL_CONSTRAINTS -ge 3"
+check "V5.2 Management constraints loaded (got $FINAL_CONSTRAINTS)" "test $FINAL_CONSTRAINTS -ge 3"
 check "V5.3 Skills intact (got $FINAL_SKILLS)" "test $FINAL_SKILLS -ge 7"
 
 if [ "$ENGINE_ONLY" = false ]; then
@@ -1499,7 +1499,7 @@ if [ "$ENGINE_ONLY" = false ]; then
   fi
   soft "V5.6 Aida produced content artifacts (write tool calls=$TOTAL_WRITES)" "test ${TOTAL_WRITES:-0} -ge 1"
 
-  soft "V5.7 Governance was exercised (violations=$FINAL_VIOLATIONS)" "test $FINAL_VIOLATIONS -ge 1"
+  soft "V5.7 Management was exercised (violations=$FINAL_VIOLATIONS)" "test $FINAL_VIOLATIONS -ge 1"
 
   AGENT_SKILLS=$((FINAL_SKILLS - ${BASELINE_SKILLS:-0}))
   soft "V5.8 Agent created Skills >= 1 (got $AGENT_SKILLS)" "test ${AGENT_SKILLS:-0} -ge 1"
@@ -1584,7 +1584,7 @@ echo "Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL"
 echo ""
 
 echo "Coverage:"
-echo "  D1: Governance Gating     (S2.01-S2.08c)  10 checks"
+echo "  D1: Management Gating     (S2.01-S2.08c)  10 checks"
 echo "  D2: Circuit Breaker       (S2.09-S2.14)    6 checks"
 echo "  D3: Information Summary   (S2.15-S2.20)    6 checks"
 echo "  D4: Process Groups        (S2.21-S2.24)    4 checks"

@@ -5,15 +5,15 @@ import { Type } from '@sinclair/typebox';
 import { stringify as stringifyYaml } from 'yaml';
 import { loadBlueprintFromString, type LoadResult } from '../loader/yaml-loader.js';
 import { isSimplifiedFormat, compileBlueprint, type CompileResult } from '../loader/blueprint-compiler.js';
-import { loadGovernanceFile, loadGovernanceFromString } from '../governance/governance-loader.js';
+import { loadManagementFile, loadManagementFromString } from '../management/management-loader.js';
 import { parse as parseYaml } from 'yaml';
 import type { ProcessTracker } from '../engine/process-tracker.js';
 import type { BlueprintStore } from '../store/blueprint-store.js';
 import type { ProcessStore } from '../store/process-store.js';
 import type { DossierStore } from '../store/dossier-store.js';
 import type { OpenClawAgentTool, OpenClawLogger } from './openclaw-types.js';
-import type { ActionGate } from '../governance/action-gate.js';
-import type { GovernanceStore } from '../governance/governance-store.js';
+import type { ActionGate } from '../management/action-gate.js';
+import type { ManagementStore } from '../management/management-store.js';
 import type { SkillMetricsStore } from '../store/skill-metrics-store.js';
 
 export interface BpsToolDeps {
@@ -23,8 +23,8 @@ export interface BpsToolDeps {
   dossierStore: DossierStore;
   logger?: OpenClawLogger;
   skillsDir?: string;
-  governanceGate?: ActionGate;
-  governanceStore?: GovernanceStore;
+  managementGate?: ActionGate;
+  managementStore?: ManagementStore;
   skillMetricsStore?: SkillMetricsStore;
 }
 
@@ -653,21 +653,21 @@ function createCreateSkillTool(deps: BpsToolDeps): OpenClawAgentTool {
         return { success: false, error: `Skill "${name}" already exists at ${skillPath}.` };
       }
 
-      // Auto-inject governance section from active constraints
-      let governanceSection = '';
-      if (deps.governanceStore) {
-        const constraints = deps.governanceStore.listConstraints();
+      // Auto-inject management section from active constraints
+      let managementSection = '';
+      if (deps.managementStore) {
+        const constraints = deps.managementStore.listConstraints();
         if (constraints.length > 0) {
           const lines = constraints.map(c =>
             `- **${c.label}** [${c.severity}]: ${c.message} (action: ${c.onViolation})`
           );
-          governanceSection = [
+          managementSection = [
             '',
-            '## Governance',
+            '## Management',
             '',
-            'This Skill operates under the following project governance constraints.',
+            'This Skill operates under the following project management constraints.',
             'All write operations (`bps_update_entity`, `bps_create_task`, etc.) are automatically checked.',
-            '**Always create/update an entity via `bps_update_entity` before writing output files** — this triggers governance review.',
+            '**Always create/update an entity via `bps_update_entity` before writing output files** — this triggers management review.',
             '',
             ...lines,
           ].join('\n');
@@ -680,7 +680,7 @@ function createCreateSkillTool(deps: BpsToolDeps): OpenClawAgentTool {
         `description: ${description}`,
         '---',
         body,
-        governanceSection,
+        managementSection,
       ].join('\n');
 
       fs.mkdirSync(skillDir, { recursive: true });
@@ -759,21 +759,21 @@ function createLoadBlueprintTool(deps: BpsToolDeps): OpenClawAgentTool {
   };
 }
 
-// ——— 14. bps_governance_status ———
+// ——— 14. bps_management_status ———
 
-function createGovernanceStatusTool(deps: BpsToolDeps): OpenClawAgentTool {
+function createManagementStatusTool(deps: BpsToolDeps): OpenClawAgentTool {
   return {
-    name: 'bps_governance_status',
-    description: 'Query the current governance status: circuit breaker state, recent violations, active constraints, and pending approvals.',
+    name: 'bps_management_status',
+    description: 'Query the current management status: circuit breaker state, recent violations, active constraints, and pending approvals.',
     parameters: Type.Object({}),
     async execute() {
-      if (!deps.governanceStore) {
-        return { error: 'Governance layer not configured' };
+      if (!deps.managementStore) {
+        return { error: 'Management layer not configured' };
       }
-      const cbState = deps.governanceStore.getCircuitBreakerState();
-      const violations = deps.governanceStore.getRecentViolations(10);
-      const constraints = deps.governanceStore.listConstraints();
-      const pendingApprovals = deps.governanceStore.getPendingApprovals();
+      const cbState = deps.managementStore.getCircuitBreakerState();
+      const violations = deps.managementStore.getRecentViolations(10);
+      const constraints = deps.managementStore.listConstraints();
+      const pendingApprovals = deps.managementStore.getPendingApprovals();
 
       return {
         circuitBreakerState: cbState.state,
@@ -787,47 +787,47 @@ function createGovernanceStatusTool(deps: BpsToolDeps): OpenClawAgentTool {
           message: v.message,
           createdAt: v.createdAt,
         })),
-        constraintEffectiveness: deps.governanceStore.getConstraintEffectiveness(),
+        constraintEffectiveness: deps.managementStore.getConstraintEffectiveness(),
       };
     },
   };
 }
 
-// ——— 15. bps_load_governance ———
+// ——— 15. bps_load_management ———
 
-const LoadGovernanceInput = Type.Object({
-  yaml: Type.Optional(Type.String({ description: 'Governance YAML content. Supports both policies[] format and flat constraints[] format. If omitted, reloads from ~/.aida/governance.yaml.' })),
+const LoadManagementInput = Type.Object({
+  yaml: Type.Optional(Type.String({ description: 'Management YAML content. Supports both policies[] format and flat constraints[] format. If omitted, reloads from ~/.aida/management.yaml.' })),
 });
 
-function createLoadGovernanceTool(deps: BpsToolDeps): OpenClawAgentTool {
+function createLoadManagementTool(deps: BpsToolDeps): OpenClawAgentTool {
   return {
-    name: 'bps_load_governance',
-    description: 'Load or reload governance constraints into the running engine. Accepts YAML content directly or reloads from ~/.aida/governance.yaml. Use after writing governance.yaml mid-session to activate constraints.',
-    parameters: LoadGovernanceInput,
+    name: 'bps_load_management',
+    description: 'Load or reload management constraints into the running engine. Accepts YAML content directly or reloads from ~/.aida/management.yaml. Use after writing management.yaml mid-session to activate constraints.',
+    parameters: LoadManagementInput,
     async execute(_callId: string, input: unknown) {
-      if (!deps.governanceStore || !deps.governanceGate) {
-        return { error: 'Governance layer not configured. Cannot load governance without GovernanceStore and ActionGate.' };
+      if (!deps.managementStore || !deps.managementGate) {
+        return { error: 'Management layer not configured. Cannot load management without ManagementStore and ActionGate.' };
       }
 
       const { yaml } = input as { yaml?: string };
 
       // Load from YAML string or from default file path
       const result = yaml
-        ? loadGovernanceFromString(yaml)
-        : loadGovernanceFile(path.join(os.homedir(), '.aida', 'governance.yaml'));
+        ? loadManagementFromString(yaml)
+        : loadManagementFile(path.join(os.homedir(), '.aida', 'management.yaml'));
 
       if (result.errors.length > 0) {
         return {
           success: false,
           errors: result.errors,
-          hint: 'Check governance YAML format. Supports "policies[].constraints[]" or flat "constraints[]" at top level.',
+          hint: 'Check management YAML format. Supports "policies[].constraints[]" or flat "constraints[]" at top level.',
         };
       }
 
       // Reload constraints into the store (idempotent: clears existing, inserts new)
-      const count = deps.governanceStore.loadConstraints(result.constraints);
+      const count = deps.managementStore.loadConstraints(result.constraints);
 
-      deps.logger?.info(`Governance reloaded: ${count} constraints`, {
+      deps.logger?.info(`Management reloaded: ${count} constraints`, {
         constraints: result.constraints.map(c => c.id),
       });
 
@@ -947,16 +947,16 @@ function createRegisterAgentTool(_deps: BpsToolDeps): OpenClawAgentTool {
   };
 }
 
-// ——— Governance wrapper ———
+// ——— Management wrapper ———
 
-/** Wrap a write-operation tool with governance checks.
+/** Wrap a write-operation tool with management checks.
  *
  * BLOCK and REQUIRE_APPROVAL verdicts throw an Error so that the agent
  * framework surfaces them as tool failures — LLMs reliably interpret
  * thrown errors as "the operation did not happen", whereas they often
  * ignore `{success: false}` buried in a JSON return value.
  */
-function wrapWithGovernance(
+function wrapWithManagement(
   tool: OpenClawAgentTool,
   gate: ActionGate,
 ): OpenClawAgentTool {
@@ -970,7 +970,7 @@ function wrapWithGovernance(
         const violations = result.checks.filter(c => !c.passed);
         const details = violations.map(c => `[${c.severity}] ${c.message}`).join('; ');
         throw new Error(
-          `GOVERNANCE BLOCKED: ${tool.name} was blocked by governance policy. ` +
+          `MANAGEMENT BLOCKED: ${tool.name} was blocked by management policy. ` +
           `Circuit breaker: ${result.circuitBreakerState}. ` +
           `Violations: ${details}. ` +
           `The operation was NOT executed. Do NOT tell the user it succeeded.`
@@ -982,7 +982,7 @@ function wrapWithGovernance(
         const constraints = result.checks.filter(c => !c.passed);
         const details = constraints.map(c => `[${c.severity}] ${c.message}`).join('; ');
         throw new Error(
-          `GOVERNANCE APPROVAL REQUIRED: ${tool.name} requires human approval before execution. ` +
+          `MANAGEMENT APPROVAL REQUIRED: ${tool.name} requires human approval before execution. ` +
           `Approval ID: ${approvalId}. ` +
           `Constraints triggered: ${details}. ` +
           `The operation was NOT executed. Tell the user this action needs approval in the Dashboard.`
@@ -1073,8 +1073,8 @@ function createBatchUpdateTool(deps: BpsToolDeps): OpenClawAgentTool {
   };
 }
 
-/** Tools that should be wrapped with governance */
-import { GATED_WRITE_TOOLS } from '../governance/constants.js';
+/** Tools that should be wrapped with management */
+import { GATED_WRITE_TOOLS } from '../management/constants.js';
 const WRITE_TOOLS = new Set<string>(GATED_WRITE_TOOLS);
 
 // ——— 导出：创建所有工具 ———
@@ -1098,17 +1098,17 @@ export function createBpsTools(deps: BpsToolDeps): OpenClawAgentTool[] {
     createBatchUpdateTool(deps),
   ];
 
-  // Add governance tools if governance is configured
-  if (deps.governanceStore) {
-    tools.push(createGovernanceStatusTool(deps));
-    tools.push(createLoadGovernanceTool(deps));
+  // Add management tools if management is configured
+  if (deps.managementStore) {
+    tools.push(createManagementStatusTool(deps));
+    tools.push(createLoadManagementTool(deps));
   }
 
-  // Wrap write-operation tools with governance if gate is provided
-  if (deps.governanceGate) {
+  // Wrap write-operation tools with management if gate is provided
+  if (deps.managementGate) {
     tools = tools.map(tool =>
       WRITE_TOOLS.has(tool.name)
-        ? wrapWithGovernance(tool, deps.governanceGate!)
+        ? wrapWithManagement(tool, deps.managementGate!)
         : tool
     );
   }

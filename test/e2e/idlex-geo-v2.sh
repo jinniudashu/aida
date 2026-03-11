@@ -159,10 +159,10 @@ blueprints: []
 knowledge: []
 YAML
 
-  # ── 1b. governance.yaml ──
-  log "Creating governance.yaml..."
-  cat > "$AIDA_HOME/governance.yaml" << 'YAML'
-# IdleX GEO Governance Constraints
+  # ── 1b. management.yaml ──
+  log "Creating management.yaml..."
+  cat > "$AIDA_HOME/management.yaml" << 'YAML'
+# IdleX GEO Management Constraints
 # Broader entityType matching to handle Aida's naming variations
 
 policies:
@@ -268,11 +268,11 @@ CTXEOF
   cat > .tmp-seed.ts << 'TYPESCRIPT'
 import path from 'node:path';
 import fs from 'node:fs';
-import { createBpsEngine, createDatabase, GovernanceStore, loadGovernanceFile } from './src/index.js';
+import { createBpsEngine, createDatabase, ManagementStore, loadManagementFile } from './src/index.js';
 
 const HOME = process.env.HOME || '/root';
 const DB_PATH = path.resolve(HOME, '.aida', 'data', 'bps.db');
-const GOV_PATH = path.resolve(HOME, '.aida', 'governance.yaml');
+const GOV_PATH = path.resolve(HOME, '.aida', 'management.yaml');
 
 console.log(`[seed] DB: ${DB_PATH}`);
 const db = createDatabase(DB_PATH);
@@ -369,13 +369,13 @@ for (const store of stores) {
   console.log(`[seed] + ${data.nameCN} (${id})`);
 }
 
-// Load governance
+// Load management
 if (fs.existsSync(GOV_PATH)) {
-  const govStore = new GovernanceStore(db);
-  const result = loadGovernanceFile(GOV_PATH);
+  const mgmtStore = new ManagementStore(db);
+  const result = loadManagementFile(GOV_PATH);
   if (result.errors.length > 0) console.log(`[seed] WARN: ${result.errors.join(', ')}`);
-  govStore.loadConstraints(result.constraints);
-  console.log(`[seed] + ${result.constraints.length} governance constraints`);
+  mgmtStore.loadConstraints(result.constraints);
+  console.log(`[seed] + ${result.constraints.length} management constraints`);
 }
 
 console.log(`[seed] Done: ${dossierStore.query({}).length} entities total`);
@@ -394,8 +394,8 @@ TYPESCRIPT
   SC=$(api_get "/api/entities?entityType=store" | jlen)
   check "V1.1 5 store entities (got $SC)" "test $SC -ge 5"
 
-  GC=$(api_get "/api/governance/constraints" | jlen)
-  check "V1.2 >= 3 governance constraints (got $GC)" "test $GC -ge 3"
+  GC=$(api_get "/api/management/constraints" | jlen)
+  check "V1.2 >= 3 management constraints (got $GC)" "test $GC -ge 3"
 
   CC=$(ls "$AIDA_HOME/context/"*.md 2>/dev/null | wc -l)
   check "V1.3 Context docs present (got $CC)" "test $CC -ge 1"
@@ -523,7 +523,7 @@ fi
 if [ "$START_PHASE" -le 5 ]; then
   section "5: GEO Execution (Turn 4)"
 
-  VIO_BEFORE=$(api_get "/api/governance/violations" | jlen)
+  VIO_BEFORE=$(api_get "/api/management/violations" | jlen)
 
   aida_say 4 '确认没问题，开始今天的GEO日常运营工作吧。'
 
@@ -531,21 +531,21 @@ if [ "$START_PHASE" -le 5 ]; then
 
   log "V5: Post-execution checks"
 
-  # Check governance trigger
-  VIO_AFTER=$(api_get "/api/governance/violations" | jlen)
+  # Check management trigger
+  VIO_AFTER=$(api_get "/api/management/violations" | jlen)
   NEW_VIO=$((VIO_AFTER - VIO_BEFORE))
-  PENDING=$(api_get "/api/governance/approvals" | node -e "
+  PENDING=$(api_get "/api/management/approvals" | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     console.log(d.filter(a=>a.status==='PENDING').length)}catch{console.log(0)}" 2>/dev/null)
 
   if [ "$NEW_VIO" -ge 1 ] || [ "${PENDING:-0}" -ge 1 ]; then
-    pass "V5.1 Governance triggered (violations: +$NEW_VIO, pending: $PENDING)"
+    pass "V5.1 Management triggered (violations: +$NEW_VIO, pending: $PENDING)"
   else
-    warn_ "V5.1 No governance trigger (Aida may not have attempted publish)"
+    warn_ "V5.1 No management trigger (Aida may not have attempted publish)"
   fi
 
-  soft "V5.2 Aida reported governance interception" \
-    "grep -qiE 'approval|审批|governance|blocked|拦截|治理' $LOG_DIR/turn-4.log"
+  soft "V5.2 Aida reported management interception" \
+    "grep -qiE 'approval|审批|management|blocked|拦截|治理' $LOG_DIR/turn-4.log"
 
   # Check for content/probe entities
   log "GEO entity scan:"
@@ -567,7 +567,7 @@ if [ "$START_PHASE" -le 6 ]; then
   aida_say 5 '收到，我去Dashboard处理审批。'
 
   # Programmatic approval of all pending items
-  APPROVALS=$(api_get "/api/governance/approvals" || echo "[]")
+  APPROVALS=$(api_get "/api/management/approvals" || echo "[]")
   PENDING_IDS=$(echo "$APPROVALS" | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     d.filter(a=>a.status==='PENDING').forEach(a=>console.log(a.id))}catch{}" 2>/dev/null)
@@ -577,7 +577,7 @@ if [ "$START_PHASE" -le 6 ]; then
     while IFS= read -r aid; do
       [ -z "$aid" ] && continue
       log "Approving: $aid"
-      RESULT=$(api_post "/api/governance/approvals/$aid/decide" '{"decision":"APPROVED","decidedBy":"owner"}' || echo "{}")
+      RESULT=$(api_post "/api/management/approvals/$aid/decide" '{"decision":"APPROVED","decidedBy":"owner"}' || echo "{}")
       if echo "$RESULT" | grep -qiE 'APPROVED|success|approved'; then
         APPROVED_N=$((APPROVED_N + 1))
       else
@@ -629,15 +629,15 @@ if [ "$START_PHASE" -le 8 ]; then
     Object.entries(t).sort().forEach(([k,v])=>console.log('  '+k+': '+v))
   " 2>/dev/null || true
 
-  # Governance
-  TV=$(api_get "/api/governance/violations" | jlen)
-  TA=$(api_get "/api/governance/approvals" | node -e "
+  # Management
+  TV=$(api_get "/api/management/violations" | jlen)
+  TA=$(api_get "/api/management/approvals" | node -e "
     try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
     console.log(d.filter(a=>a.status==='APPROVED').length)}catch{console.log(0)}" 2>/dev/null)
   log "  Violations: $TV, Approved: $TA"
 
   # Dashboard pages
-  for page in "/" "/business-goals" "/approvals" "/governance" "/agent-log"; do
+  for page in "/" "/business-goals" "/approvals" "/management" "/agent-log"; do
     check "V8.2 Dashboard $page" "curl -sf $DASHBOARD_URL$page >/dev/null"
   done
 
@@ -686,9 +686,9 @@ echo "Logs:      $LOG_DIR/turn-{1..6}.log"
 echo "Dashboard: $DASHBOARD_URL"
 echo ""
 echo "Manual verification:"
-echo "  $DASHBOARD_URL/              — Overview (entities + governance)"
+echo "  $DASHBOARD_URL/              — Overview (entities + management)"
 echo "  $DASHBOARD_URL/business-goals — Action plans"
-echo "  $DASHBOARD_URL/governance     — Constraints + violations + approvals"
+echo "  $DASHBOARD_URL/management     — Constraints + violations + approvals"
 echo "  $DASHBOARD_URL/agent-log      — Audit trail"
 echo ""
 

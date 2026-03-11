@@ -67,8 +67,8 @@ results/{model-id}/
 |-----------|--------|-----------------|
 | Business Understanding | 0.20 | IdleX context, store differentiation, strategy |
 | Tool Invocation | 0.25 | BPS tool call density + correctness |
-| Two-Layer Routing | 0.15 | Governance vs Operations classification |
-| Governance Closure | 0.15 | Triggers interception + approval flow |
+| Two-Layer Routing | 0.15 | Management vs Operations classification |
+| Management Closure | 0.15 | Triggers interception + approval flow |
 | Self-Evolution | 0.15 | Skills, Agents, Cron creation |
 | Response Quality | 0.10 | Business value, actionability |
 

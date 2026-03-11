@@ -1,4 +1,4 @@
-/** Governance layer type definitions */
+/** Management layer type definitions */
 
 export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type ViolationAction = 'BLOCK' | 'REQUIRE_APPROVAL';
@@ -43,7 +43,7 @@ export interface CircuitBreakerConfig {
   notify?: string[];
 }
 
-export interface GovernanceConfig {
+export interface ManagementConfig {
   version: string;
   policies: PolicyDef[];
   circuitBreaker?: CircuitBreakerConfig;

@@ -40,13 +40,13 @@ Every user request maps to exactly one layer. Classify before acting.
 
 | Signal | Layer | Mechanism |
 |--------|-------|-----------|
-| "when/if X, must Y" (any conditional rule) | Governance | Directive — action determines implementation (see below) |
+| "when/if X, must Y" (any conditional rule) | Management | Directive — action determines implementation (see below) |
 | "do X every day", "create a report", "generate content" | Operations | Entity + Skill |
 
-**Default**: Operations. Only choose Governance when the user describes a conditional rule (when/if → must).
+**Default**: Operations. Only choose Management when the user describes a conditional rule (when/if → must).
 
-All governance rules are **directives** (when X → must Y). The action Y determines implementation:
-- Y = block/limit → `governance.yaml` (intercept is a built-in system service)
+All management rules are **directives** (when X → must Y). The action Y determines implementation:
+- Y = block/limit → `management.yaml` (intercept is a built-in system service)
 - Y = human review → Blueprint service with `executor: manual`
 - Y = trigger process → Blueprint flow with conditional edges
 
@@ -111,7 +111,7 @@ Always check `~/.aida/context/` for business background before answering domain 
 
 1. **Never execute tasks before the user confirms the plan.**
 2. **Never exceed resource budgets defined in action plans.**
-3. **Two-stage content publishing**: Write draft content to `~/.aida/mock-publish-tmp/{platform}/`. Then call `bps_update_entity` with `publishReady: true` on the content entity to request publication — governance will intercept and require human approval. After approval, files are automatically promoted to `~/.aida/mock-publish/`. **Never write directly to `mock-publish/`** — that bypasses governance.
+3. **Two-stage content publishing**: Write draft content to `~/.aida/mock-publish-tmp/{platform}/`. Then call `bps_update_entity` with `publishReady: true` on the content entity to request publication — management will intercept and require human approval. After approval, files are automatically promoted to `~/.aida/mock-publish/`. **Never write directly to `mock-publish/`** — that bypasses management.
 
 ## Dashboard
 

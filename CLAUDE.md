@@ -41,7 +41,7 @@ aida/
 ├── src/                      ← 引擎核心（tsc 编译域）
 │   ├── store/                ← SQLite 持久化（6 文件）
 │   ├── engine/               ← 任务追踪 + 状态机（2 文件）
-│   ├── governance/           ← 治理层（4 文件）
+│   ├── management/           ← 管理层（5 文件）
 │   ├── knowledge/            ← BKM 知识管理（3 文件）
 │   ├── loader/               ← 项目装载（4 文件）
 │   ├── integration/          ← OpenClaw 桥接（5 文件）
@@ -654,6 +654,26 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - #5 两阶段发现：Aida 从治理拦截自然推导出发布→审批→分发流程
 - **1 FAIL**：V5.2 constraints=2（Aida 自建覆盖种子 3），建议阈值改为 ≥2
 - **遗留**：Turn 6 `unexpected_state` 仍阻止 Agent workspace 创建（OpenClaw 框架问题）
+
+### Governance→Management 术语重命名（2026-03-11）
+- **决策**：将代码和 Aida 接触面中的 "Governance" 全部替换为 "Management"，"Governance" 一词保留给未来 Aida 与实例外部治理层的治理约定
+- **语义区分**：Management = Aida 实例内约束/审批系统（管理层），Governance = 未来外部治理层（保留）
+- **文件重命名**（`git mv`）：
+  - `src/governance/` → `src/management/`（含 management-store.ts, management-loader.ts, action-gate.ts, constants.ts, types.ts）
+  - `test/governance.test.ts` → `test/management.test.ts`
+  - `dashboard/test/api-governance.test.ts` → `dashboard/test/api-management.test.ts`
+  - `dashboard/client/src/pages/GovernancePage.vue` → `dashboard/client/src/pages/ManagementPage.vue`
+  - `dashboard/blueprints/governance.yaml` → `dashboard/blueprints/management.yaml`
+- **内容替换**（~50 个非归档文件）：
+  - 变量/类名：`govStore` → `mgmtStore`, `GovernanceStore` → `ManagementStore`, `GovernanceLoader` → `ManagementLoader`
+  - DB 索引：`idx_gov_` → `idx_mgmt_`
+  - 函数名：`resetGovernance` → `resetManagement`, `loadGovernance` → `loadManagement`
+  - 工具名：`bps_governance_status` → `bps_management_status`, `bps_load_governance` → `bps_load_management`
+  - API 路径：`/api/governance/` → `/api/management/`
+  - DB 表名：`bps_governance_*` → `bps_management_*`
+  - 事件名：`governance:*` → `management:*`
+  - E2E 脚本、Agent workspace（TOOLS.md）同步更新
+- **测试**：437 tests 全部通过，TypeScript 编译无错误
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

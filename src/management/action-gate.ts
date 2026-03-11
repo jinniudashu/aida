@@ -1,5 +1,5 @@
 import { Parser } from 'expr-eval';
-import type { GovernanceStore } from './governance-store.js';
+import type { ManagementStore } from './management-store.js';
 import type {
   ConstraintDef,
   ConstraintCheck,
@@ -10,7 +10,7 @@ import type {
 } from './types.js';
 import { GATED_WRITE_TOOLS } from './constants.js';
 
-/** Tools that are subject to governance checks (write operations) */
+/** Tools that are subject to management checks (write operations) */
 const GATED_TOOLS = new Set<string>(GATED_WRITE_TOOLS);
 
 /** Default circuit breaker config if not specified */
@@ -28,7 +28,7 @@ export class ActionGate {
   private cbConfig: CircuitBreakerConfig;
 
   constructor(
-    private store: GovernanceStore,
+    private store: ManagementStore,
     cbConfig?: CircuitBreakerConfig,
   ) {
     this.cbConfig = cbConfig ?? DEFAULT_CB_CONFIG;
@@ -209,7 +209,7 @@ export class ActionGate {
       if (input.id !== undefined) ctx.agentId = input.id;
       if (input.toolsProfile !== undefined) ctx.toolsProfile = input.toolsProfile;
     }
-    if (toolName === 'bps_load_governance') {
+    if (toolName === 'bps_load_management') {
       ctx.inlineYaml = typeof input.yaml === 'string';
     }
 
@@ -332,7 +332,7 @@ export class ActionGate {
     }
     this.stateTransitionCount++;
     if (this.stateTransitionCount > 3) {
-      this.store.emit('governance:oscillation_detected', { state, transitionCount: this.stateTransitionCount });
+      this.store.emit('management:oscillation_detected', { state, transitionCount: this.stateTransitionCount });
       return; // Lock — don't downgrade
     }
 
@@ -342,7 +342,7 @@ export class ActionGate {
       high: 0,
       windowStart: new Date().toISOString(),
     });
-    this.store.emit('governance:cooldown_recovery', { from: state, to: newState });
+    this.store.emit('management:cooldown_recovery', { from: state, to: newState });
   }
 
   private updateCircuitBreaker(): CircuitBreakerState {

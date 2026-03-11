@@ -1,16 +1,16 @@
 ---
 name: blueprint-modeling
-description: Model governance directives as BPS blueprints — conditional rules (when X → must Y) where Y is a non-trivial action (approval, process trigger, orchestration). NOT for daily operational work.
+description: Model management directives as BPS blueprints — conditional rules (when X → must Y) where Y is a non-trivial action (approval, process trigger, orchestration). NOT for daily operational work.
 ---
-# Blueprint Modeling (SBMP) — Governance Directives
+# Blueprint Modeling (SBMP) — Management Directives
 
-Model governance directives as BPS YAML blueprints. All governance rules share the same form: **when X, must Y**. Blueprints handle directives where Y requires orchestration:
+Model management directives as BPS YAML blueprints. All management rules share the same form: **when X, must Y**. Blueprints handle directives where Y requires orchestration:
 
 - "When content is ready, require human review" → flow with a `manual` approval service
 - "When GEO score drops below 60, trigger optimization" → conditional edge `| "GEO score below 60"`
 - "When a new store opens, run the onboarding sequence" → flow chain of services
 
-For simple intercept directives (Y = block/limit), use `governance.yaml` instead — intercept is a built-in system service that doesn't need a Blueprint.
+For simple intercept directives (Y = block/limit), use `management.yaml` instead — intercept is a built-in system service that doesn't need a Blueprint.
 
 **Scope check**: If the user is describing daily work to be done (content generation, data collection, reporting), stop — that belongs to the Operations layer (Entity + Skill). Only proceed if the request is a conditional rule (when/if → must do).
 

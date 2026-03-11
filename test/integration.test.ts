@@ -10,7 +10,7 @@ import {
 import { createBpsTools } from '../src/integration/tools.js';
 import { BpsEventBridge } from '../src/integration/event-bridge.js';
 import { registerBpsPlugin } from '../src/integration/plugin.js';
-import { GovernanceStore } from '../src/governance/governance-store.js';
+import { ManagementStore } from '../src/management/management-store.js';
 import type {
   OpenClawPluginApi,
   OpenClawAgentTool,
@@ -818,9 +818,9 @@ describe('bps_create_skill', () => {
     expect(lines[4]).toBe('# Test');
   });
 
-  it('should auto-inject governance section when constraints exist', async () => {
-    const govStore = new GovernanceStore(engine.db);
-    govStore.loadConstraints([{
+  it('should auto-inject management section when constraints exist', async () => {
+    const mgmtStore = new ManagementStore(engine.db);
+    mgmtStore.loadConstraints([{
       id: 'c-test',
       policyId: 'p-test',
       label: 'Content publish requires approval',
@@ -838,25 +838,25 @@ describe('bps_create_skill', () => {
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
       skillsDir: tmpDir,
-      governanceStore: govStore,
+      managementStore: mgmtStore,
     });
     const govToolMap = new Map(govTools.map(t => [t.name, t]));
 
     await govToolMap.get('bps_create_skill')!.execute('test-call', {
       name: 'gov-test-skill',
-      description: 'Test governance injection.',
+      description: 'Test management injection.',
       body: '# Test\n\nStep 1: do something.',
     });
 
     const content = fs.readFileSync(path.join(tmpDir, 'gov-test-skill', 'SKILL.md'), 'utf-8');
-    expect(content).toContain('## Governance');
+    expect(content).toContain('## Management');
     expect(content).toContain('Content publish requires approval');
     expect(content).toContain('REQUIRE_APPROVAL');
     expect(content).toContain('Always create/update an entity via `bps_update_entity`');
   });
 
-  it('should not inject governance section when no constraints exist', async () => {
-    const govStore = new GovernanceStore(engine.db);
+  it('should not inject management section when no constraints exist', async () => {
+    const mgmtStore = new ManagementStore(engine.db);
 
     const govTools = createBpsTools({
       tracker: engine.tracker,
@@ -864,18 +864,18 @@ describe('bps_create_skill', () => {
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
       skillsDir: tmpDir,
-      governanceStore: govStore,
+      managementStore: mgmtStore,
     });
     const govToolMap = new Map(govTools.map(t => [t.name, t]));
 
     await govToolMap.get('bps_create_skill')!.execute('test-call', {
       name: 'no-gov-skill',
-      description: 'No governance.',
+      description: 'No management.',
       body: '# Test\n\nStep 1: do something.',
     });
 
     const content = fs.readFileSync(path.join(tmpDir, 'no-gov-skill', 'SKILL.md'), 'utf-8');
-    expect(content).not.toContain('## Governance');
+    expect(content).not.toContain('## Management');
   });
 });
 

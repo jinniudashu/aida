@@ -1,6 +1,6 @@
 # AIDA Benchmark Scoring Rubric
 
-Score each dimension 1-10. Evaluate based on **observable artifacts** (tool calls, entities created, governance triggers), not just natural language quality.
+Score each dimension 1-10. Evaluate based on **observable artifacts** (tool calls, entities created, management triggers), not just natural language quality.
 
 ## Dimensions
 
@@ -28,21 +28,21 @@ Score each dimension 1-10. Evaluate based on **observable artifacts** (tool call
 
 | Score | Criteria |
 |-------|----------|
-| 9-10 | Correctly classifies governance (审批/约束 → Blueprint) vs operations (运营任务 → Entity/Skill); creates both layers |
-| 7-8 | Shows awareness of two layers, creates at least one governance artifact (blueprint or constraint) |
-| 5-6 | Mentions governance/operations distinction but doesn't materialize it in tool calls |
-| 3-4 | Mixes governance and operations; no clear separation |
+| 9-10 | Correctly classifies management (审批/约束 → Blueprint) vs operations (运营任务 → Entity/Skill); creates both layers |
+| 7-8 | Shows awareness of two layers, creates at least one management artifact (blueprint or constraint) |
+| 5-6 | Mentions management/operations distinction but doesn't materialize it in tool calls |
+| 3-4 | Mixes management and operations; no clear separation |
 | 1-2 | No awareness of two-layer architecture |
 
-### 4. Governance Closure (weight: 0.15)
+### 4. Management Closure (weight: 0.15)
 
 | Score | Criteria |
 |-------|----------|
-| 9-10 | Triggers governance interception (violations > 0), reports approval ID, enables Dashboard approval→replay loop |
-| 7-8 | Triggers governance interception, reports it to user |
-| 5-6 | Describes governance approval flow but doesn't trigger actual interception |
-| 3-4 | Mentions "审批" in plan but no governance implementation |
-| 1-2 | No governance awareness or implementation |
+| 9-10 | Triggers management interception (violations > 0), reports approval ID, enables Dashboard approval→replay loop |
+| 7-8 | Triggers management interception, reports it to user |
+| 5-6 | Describes management approval flow but doesn't trigger actual interception |
+| 3-4 | Mentions "审批" in plan but no management implementation |
+| 1-2 | No management awareness or implementation |
 
 ### 5. Self-Evolution (weight: 0.15)
 
@@ -68,6 +68,6 @@ Score each dimension 1-10. Evaluate based on **observable artifacts** (tool call
 
 - Score based on what the model **actually did** (tool calls, created artifacts), not what it **said it would do**
 - An empty turn (timeout or no response) scores 0 for that turn's contribution
-- Governance violations count POSITIVELY — they prove the model interacts with the governance layer
+- Management violations count POSITIVELY — they prove the model interacts with the management layer
 - Count entities, skills, agent workspaces, blueprints from metrics.json as objective evidence
 - The weighted total = sum(dimension_score * weight), scale 1-10

@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from './api'
 import { sse } from './sse'
-import type { DashboardOverview, KanbanColumn, ProcessDef, ProcessDetail, DossierSearchResult, EntityDetail, ServiceDef, TimeSeriesPoint, RuleEdge, OperatorWorkload, EntityNetwork, Alert, ServiceActivity, ProcessTreeNode, AgentLogEntry, BusinessGoal, ApprovalItem, GovernanceStatus, GovernanceConstraint, GovernanceViolation, GovernanceApproval } from './api'
+import type { DashboardOverview, KanbanColumn, ProcessDef, ProcessDetail, DossierSearchResult, EntityDetail, ServiceDef, TimeSeriesPoint, RuleEdge, OperatorWorkload, EntityNetwork, Alert, ServiceActivity, ProcessTreeNode, AgentLogEntry, BusinessGoal, ApprovalItem, ManagementStatus, ManagementConstraint, ManagementViolation, ManagementApproval } from './api'
 
 function debounce(fn: () => void, ms: number) {
   let timer: ReturnType<typeof setTimeout> | null = null
@@ -42,8 +42,8 @@ export const useOverviewStore = defineStore('overview', () => {
       sse.on('process:completed', debouncedFetch),
       sse.on('process:error', debouncedFetch),
       sse.on('dossier:committed', debouncedFetch),
-      sse.on('governance:violation', debouncedFetch),
-      sse.on('governance:circuit_breaker_changed', debouncedFetch),
+      sse.on('management:violation', debouncedFetch),
+      sse.on('management:circuit_breaker_changed', debouncedFetch),
     ]
     return () => unsubs.forEach(u => u())
   }
@@ -323,23 +323,23 @@ export const useApprovalsStore = defineStore('approvals', () => {
   return { items, loading, fetch, decide, subscribe }
 })
 
-// --- Governance store ---
+// --- Management store ---
 
-export const useGovernanceStore = defineStore('governance', () => {
-  const status = ref<GovernanceStatus | null>(null)
-  const constraints = ref<GovernanceConstraint[]>([])
-  const violations = ref<GovernanceViolation[]>([])
-  const approvals = ref<GovernanceApproval[]>([])
+export const useManagementStore = defineStore('management', () => {
+  const status = ref<ManagementStatus | null>(null)
+  const constraints = ref<ManagementConstraint[]>([])
+  const violations = ref<ManagementViolation[]>([])
+  const approvals = ref<ManagementApproval[]>([])
   const loading = ref(false)
 
   async function fetch() {
     loading.value = true
     try {
       const [s, c, v, a] = await Promise.all([
-        api.getGovernanceStatus(),
-        api.getGovernanceConstraints(),
-        api.getGovernanceViolations('100'),
-        api.getGovernanceApprovals(),
+        api.getManagementStatus(),
+        api.getManagementConstraints(),
+        api.getManagementViolations('100'),
+        api.getManagementApprovals(),
       ])
       status.value = s
       constraints.value = c
@@ -349,7 +349,7 @@ export const useGovernanceStore = defineStore('governance', () => {
   }
 
   async function decideApproval(id: string, decision: 'APPROVED' | 'REJECTED', decidedBy?: string) {
-    const result = await api.decideGovernanceApproval(id, { decision, decidedBy })
+    const result = await api.decideManagementApproval(id, { decision, decidedBy })
     await fetch()
     return result
   }
@@ -363,10 +363,10 @@ export const useGovernanceStore = defineStore('governance', () => {
     fetch()
     const debouncedFetch = debounce(fetch, 300)
     const unsubs = [
-      sse.on('governance:violation', debouncedFetch),
-      sse.on('governance:approval_created', debouncedFetch),
-      sse.on('governance:approval_decided', debouncedFetch),
-      sse.on('governance:circuit_breaker_changed', debouncedFetch),
+      sse.on('management:violation', debouncedFetch),
+      sse.on('management:approval_created', debouncedFetch),
+      sse.on('management:approval_decided', debouncedFetch),
+      sse.on('management:circuit_breaker_changed', debouncedFetch),
     ]
     return () => unsubs.forEach(u => u())
   }

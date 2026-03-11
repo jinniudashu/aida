@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createMemoryDatabase } from '../src/store/db.js';
-import { GovernanceStore } from '../src/governance/governance-store.js';
-import { ActionGate } from '../src/governance/action-gate.js';
-import { loadGovernanceFromString } from '../src/governance/governance-loader.js';
-import type { ConstraintDef, CircuitBreakerConfig } from '../src/governance/types.js';
+import { ManagementStore } from '../src/management/management-store.js';
+import { ActionGate } from '../src/management/action-gate.js';
+import { loadManagementFromString } from '../src/management/management-loader.js';
+import type { ConstraintDef, CircuitBreakerConfig } from '../src/management/types.js';
 
-// ——— GovernanceStore ———
+// ——— ManagementStore ———
 
-describe('GovernanceStore', () => {
-  let store: GovernanceStore;
+describe('ManagementStore', () => {
+  let store: ManagementStore;
 
   beforeEach(() => {
     const db = createMemoryDatabase();
-    store = new GovernanceStore(db);
+    store = new ManagementStore(db);
   });
 
   it('should load and list constraints', () => {
@@ -147,10 +147,10 @@ describe('GovernanceStore', () => {
   });
 });
 
-// ——— Governance Loader ———
+// ——— Management Loader ———
 
-describe('GovernanceLoader', () => {
-  it('should parse valid governance YAML', () => {
+describe('ManagementLoader', () => {
+  it('should parse valid management YAML', () => {
     const yaml = `
 version: "1"
 policies:
@@ -174,7 +174,7 @@ circuit_breaker:
       action: DISCONNECT
   cooldown: "30m"
 `;
-    const result = loadGovernanceFromString(yaml);
+    const result = loadManagementFromString(yaml);
     expect(result.errors).toHaveLength(0);
     expect(result.constraints).toHaveLength(1);
     expect(result.constraints[0].id).toBe('budget-cap');
@@ -188,7 +188,7 @@ circuit_breaker:
   });
 
   it('should report errors for invalid YAML', () => {
-    const result = loadGovernanceFromString('not valid yaml: [');
+    const result = loadManagementFromString('not valid yaml: [');
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
@@ -207,7 +207,7 @@ policies:
         severity: HIGH
         message: "msg"
 `;
-    const result = loadGovernanceFromString(yaml);
+    const result = loadManagementFromString(yaml);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
@@ -238,7 +238,7 @@ policies:
         severity: HIGH
         message: "m2"
 `;
-    const result = loadGovernanceFromString(yaml);
+    const result = loadManagementFromString(yaml);
     expect(result.errors).toContain('Duplicate constraint ID: dup');
     expect(result.constraints).toHaveLength(1);
   });
@@ -278,7 +278,7 @@ policies:
         severity: MEDIUM
         message: "m3"
 `;
-    const result = loadGovernanceFromString(yaml);
+    const result = loadManagementFromString(yaml);
     expect(result.errors).toHaveLength(0);
     expect(result.constraints).toHaveLength(3);
   });
@@ -304,7 +304,7 @@ constraints:
     severity: CRITICAL
     message: "Treatment requires signed consent"
 `;
-    const result = loadGovernanceFromString(yaml);
+    const result = loadManagementFromString(yaml);
     expect(result.errors).toHaveLength(0);
     expect(result.constraints).toHaveLength(2);
     expect(result.constraints[0].policyId).toBe('auto-policy');
@@ -324,16 +324,16 @@ constraints:
     severity: CRITICAL
     message: "Botox limit exceeded"
 `;
-    const result = loadGovernanceFromString(yaml);
+    const result = loadManagementFromString(yaml);
     expect(result.errors).toHaveLength(0);
     expect(result.constraints).toHaveLength(1);
     expect(result.constraints[0].onViolation).toBe('BLOCK');
-    // Should default scope.tools to all write tools (except bps_load_governance)
+    // Should default scope.tools to all write tools (except bps_load_management)
     expect(result.constraints[0].scope.tools).toContain('bps_update_entity');
     expect(result.constraints[0].scope.tools).toContain('bps_create_task');
     expect(result.constraints[0].scope.tools).toContain('bps_load_blueprint');
     expect(result.constraints[0].scope.tools).toContain('bps_register_agent');
-    expect(result.constraints[0].scope.tools).not.toContain('bps_load_governance');
+    expect(result.constraints[0].scope.tools).not.toContain('bps_load_management');
     expect(result.constraints[0].scope.tools.length).toBe(8);
   });
 });
@@ -341,12 +341,12 @@ constraints:
 // ——— ActionGate ———
 
 describe('ActionGate', () => {
-  let store: GovernanceStore;
+  let store: ManagementStore;
   let gate: ActionGate;
 
   beforeEach(() => {
     const db = createMemoryDatabase();
-    store = new GovernanceStore(db);
+    store = new ManagementStore(db);
     gate = new ActionGate(store);
   });
 
@@ -531,7 +531,7 @@ describe('ActionGate', () => {
     expect(pending[0].tool).toBe('bps_create_skill');
   });
 
-  // — P0-a: Governance bypass fix — new gated tools —
+  // — P0-a: Management bypass fix — new gated tools —
 
   it('should gate bps_load_blueprint', () => {
     store.loadConstraints([{
@@ -557,15 +557,15 @@ describe('ActionGate', () => {
     expect(result.verdict).toBe('REQUIRE_APPROVAL');
   });
 
-  it('should gate bps_load_governance', () => {
+  it('should gate bps_load_management', () => {
     store.loadConstraints([{
-      id: 'governance-reload-block', policyId: 'p', label: 'Block governance reload',
-      scope: { tools: ['bps_load_governance'] },
+      id: 'management-reload-block', policyId: 'p', label: 'Block management reload',
+      scope: { tools: ['bps_load_management'] },
       condition: 'false', onViolation: 'BLOCK',
-      severity: 'CRITICAL', message: 'Governance reload blocked',
+      severity: 'CRITICAL', message: 'Management reload blocked',
     }]);
 
-    const result = gate.check('bps_load_governance', { yaml: 'constraints: []' });
+    const result = gate.check('bps_load_management', { yaml: 'constraints: []' });
     expect(result.verdict).toBe('BLOCK');
   });
 
@@ -609,12 +609,12 @@ describe('ActionGate', () => {
 // ——— Circuit Breaker ———
 
 describe('CircuitBreaker', () => {
-  let store: GovernanceStore;
+  let store: ManagementStore;
   let gate: ActionGate;
 
   beforeEach(() => {
     const db = createMemoryDatabase();
-    store = new GovernanceStore(db);
+    store = new ManagementStore(db);
     const cbConfig: CircuitBreakerConfig = {
       thresholds: [
         { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
@@ -733,7 +733,7 @@ describe('CircuitBreaker', () => {
     // Set lastStateChange to 2 seconds ago to exceed cooldown
     const db2 = (store as any).db as import('node:sqlite').DatabaseSync;
     const pastTime = new Date(Date.now() - 2000).toISOString();
-    db2.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${pastTime}' WHERE id = 'singleton'`);
+    db2.exec(`UPDATE bps_management_circuit_breaker SET last_state_change = '${pastTime}' WHERE id = 'singleton'`);
 
     // Next check should trigger cooldown recovery (no constraints → no violations → recovery)
     const result = gate2.check('bps_update_entity', { entityType: 'x', entityId: '1', data: {} });
@@ -763,7 +763,7 @@ describe('CircuitBreaker', () => {
     // Set lastStateChange to the past but keep the constraint active
     const db2 = (store as any).db as import('node:sqlite').DatabaseSync;
     const pastTime = new Date(Date.now() - 2000).toISOString();
-    db2.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${pastTime}' WHERE id = 'singleton'`);
+    db2.exec(`UPDATE bps_management_circuit_breaker SET last_state_change = '${pastTime}' WHERE id = 'singleton'`);
 
     // Next check will record a new violation (constraint still active), so no recovery
     const result = gate2.check('bps_update_entity', { entityType: 'x', entityId: '1', data: {} });
@@ -774,13 +774,13 @@ describe('CircuitBreaker', () => {
 
 // ——— Integration: tools wrapper ———
 
-describe('GovernanceToolWrapper', () => {
+describe('ManagementToolWrapper', () => {
   it('should wrap write tools and block based on constraints', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
-    govStore.loadConstraints([{
+    mgmtStore.loadConstraints([{
       id: 'no-archived', policyId: 'p', label: 'No archive',
       scope: { tools: ['bps_update_entity'] },
       condition: 'status != "archived"',
@@ -788,7 +788,7 @@ describe('GovernanceToolWrapper', () => {
       message: 'Cannot set status to archived',
     }]);
 
-    // Import and create tools with governance
+    // Import and create tools with management
     const { createBpsEngine } = await import('../src/index.js');
     const engine = createBpsEngine({ db });
     const { createBpsTools } = await import('../src/integration/tools.js');
@@ -797,18 +797,18 @@ describe('GovernanceToolWrapper', () => {
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
     const updateTool = tools.find(t => t.name === 'bps_update_entity')!;
     expect(updateTool).toBeDefined();
 
-    // Should throw when status = archived (governance BLOCK)
+    // Should throw when status = archived (management BLOCK)
     await expect(updateTool.execute('call-1', {
       entityType: 'store', entityId: 's1',
       data: { status: 'archived' },
-    })).rejects.toThrow('GOVERNANCE BLOCKED');
+    })).rejects.toThrow('MANAGEMENT BLOCKED');
 
     // Should pass when status = active
     const passed = await updateTool.execute('call-2', {
@@ -818,10 +818,10 @@ describe('GovernanceToolWrapper', () => {
     expect((passed as Record<string, unknown>).success).toBe(true);
   });
 
-  it('should include governance_status tool when governance is configured', async () => {
+  it('should include management_status tool when management is configured', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
     const { createBpsEngine } = await import('../src/index.js');
     const engine = createBpsEngine({ db });
@@ -831,11 +831,11 @@ describe('GovernanceToolWrapper', () => {
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
-    const govTool = tools.find(t => t.name === 'bps_governance_status');
+    const govTool = tools.find(t => t.name === 'bps_management_status');
     expect(govTool).toBeDefined();
 
     const result = await govTool!.execute('call-1', {}) as Record<string, unknown>;
@@ -843,10 +843,10 @@ describe('GovernanceToolWrapper', () => {
     expect(result.activeConstraints).toBe(0);
   });
 
-  it('should include bps_load_governance tool when governance is configured', async () => {
+  it('should include bps_load_management tool when management is configured', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
     const { createBpsEngine } = await import('../src/index.js');
     const engine = createBpsEngine({ db });
@@ -856,14 +856,14 @@ describe('GovernanceToolWrapper', () => {
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
-    const loadGovTool = tools.find(t => t.name === 'bps_load_governance');
+    const loadGovTool = tools.find(t => t.name === 'bps_load_management');
     expect(loadGovTool).toBeDefined();
 
-    // Load governance from inline YAML (flat format)
+    // Load management from inline YAML (flat format)
     const result = await loadGovTool!.execute('call-1', {
       yaml: `
 constraints:
@@ -879,18 +879,18 @@ constraints:
     expect(result.constraintsLoaded).toBe(1);
 
     // Verify constraints are now active
-    const statusTool = tools.find(t => t.name === 'bps_governance_status')!;
+    const statusTool = tools.find(t => t.name === 'bps_management_status')!;
     const status = await statusTool.execute('call-2', {}) as Record<string, unknown>;
     expect(status.activeConstraints).toBe(1);
   });
 
   it('should not wrap read-only tools', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
     // Load a constraint that blocks everything
-    govStore.loadConstraints([{
+    mgmtStore.loadConstraints([{
       id: 'block-all', policyId: 'p', label: 'Block all',
       scope: { tools: ['bps_update_entity', 'bps_get_entity'] },
       condition: 'false', onViolation: 'BLOCK', severity: 'HIGH', message: 'blocked',
@@ -904,29 +904,29 @@ constraints:
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
     // bps_get_entity is read-only, should not be wrapped
     const getTool = tools.find(t => t.name === 'bps_get_entity')!;
     const result = await getTool.execute('call-1', { entityType: 'store', entityId: 's1' });
-    // Should return "not found" error (not governance_blocked)
-    expect((result as Record<string, unknown>).governance_blocked).toBeUndefined();
+    // Should return "not found" error (not management_blocked)
+    expect((result as Record<string, unknown>).management_blocked).toBeUndefined();
   });
 
-  // — P0-a: Governance wrapper for newly gated tools —
+  // — P0-a: Management wrapper for newly gated tools —
 
-  it('should governance-wrap bps_load_blueprint', async () => {
+  it('should management-wrap bps_load_blueprint', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
-    govStore.loadConstraints([{
+    mgmtStore.loadConstraints([{
       id: 'block-blueprints', policyId: 'p', label: 'Block blueprints',
       scope: { tools: ['bps_load_blueprint'] },
       condition: 'false', onViolation: 'BLOCK', severity: 'HIGH',
-      message: 'Blueprint loading blocked by governance',
+      message: 'Blueprint loading blocked by management',
     }]);
 
     const { createBpsEngine } = await import('../src/index.js');
@@ -937,8 +937,8 @@ constraints:
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
     const loadBpTool = tools.find(t => t.name === 'bps_load_blueprint')!;
@@ -946,19 +946,19 @@ constraints:
 
     await expect(loadBpTool.execute('call-1', {
       yaml: 'name: test\nservices:\n  - id: s1\n    label: Test\n    executor: agent',
-    })).rejects.toThrow('GOVERNANCE BLOCKED');
+    })).rejects.toThrow('MANAGEMENT BLOCKED');
   });
 
-  it('should governance-wrap bps_register_agent', async () => {
+  it('should management-wrap bps_register_agent', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
-    govStore.loadConstraints([{
+    mgmtStore.loadConstraints([{
       id: 'block-agents', policyId: 'p', label: 'Block agent registration',
       scope: { tools: ['bps_register_agent'] },
       condition: 'false', onViolation: 'BLOCK', severity: 'HIGH',
-      message: 'Agent registration blocked by governance',
+      message: 'Agent registration blocked by management',
     }]);
 
     const { createBpsEngine } = await import('../src/index.js');
@@ -969,8 +969,8 @@ constraints:
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
     const registerTool = tools.find(t => t.name === 'bps_register_agent')!;
@@ -978,19 +978,19 @@ constraints:
 
     await expect(registerTool.execute('call-1', {
       id: 'test-agent', name: 'Test Agent',
-    })).rejects.toThrow('GOVERNANCE BLOCKED');
+    })).rejects.toThrow('MANAGEMENT BLOCKED');
   });
 
-  it('should governance-wrap bps_load_governance', async () => {
+  it('should management-wrap bps_load_management', async () => {
     const db = createMemoryDatabase();
-    const govStore = new GovernanceStore(db);
-    const actionGate = new ActionGate(govStore);
+    const mgmtStore = new ManagementStore(db);
+    const actionGate = new ActionGate(mgmtStore);
 
-    govStore.loadConstraints([{
-      id: 'block-gov-reload', policyId: 'p', label: 'Block governance reload',
-      scope: { tools: ['bps_load_governance'] },
+    mgmtStore.loadConstraints([{
+      id: 'block-gov-reload', policyId: 'p', label: 'Block management reload',
+      scope: { tools: ['bps_load_management'] },
       condition: 'false', onViolation: 'BLOCK', severity: 'CRITICAL',
-      message: 'Governance reload blocked',
+      message: 'Management reload blocked',
     }]);
 
     const { createBpsEngine } = await import('../src/index.js');
@@ -1001,16 +1001,16 @@ constraints:
       blueprintStore: engine.blueprintStore,
       processStore: engine.processStore,
       dossierStore: engine.dossierStore,
-      governanceGate: actionGate,
-      governanceStore: govStore,
+      managementGate: actionGate,
+      managementStore: mgmtStore,
     });
 
-    const loadGovTool = tools.find(t => t.name === 'bps_load_governance')!;
+    const loadGovTool = tools.find(t => t.name === 'bps_load_management')!;
     expect(loadGovTool).toBeDefined();
 
     await expect(loadGovTool.execute('call-1', {
       yaml: 'constraints: []',
-    })).rejects.toThrow('GOVERNANCE BLOCKED');
+    })).rejects.toThrow('MANAGEMENT BLOCKED');
   });
 });
 
@@ -1019,7 +1019,7 @@ constraints:
 describe('ConstraintEffectiveness', () => {
   it('should return per-constraint violation and approval stats', () => {
     const db = createMemoryDatabase();
-    const store = new GovernanceStore(db);
+    const store = new ManagementStore(db);
 
     store.loadConstraints([{
       id: 'c-publish', policyId: 'p-1', label: 'Publish gate',
@@ -1061,7 +1061,7 @@ describe('ConstraintEffectiveness', () => {
 
   it('should suggest relaxing when approval rate > 90% with enough samples', () => {
     const db = createMemoryDatabase();
-    const store = new GovernanceStore(db);
+    const store = new ManagementStore(db);
 
     store.loadConstraints([{
       id: 'c-strict', policyId: 'p', label: 'Too strict',

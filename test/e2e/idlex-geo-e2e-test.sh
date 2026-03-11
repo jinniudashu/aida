@@ -3,7 +3,7 @@
 # IdleX GEO E2E Test Script
 # ============================================================
 # Tests the full AIDA lifecycle with IdleX GEO business scenario:
-#   Install -> Seed -> Model -> Execute -> Governance -> Approve -> Summary
+#   Install -> Seed -> Model -> Execute -> Management -> Approve -> Summary
 #
 # Usage:
 #   bash idlex-geo-e2e-test.sh [--skip-install] [--skip-seed] [--phase N]
@@ -138,10 +138,10 @@ blueprints: []
 knowledge: []
 YAML
 
-  # 1b. Create governance.yaml
-  log "Creating governance.yaml..."
-  cat > "$AIDA_HOME/governance.yaml" << 'YAML'
-# IdleX GEO -- Governance Constraints
+  # 1b. Create management.yaml
+  log "Creating management.yaml..."
+  cat > "$AIDA_HOME/management.yaml" << 'YAML'
+# IdleX GEO -- Management Constraints
 # Controls Agent write operations during GEO content management
 
 policies:
@@ -242,10 +242,10 @@ EOF
   cat > /tmp/seed-idlex-stores.ts << 'TYPESCRIPT'
 import path from 'node:path'
 import fs from 'node:fs'
-import { createBpsEngine, createDatabase, GovernanceStore, loadGovernanceFile } from '@aida/bps-engine'
+import { createBpsEngine, createDatabase, ManagementStore, loadManagementFile } from '@aida/bps-engine'
 
 const DB_PATH = path.resolve(process.env.HOME || '/root', '.aida', 'data', 'bps.db')
-const GOV_PATH = path.resolve(process.env.HOME || '/root', '.aida', 'governance.yaml')
+const GOV_PATH = path.resolve(process.env.HOME || '/root', '.aida', 'management.yaml')
 
 console.log(`[seed] Database: ${DB_PATH}`)
 const db = createDatabase(DB_PATH)
@@ -354,18 +354,18 @@ for (const store of stores) {
   console.log(`[seed] Created store: ${data.nameCN} (${id})`)
 }
 
-// ── Load Governance Constraints ──
+// ── Load Management Constraints ──
 
 if (fs.existsSync(GOV_PATH)) {
-  const govStore = new GovernanceStore(db)
-  const result = loadGovernanceFile(GOV_PATH)
+  const mgmtStore = new ManagementStore(db)
+  const result = loadManagementFile(GOV_PATH)
   if (result.errors.length > 0) {
-    console.log(`[seed] WARNING: governance errors: ${result.errors.join(', ')}`)
+    console.log(`[seed] WARNING: management errors: ${result.errors.join(', ')}`)
   }
-  govStore.loadConstraints(result.constraints)
-  console.log(`[seed] Loaded ${result.constraints.length} governance constraints`)
+  mgmtStore.loadConstraints(result.constraints)
+  console.log(`[seed] Loaded ${result.constraints.length} management constraints`)
 } else {
-  console.log('[seed] WARNING: governance.yaml not found')
+  console.log('[seed] WARNING: management.yaml not found')
 }
 
 // ── Summary ──
@@ -378,7 +378,7 @@ TYPESCRIPT
   node --import tsx /tmp/seed-idlex-stores.ts
   cd "$AIDA_REPO"
 
-  # Restart dashboard to pick up governance + new data
+  # Restart dashboard to pick up management + new data
   log "Restarting Dashboard..."
   systemctl restart bps-dashboard 2>/dev/null || true
   sleep 3
@@ -388,8 +388,8 @@ TYPESCRIPT
   STORE_COUNT=$(api_get "/api/entities?entityType=store" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
   check "V1.1 5 store entities seeded" "test '$STORE_COUNT' -ge 5"
 
-  GOV_COUNT=$(api_get "/api/governance/constraints" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
-  check "V1.2 Governance constraints loaded" "test '$GOV_COUNT' -ge 2"
+  GOV_COUNT=$(api_get "/api/management/constraints" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+  check "V1.2 Management constraints loaded" "test '$GOV_COUNT' -ge 2"
 
   CONTEXT_COUNT=$(ls "$AIDA_HOME/context/"*.md 2>/dev/null | wc -l)
   check "V1.3 Context docs present" "test '$CONTEXT_COUNT' -ge 1"
@@ -469,8 +469,8 @@ fi
 if [ "$START_PHASE" -le 3 ]; then
   section "Phase 3: GEO Execution"
 
-  # Count governance records before
-  GOV_VIOLATIONS_BEFORE=$(api_get "/api/governance/violations" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+  # Count management records before
+  GOV_VIOLATIONS_BEFORE=$(api_get "/api/management/violations" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
 
   # Turn 3: Start execution
   log "Turn 3: Starting GEO execution..."
@@ -492,17 +492,17 @@ if [ "$START_PHASE" -le 3 ]; then
   CONTENT_COUNT=$(api_get "/api/entities?entityType=geo-content" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
   check "V3.2 GEO content entities exist" "test '$CONTENT_COUNT' -ge 1"
 
-  # Check governance violations
-  GOV_VIOLATIONS_AFTER=$(api_get "/api/governance/violations" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+  # Check management violations
+  GOV_VIOLATIONS_AFTER=$(api_get "/api/management/violations" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
   NEW_VIOLATIONS=$((GOV_VIOLATIONS_AFTER - GOV_VIOLATIONS_BEFORE))
-  check "V3.3 Governance violation recorded" "test '$NEW_VIOLATIONS' -ge 1"
+  check "V3.3 Management violation recorded" "test '$NEW_VIOLATIONS' -ge 1"
 
   # Check pending approvals
-  PENDING=$(api_get "/api/governance/approvals" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d if a.get('status')=='PENDING']))" 2>/dev/null || echo "0")
-  check "V3.4 Governance approval pending" "test '$PENDING' -ge 1"
+  PENDING=$(api_get "/api/management/approvals" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d if a.get('status')=='PENDING']))" 2>/dev/null || echo "0")
+  check "V3.4 Management approval pending" "test '$PENDING' -ge 1"
 
   # Check if Aida reported the block
-  check "V3.5 Aida reported governance interception" "grep -qi 'approval\|审批\|governance\|blocked\|拦截' /tmp/idlex-geo-turn3.log"
+  check "V3.5 Aida reported management interception" "grep -qi 'approval\|审批\|management\|blocked\|拦截' /tmp/idlex-geo-turn3.log"
 
   log "Phase 3 complete."
 fi
@@ -513,7 +513,7 @@ if [ "$START_PHASE" -le 4 ]; then
   section "Phase 4: Dashboard Approval"
 
   # Turn 4: Acknowledge
-  log "Turn 4: Acknowledging governance block..."
+  log "Turn 4: Acknowledging management block..."
 
   TURN4_MSG='明白了，我去Dashboard处理审批。'
 
@@ -522,7 +522,7 @@ if [ "$START_PHASE" -le 4 ]; then
 
   # Get pending approvals
   log "Querying pending approvals..."
-  APPROVALS_JSON=$(api_get "/api/governance/approvals" || echo "[]")
+  APPROVALS_JSON=$(api_get "/api/management/approvals" || echo "[]")
   echo "$APPROVALS_JSON" | python3 -m json.tool 2>/dev/null || echo "$APPROVALS_JSON"
 
   # Approve the first pending approval
@@ -538,16 +538,16 @@ else:
 
   if [ -n "$APPROVAL_ID" ]; then
     log "Approving: $APPROVAL_ID"
-    APPROVE_RESULT=$(api_post "/api/governance/approvals/$APPROVAL_ID/decide" '{"decision":"APPROVED","decidedBy":"owner"}')
+    APPROVE_RESULT=$(api_post "/api/management/approvals/$APPROVAL_ID/decide" '{"decision":"APPROVED","decidedBy":"owner"}')
     echo "$APPROVE_RESULT" | python3 -m json.tool 2>/dev/null || echo "$APPROVE_RESULT"
 
     check "V4.1 Approval processed" "echo '$APPROVE_RESULT' | grep -qi 'APPROVED\|success'"
 
     # Check no more pending (or fewer)
-    REMAINING=$(api_get "/api/governance/approvals" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d if a.get('status')=='PENDING']))" 2>/dev/null || echo "0")
+    REMAINING=$(api_get "/api/management/approvals" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d if a.get('status')=='PENDING']))" 2>/dev/null || echo "0")
     check "V4.2 Approval removed from queue" "test '$REMAINING' -lt '$PENDING'"
   else
-    warn "No pending approvals found -- governance may not have fired"
+    warn "No pending approvals found -- management may not have fired"
     fail "V4.1 No approval to process"
   fi
 
@@ -597,15 +597,15 @@ for t, c in sorted(types.items()):
     print(f'  {t}: {c}')
 " 2>/dev/null || warn "Could not parse entities"
 
-  # Governance audit
-  TOTAL_VIOLATIONS=$(api_get "/api/governance/violations" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
-  check "V6.2 Governance violations recorded" "test '$TOTAL_VIOLATIONS' -ge 1"
+  # Management audit
+  TOTAL_VIOLATIONS=$(api_get "/api/management/violations" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+  check "V6.2 Management violations recorded" "test '$TOTAL_VIOLATIONS' -ge 1"
 
-  TOTAL_APPROVALS=$(api_get "/api/governance/approvals" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d if a.get('status')=='APPROVED']))" 2>/dev/null || echo "0")
+  TOTAL_APPROVALS=$(api_get "/api/management/approvals" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d if a.get('status')=='APPROVED']))" 2>/dev/null || echo "0")
   check "V6.3 At least 1 approved approval" "test '$TOTAL_APPROVALS' -ge 1"
 
   # Dashboard pages
-  for page in "/" "/business-goals" "/approvals" "/governance" "/agent-log"; do
+  for page in "/" "/business-goals" "/approvals" "/management" "/agent-log"; do
     check "V6.4 Dashboard page $page accessible" "curl -s -f $DASHBOARD_URL$page > /dev/null"
   done
 
@@ -647,9 +647,9 @@ fi
 
 echo ""
 echo "Dashboard pages to verify manually:"
-echo "  $DASHBOARD_URL/                -- Overview (entities + governance status)"
+echo "  $DASHBOARD_URL/                -- Overview (entities + management status)"
 echo "  $DASHBOARD_URL/business-goals  -- Action plans"
-echo "  $DASHBOARD_URL/governance      -- Constraints + violations + approvals"
+echo "  $DASHBOARD_URL/management      -- Constraints + violations + approvals"
 echo "  $DASHBOARD_URL/agent-log       -- Full audit trail"
 echo ""
 
@@ -674,7 +674,7 @@ for t, c in sorted(types.items()):
     print(f'  {t}: {c}')
 " 2>/dev/null || echo "  (could not parse)")
 
-Governance:
+Management:
   Violations: $TOTAL_VIOLATIONS
   Approved: $TOTAL_APPROVALS
 

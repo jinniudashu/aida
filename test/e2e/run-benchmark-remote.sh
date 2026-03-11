@@ -95,8 +95,8 @@ FAIL_N=$(grep -oE '[0-9]+ FAIL' "$LOG_DIR/e2e-test.log" 2>/dev/null | grep -oE '
 WARN_N=$(grep -oE '[0-9]+ WARN' "$LOG_DIR/e2e-test.log" 2>/dev/null | grep -oE '[0-9]+' | tail -1 || echo 0)
 ENTITIES=$(curl -sf http://localhost:3456/api/entities 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).length)}catch{console.log(0)}" || echo 0)
 SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l || echo 0)
-VIOLATIONS=$(curl -sf http://localhost:3456/api/governance/violations 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).length)}catch{console.log(0)}" || echo 0)
-APPROVALS=$(curl -sf http://localhost:3456/api/governance/approvals 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).filter(a=>a.status==='APPROVED').length)}catch{console.log(0)}" || echo 0)
+VIOLATIONS=$(curl -sf http://localhost:3456/api/management/violations 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).length)}catch{console.log(0)}" || echo 0)
+APPROVALS=$(curl -sf http://localhost:3456/api/management/approvals 2>/dev/null | node -e "try{console.log(JSON.parse(require('fs').readFileSync(0,'utf8')).filter(a=>a.status==='APPROVED').length)}catch{console.log(0)}" || echo 0)
 
 cat > "$LOG_DIR/metrics.json" << METRICS
 {

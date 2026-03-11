@@ -31,7 +31,7 @@ const menuOptions: (MenuOption | MenuDividerOption)[] = [
   { label: 'Agent Log', key: '/agent-log', icon: icon(DocumentTextOutline) },
   { label: 'Business Goals', key: '/business-goals', icon: icon(TrophyOutline) },
   { label: 'Approvals', key: '/approvals', icon: icon(CheckmarkCircleOutline) },
-  { label: 'Governance', key: '/governance', icon: icon(ShieldCheckmarkOutline) },
+  { label: 'Management', key: '/management', icon: icon(ShieldCheckmarkOutline) },
 ]
 
 const activeKey = computed(() => {
@@ -45,7 +45,7 @@ const activeKey = computed(() => {
   if (path.startsWith('/agent-log')) return '/agent-log'
   if (path.startsWith('/business-goals')) return '/business-goals'
   if (path.startsWith('/approvals')) return '/approvals'
-  if (path.startsWith('/governance')) return '/governance'
+  if (path.startsWith('/management')) return '/management'
   return '/'
 })
 

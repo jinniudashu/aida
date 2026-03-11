@@ -11,8 +11,8 @@ import type {
   ApprovalStatus,
 } from './types.js';
 
-const GOVERNANCE_SCHEMA = `
-CREATE TABLE IF NOT EXISTS bps_governance_constraints (
+const MANAGEMENT_SCHEMA = `
+CREATE TABLE IF NOT EXISTS bps_management_constraints (
   id TEXT PRIMARY KEY,
   policy_id TEXT NOT NULL,
   label TEXT NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS bps_governance_constraints (
   updated_at TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS bps_governance_violations (
+CREATE TABLE IF NOT EXISTS bps_management_violations (
   id TEXT PRIMARY KEY,
   constraint_id TEXT NOT NULL,
   policy_id TEXT NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS bps_governance_violations (
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS bps_governance_circuit_breaker (
+CREATE TABLE IF NOT EXISTS bps_management_circuit_breaker (
   id TEXT PRIMARY KEY DEFAULT 'singleton',
   state TEXT NOT NULL DEFAULT 'NORMAL',
   last_state_change TEXT NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS bps_governance_circuit_breaker (
   updated_at TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS bps_governance_approvals (
+CREATE TABLE IF NOT EXISTS bps_management_approvals (
   id TEXT PRIMARY KEY,
   constraint_id TEXT NOT NULL,
   tool TEXT NOT NULL,
@@ -67,15 +67,15 @@ CREATE TABLE IF NOT EXISTS bps_governance_approvals (
   expires_at TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_gov_violations_time
-  ON bps_governance_violations(created_at);
-CREATE INDEX IF NOT EXISTS idx_gov_violations_severity
-  ON bps_governance_violations(severity, created_at);
-CREATE INDEX IF NOT EXISTS idx_gov_approvals_status
-  ON bps_governance_approvals(status);
+CREATE INDEX IF NOT EXISTS idx_mgmt_violations_time
+  ON bps_management_violations(created_at);
+CREATE INDEX IF NOT EXISTS idx_mgmt_violations_severity
+  ON bps_management_violations(severity, created_at);
+CREATE INDEX IF NOT EXISTS idx_mgmt_approvals_status
+  ON bps_management_approvals(status);
 `;
 
-export class GovernanceStore extends EventEmitter {
+export class ManagementStore extends EventEmitter {
   private insertConstraintStmt: StatementSync;
   private listConstraintsStmt: StatementSync;
   private clearConstraintsStmt: StatementSync;
@@ -91,24 +91,24 @@ export class GovernanceStore extends EventEmitter {
 
   constructor(private db: DatabaseSync) {
     super();
-    db.exec(GOVERNANCE_SCHEMA);
+    db.exec(MANAGEMENT_SCHEMA);
 
     this.insertConstraintStmt = db.prepare(`
-      INSERT OR REPLACE INTO bps_governance_constraints
+      INSERT OR REPLACE INTO bps_management_constraints
         (id, policy_id, label, scope_json, condition, on_violation, severity, approver, message, created_at, updated_at)
       VALUES (@id, @policyId, @label, @scopeJson, @condition, @onViolation, @severity, @approver, @message, @createdAt, @updatedAt)
     `);
 
     this.listConstraintsStmt = db.prepare(
-      `SELECT * FROM bps_governance_constraints ORDER BY policy_id, id`
+      `SELECT * FROM bps_management_constraints ORDER BY policy_id, id`
     );
 
     this.clearConstraintsStmt = db.prepare(
-      `DELETE FROM bps_governance_constraints`
+      `DELETE FROM bps_management_constraints`
     );
 
     this.insertViolationStmt = db.prepare(`
-      INSERT INTO bps_governance_violations
+      INSERT INTO bps_management_violations
         (id, constraint_id, policy_id, severity, tool, entity_type, entity_id,
          verdict, condition, eval_context, message, circuit_breaker_state, created_at)
       VALUES (@id, @constraintId, @policyId, @severity, @tool, @entityType, @entityId,
@@ -116,40 +116,40 @@ export class GovernanceStore extends EventEmitter {
     `);
 
     this.recentViolationsStmt = db.prepare(
-      `SELECT * FROM bps_governance_violations ORDER BY created_at DESC LIMIT ?`
+      `SELECT * FROM bps_management_violations ORDER BY created_at DESC LIMIT ?`
     );
 
     this.countViolationsBySeverityStmt = db.prepare(
-      `SELECT COUNT(*) as count FROM bps_governance_violations
+      `SELECT COUNT(*) as count FROM bps_management_violations
        WHERE severity = ? AND created_at >= ?`
     );
 
     this.getCbStmt = db.prepare(
-      `SELECT * FROM bps_governance_circuit_breaker WHERE id = 'singleton'`
+      `SELECT * FROM bps_management_circuit_breaker WHERE id = 'singleton'`
     );
 
     this.upsertCbStmt = db.prepare(`
-      INSERT OR REPLACE INTO bps_governance_circuit_breaker
+      INSERT OR REPLACE INTO bps_management_circuit_breaker
         (id, state, last_state_change, violation_count_critical, violation_count_high, window_start, updated_at)
       VALUES ('singleton', @state, @lastStateChange, @violationCountCritical, @violationCountHigh, @windowStart, @updatedAt)
     `);
 
     this.insertApprovalStmt = db.prepare(`
-      INSERT INTO bps_governance_approvals
+      INSERT INTO bps_management_approvals
         (id, constraint_id, tool, tool_input, entity_type, entity_id, message, status, created_at, expires_at)
       VALUES (@id, @constraintId, @tool, @toolInput, @entityType, @entityId, @message, @status, @createdAt, @expiresAt)
     `);
 
     this.getApprovalStmt = db.prepare(
-      `SELECT * FROM bps_governance_approvals WHERE id = ?`
+      `SELECT * FROM bps_management_approvals WHERE id = ?`
     );
 
     this.pendingApprovalsStmt = db.prepare(
-      `SELECT * FROM bps_governance_approvals WHERE status = 'PENDING' ORDER BY created_at ASC`
+      `SELECT * FROM bps_management_approvals WHERE status = 'PENDING' ORDER BY created_at ASC`
     );
 
     this.updateApprovalStmt = db.prepare(`
-      UPDATE bps_governance_approvals
+      UPDATE bps_management_approvals
       SET status = @status, approved_by = @approvedBy, decided_at = @decidedAt
       WHERE id = @id
     `);
@@ -204,7 +204,7 @@ export class GovernanceStore extends EventEmitter {
       createdAt,
     });
     const record: ViolationRecord = { ...v, id, createdAt };
-    this.emit('governance:violation', record);
+    this.emit('management:violation', record);
     return record;
   }
 
@@ -245,7 +245,7 @@ export class GovernanceStore extends EventEmitter {
       windowStart: counts.windowStart,
       updatedAt: timestamp,
     });
-    this.emit('governance:circuit_breaker_changed', { state, lastStateChange: timestamp });
+    this.emit('management:circuit_breaker_changed', { state, lastStateChange: timestamp });
   }
 
   resetCircuitBreaker(): void {
@@ -274,7 +274,7 @@ export class GovernanceStore extends EventEmitter {
       expiresAt: req.expiresAt,
     });
     const approval: ApprovalRequest = { ...req, id, status: 'PENDING', createdAt };
-    this.emit('governance:approval_created', approval);
+    this.emit('management:approval_created', approval);
     return approval;
   }
 
@@ -296,7 +296,7 @@ export class GovernanceStore extends EventEmitter {
       approvedBy: approvedBy ?? null,
       decidedAt,
     });
-    this.emit('governance:approval_decided', { id, status, approvedBy: approvedBy ?? null, decidedAt });
+    this.emit('management:approval_decided', { id, status, approvedBy: approvedBy ?? null, decidedAt });
   }
 
   // ——— Analytics ———
@@ -320,12 +320,12 @@ export class GovernanceStore extends EventEmitter {
     return constraints.map(c => {
       // Count violations for this constraint
       const violRow = this.db.prepare(
-        'SELECT COUNT(*) as count FROM bps_governance_violations WHERE constraint_id = ?',
+        'SELECT COUNT(*) as count FROM bps_management_violations WHERE constraint_id = ?',
       ).get(c.id) as { count: number };
 
       // Count approvals for this constraint (all statuses)
       const allApprovals = this.db.prepare(
-        'SELECT status, COUNT(*) as count FROM bps_governance_approvals WHERE constraint_id = ? GROUP BY status',
+        'SELECT status, COUNT(*) as count FROM bps_management_approvals WHERE constraint_id = ? GROUP BY status',
       ).all(c.id) as Array<{ status: string; count: number }>;
 
       const approvalMap: Record<string, number> = {};

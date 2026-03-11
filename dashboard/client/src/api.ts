@@ -262,19 +262,19 @@ export interface ApprovalItem {
   updatedAt: string
 }
 
-// --- Governance types ---
+// --- Management types ---
 
-export interface GovernanceStatus {
+export interface ManagementStatus {
   circuitBreaker: {
     state: string
     lastStateChange: string
   }
   constraintCount: number
   pendingApprovalCount: number
-  recentViolations: GovernanceViolation[]
+  recentViolations: ManagementViolation[]
 }
 
-export interface GovernanceViolation {
+export interface ManagementViolation {
   id: string
   constraintId: string
   policyId: string
@@ -289,7 +289,7 @@ export interface GovernanceViolation {
   createdAt: string
 }
 
-export interface GovernanceConstraint {
+export interface ManagementConstraint {
   id: string
   policyId: string
   label: string
@@ -301,7 +301,7 @@ export interface GovernanceConstraint {
   message: string
 }
 
-export interface GovernanceApproval {
+export interface ManagementApproval {
   id: string
   constraintId: string
   tool: string
@@ -390,17 +390,17 @@ export const api = {
     get<ApprovalItem[]>('/api/approvals', { status }),
   decideApproval: (approvalId: string, params: { decision: 'approved' | 'rejected'; decidedBy?: string; reason?: string }) =>
     post<{ success: boolean; approvalId: string; decision: string }>(`/api/approvals/${approvalId}/decide`, params),
-  // Governance
-  getGovernanceStatus: () =>
-    get<GovernanceStatus>('/api/governance/status'),
-  getGovernanceViolations: (limit?: string) =>
-    get<GovernanceViolation[]>('/api/governance/violations', { limit }),
-  getGovernanceConstraints: () =>
-    get<GovernanceConstraint[]>('/api/governance/constraints'),
-  getGovernanceApprovals: () =>
-    get<GovernanceApproval[]>('/api/governance/approvals'),
-  decideGovernanceApproval: (id: string, params: { decision: 'APPROVED' | 'REJECTED'; decidedBy?: string }) =>
-    post<{ success: boolean; id: string; decision: string; executionResult?: Record<string, unknown> | null }>(`/api/governance/approvals/${id}/decide`, params),
+  // Management
+  getManagementStatus: () =>
+    get<ManagementStatus>('/api/management/status'),
+  getManagementViolations: (limit?: string) =>
+    get<ManagementViolation[]>('/api/management/violations', { limit }),
+  getManagementConstraints: () =>
+    get<ManagementConstraint[]>('/api/management/constraints'),
+  getManagementApprovals: () =>
+    get<ManagementApproval[]>('/api/management/approvals'),
+  decideManagementApproval: (id: string, params: { decision: 'APPROVED' | 'REJECTED'; decidedBy?: string }) =>
+    post<{ success: boolean; id: string; decision: string; executionResult?: Record<string, unknown> | null }>(`/api/management/approvals/${id}/decide`, params),
   resetCircuitBreaker: () =>
-    post<{ success: boolean; state: string }>('/api/governance/circuit-breaker/reset', {}),
+    post<{ success: boolean; state: string }>('/api/management/circuit-breaker/reset', {}),
 }

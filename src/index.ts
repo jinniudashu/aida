@@ -37,12 +37,12 @@ export { loadProject, loadProjectFromString, type ProjectLoadResult } from './lo
 export { loadAidaProject, initAidaProject, getDefaultAidaDir,
          AIDA_DIR_NAME, type AidaProjectResult } from './loader/aida-project.js';
 
-// ——— Governance ———
-export { GovernanceStore } from './governance/governance-store.js';
-export { ActionGate } from './governance/action-gate.js';
-export { loadGovernanceFile, loadGovernanceFromString, type GovernanceLoadResult } from './governance/governance-loader.js';
-export { GATED_WRITE_TOOLS, DEFAULT_SCOPE_WRITE_TOOLS } from './governance/constants.js';
-export * from './governance/types.js';
+// ——— Management ———
+export { ManagementStore } from './management/management-store.js';
+export { ActionGate } from './management/action-gate.js';
+export { loadManagementFile, loadManagementFromString, type ManagementLoadResult } from './management/management-loader.js';
+export { GATED_WRITE_TOOLS, DEFAULT_SCOPE_WRITE_TOOLS } from './management/constants.js';
+export * from './management/types.js';
 
 // ——— Integration (OpenClaw) ———
 export * from './integration/index.js';

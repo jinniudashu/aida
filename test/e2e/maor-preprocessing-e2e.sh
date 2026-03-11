@@ -177,7 +177,7 @@ YAML
   fi
 
   # 1c. No seed data — MAOr test relies entirely on Aida modeling from context/
-  # No governance seed either — Aida should create governance.yaml from compliance.md
+  # No management seed either — Aida should create management.yaml from compliance.md
 
   # Restart dashboard to pick up new project.yaml
   log "Restarting Dashboard..."
@@ -261,16 +261,16 @@ flow 可以用箭头 DSL（如 svc-a -> svc-b -> svc-c）或 rules 格式（{whe
 fi
 
 # ════════════════════════════════════════════════════════════
-# Phase 5: Turn 4a — Consent Forms + Governance
+# Phase 5: Turn 4a — Consent Forms + Management
 # ════════════════════════════════════════════════════════════
 
 if [ "$START_PHASE" -le 5 ]; then
-  section "5: Turn 4a — Consent Forms + Governance"
+  section "5: Turn 4a — Consent Forms + Management"
 
   aida_say 4a '现在建立合规体系：
 1. 创建全部 8 个知情同意书模板实体（IC-01 至 IC-08，见 compliance.md 同意书覆盖范围表），每个包含编号、项目类型、适应症、禁忌、风险
-2. 建立治理约束（governance.yaml），至少包含：知情同意必签、肉毒素剂量上限（2月200U）、光子间隔（≥3周）、折扣不叠加、禁忌症阻断、三星钻石限额、麻药面积上限
-3. 写完 governance.yaml 后，请立即使用 bps_load_governance 工具将其加载到运行时'
+2. 建立治理约束（management.yaml），至少包含：知情同意必签、肉毒素剂量上限（2月200U）、光子间隔（≥3周）、折扣不叠加、禁忌症阻断、三星钻石限额、麻药面积上限
+3. 写完 management.yaml 后，请立即使用 bps_load_management 工具将其加载到运行时'
 
   check "V5.1 Aida produced response" "test -s $LOG_DIR/turn-4a.log"
 
@@ -386,21 +386,21 @@ if [ "$START_PHASE" -le 9 ]; then
   # -- D4: Compliance Constraint Capture --
   log "D4: Compliance Constraint Capture"
 
-  # Check governance.yaml on disk
-  if [ -f "$AIDA_HOME/governance.yaml" ]; then
-    GOV_DISK=$(grep -c "id:" "$AIDA_HOME/governance.yaml" 2>/dev/null || echo "0")
-    check "G1 [HARD] governance.yaml exists with constraints (got $GOV_DISK ids)" "test $GOV_DISK -ge 1"
+  # Check management.yaml on disk
+  if [ -f "$AIDA_HOME/management.yaml" ]; then
+    GOV_DISK=$(grep -c "id:" "$AIDA_HOME/management.yaml" 2>/dev/null || echo "0")
+    check "G1 [HARD] management.yaml exists with constraints (got $GOV_DISK ids)" "test $GOV_DISK -ge 1"
   else
-    fail "G1 [HARD] governance.yaml not found on disk"
+    fail "G1 [HARD] management.yaml not found on disk"
     GOV_DISK=0
   fi
 
-  # Check governance loaded at runtime (NEW: bps_load_governance should have activated them)
-  GOV_RUNTIME=$(api_get "/api/governance/constraints" | jlen)
-  soft  "G1b [SOFT] Governance constraints loaded at runtime (got $GOV_RUNTIME)" "test ${GOV_RUNTIME:-0} -ge 1"
+  # Check management loaded at runtime (NEW: bps_load_management should have activated them)
+  GOV_RUNTIME=$(api_get "/api/management/constraints" | jlen)
+  soft  "G1b [SOFT] Management constraints loaded at runtime (got $GOV_RUNTIME)" "test ${GOV_RUNTIME:-0} -ge 1"
 
-  GOV_VIO=$(api_get "/api/governance/violations" | jlen)
-  log "  Governance: $GOV_DISK on disk, $GOV_RUNTIME loaded, $GOV_VIO violations"
+  GOV_VIO=$(api_get "/api/management/violations" | jlen)
+  log "  Management: $GOV_DISK on disk, $GOV_RUNTIME loaded, $GOV_VIO violations"
 
   # -- D6: No Hallucination (automated entity name check) --
   log "D6: No Hallucination (automated spot check)"
@@ -432,9 +432,9 @@ if [ "$START_PHASE" -le 10 ]; then
 
   log "Generating metrics.json..."
   ENTITIES_JSON=$(api_get "/api/entities" || echo "[]")
-  GOV_CONSTRAINTS_JSON=$(api_get "/api/governance/constraints" || echo "[]")
-  GOV_VIOLATIONS_JSON=$(api_get "/api/governance/violations?limit=100" || echo "[]")
-  GOV_APPROVALS_JSON=$(api_get "/api/governance/approvals" || echo "[]")
+  GOV_CONSTRAINTS_JSON=$(api_get "/api/management/constraints" || echo "[]")
+  GOV_VIOLATIONS_JSON=$(api_get "/api/management/violations?limit=100" || echo "[]")
+  GOV_APPROVALS_JSON=$(api_get "/api/management/approvals" || echo "[]")
 
   node -e '
 const entities = JSON.parse(process.argv[1] || "[]");
@@ -468,7 +468,7 @@ console.log(JSON.stringify({
     services: svcCount,
     health: svcCount > 0 ? "loaded" : "none",
   },
-  governance: {
+  management: {
     constraintsOnDisk: govOnDisk,
     constraintsLoaded: constraints.length,
     violations: violations.length,
@@ -594,7 +594,7 @@ fi
 echo ""
 echo "Entities:     ${TI:-?} treatment, ${SP:-?} package, ${MB:-?} membership, ${CF:-?} consent, ${PC:-?} post-care"
 echo "Blueprint:    ${BP:-?} files, ${SVC:-?} services"
-echo "Governance:   ${GOV_DISK:-?} on disk, ${GOV_RUNTIME:-?} loaded, ${GOV_VIO:-?} violations"
+echo "Management:   ${GOV_DISK:-?} on disk, ${GOV_RUNTIME:-?} loaded, ${GOV_VIO:-?} violations"
 echo "Cron:         ${CRON_JOBS:-?}"
 echo ""
 echo "Logs:         $LOG_DIR/"
@@ -622,7 +622,7 @@ Entities:
   product-inventory:   ${PI:-?}
 
 Blueprint: ${BP:-?} files, ${SVC:-?} services
-Governance: ${GOV_DISK:-?} on disk, ${GOV_RUNTIME:-?} loaded, ${GOV_VIO:-?} violations
+Management: ${GOV_DISK:-?} on disk, ${GOV_RUNTIME:-?} loaded, ${GOV_VIO:-?} violations
 Cron: ${CRON_JOBS:-?}
 
 Logs: $LOG_DIR/

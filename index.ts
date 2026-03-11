@@ -31,20 +31,20 @@ export default function register(api: OpenClawPluginApi) {
     logger.info(`[bps-engine] Blueprints: ${project.blueprints.loaded}, Seeds: ${project.seeds.loaded}`);
   }
   logger.info(`[bps-engine] System knowledge: ${systemKnowledge.loaded} loaded, ${systemKnowledge.skipped} skipped`);
-  if (result.governance && result.governance.constraintCount > 0) {
-    logger.info(`[bps-engine] Governance: ${result.governance.constraintCount} constraints loaded`);
+  if (result.management && result.management.constraintCount > 0) {
+    logger.info(`[bps-engine] Management: ${result.management.constraintCount} constraints loaded`);
   }
 
-  // 2. Register tools (13 tools from shared module, 5 wrapped with governance)
-  const { governance } = result;
+  // 2. Register tools (13 tools from shared module, 5 wrapped with management)
+  const { management } = result;
   const tools = createBpsTools({
     tracker: engine.tracker,
     blueprintStore: engine.blueprintStore,
     processStore: engine.processStore,
     dossierStore: engine.dossierStore,
     skillMetricsStore: engine.skillMetricsStore,
-    governanceGate: governance?.gate,
-    governanceStore: governance?.store,
+    managementGate: management?.gate,
+    managementStore: management?.store,
     logger,
   });
 

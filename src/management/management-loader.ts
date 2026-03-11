@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import type {
-  GovernanceConfig,
+  ManagementConfig,
   ConstraintDef,
   PolicyDef,
   CircuitBreakerConfig,
@@ -13,34 +13,34 @@ import { DEFAULT_SCOPE_WRITE_TOOLS } from './constants.js';
 const VALID_SEVERITIES = new Set<Severity>(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 const VALID_ACTIONS = new Set<ViolationAction>(['BLOCK', 'REQUIRE_APPROVAL']);
 
-export interface GovernanceLoadResult {
+export interface ManagementLoadResult {
   constraints: ConstraintDef[];
   circuitBreaker?: CircuitBreakerConfig;
   errors: string[];
 }
 
-/** Load and validate governance.yaml from a file path */
-export function loadGovernanceFile(filePath: string): GovernanceLoadResult {
+/** Load and validate management.yaml from a file path */
+export function loadManagementFile(filePath: string): ManagementLoadResult {
   if (!fs.existsSync(filePath)) {
     return { constraints: [], errors: [`File not found: ${filePath}`] };
   }
   const content = fs.readFileSync(filePath, 'utf-8');
-  return loadGovernanceFromString(content);
+  return loadManagementFromString(content);
 }
 
-/** Load and validate governance config from a YAML string */
-export function loadGovernanceFromString(yamlContent: string): GovernanceLoadResult {
+/** Load and validate management config from a YAML string */
+export function loadManagementFromString(yamlContent: string): ManagementLoadResult {
   const errors: string[] = [];
-  let raw: GovernanceConfig;
+  let raw: ManagementConfig;
 
   try {
-    raw = parseYaml(yamlContent) as GovernanceConfig;
+    raw = parseYaml(yamlContent) as ManagementConfig;
   } catch (err) {
     return { constraints: [], errors: [`YAML parse error: ${err instanceof Error ? err.message : String(err)}`] };
   }
 
   if (!raw || typeof raw !== 'object') {
-    return { constraints: [], errors: ['Governance config must be a YAML object'] };
+    return { constraints: [], errors: ['Management config must be a YAML object'] };
   }
 
   // Support flat constraints[] format (what Aida writes) in addition to policies[] format
@@ -48,7 +48,7 @@ export function loadGovernanceFromString(yamlContent: string): GovernanceLoadRes
   if (!Array.isArray(raw.policies) && Array.isArray(rawAny2.constraints)) {
     const flatConstraints = rawAny2.constraints as Array<Record<string, unknown>>;
     // Normalize flat constraint fields: Aida may write `action` instead of `onViolation`,
-    // and may omit `scope.tools` (default to all write tools except bps_load_governance)
+    // and may omit `scope.tools` (default to all write tools except bps_load_management)
     const normalized = flatConstraints.map(c => ({
       ...c,
       label: c.label ?? c.id ?? 'unnamed',

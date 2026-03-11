@@ -1,4 +1,4 @@
-import { createBpsEngine, GovernanceStore, loadBlueprintFromString, type BpsEngine } from '../../src/index.js'
+import { createBpsEngine, ManagementStore, loadBlueprintFromString, type BpsEngine } from '../../src/index.js'
 import { createApp } from '../server/routes.js'
 import type { Hono } from 'hono'
 import fs from 'node:fs'
@@ -6,7 +6,7 @@ import path from 'node:path'
 
 export interface TestContext {
   engine: BpsEngine
-  governanceStore: GovernanceStore
+  managementStore: ManagementStore
   app: Hono
 }
 
@@ -16,7 +16,7 @@ export interface TestContext {
  */
 export function createTestContext(): TestContext {
   const engine = createBpsEngine()
-  const governanceStore = new GovernanceStore(engine.db)
+  const managementStore = new ManagementStore(engine.db)
 
   // Load demo blueprint
   const bpPath = path.resolve(import.meta.dirname, '..', 'blueprints', 'demo-order-fulfillment.yaml')
@@ -28,8 +28,8 @@ export function createTestContext(): TestContext {
     engine.statsStore.recordEvent('dashboard.process.created')
   })
 
-  const app = createApp(engine, { governanceStore })
-  return { engine, governanceStore, app }
+  const app = createApp(engine, { managementStore })
+  return { engine, managementStore, app }
 }
 
 /** GET helper — returns { status, body } */

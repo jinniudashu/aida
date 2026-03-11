@@ -368,7 +368,7 @@ if (config.hooks.internal.enabled === undefined) {
   config.hooks.internal.enabled = true;
 }
 
-// 8. Security baseline (P0: prevent governance bypass via native tools)
+// 8. Security baseline (P0: prevent management bypass via native tools)
 if (!config.tools) config.tools = {};
 // Exec security: require allowlist approval for shell commands
 if (!config.tools.exec) config.tools.exec = {};

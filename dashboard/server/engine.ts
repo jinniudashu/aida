@@ -1,4 +1,4 @@
-import { createBpsEngine, createDatabase, createMemoryDatabase, loadBlueprintFromYaml, GovernanceStore, ActionGate, loadGovernanceFile } from '../../src/index.js'
+import { createBpsEngine, createDatabase, createMemoryDatabase, loadBlueprintFromYaml, ManagementStore, ActionGate, loadManagementFile } from '../../src/index.js'
 import path from 'node:path'
 import fs from 'node:fs'
 import { seedDemoData } from './seed.js'
@@ -12,20 +12,20 @@ if (dbPath) console.log(`[bps] Using shared database: ${dbPath}`)
 
 export const engine = createBpsEngine({ db })
 
-// Governance layer
-export const governanceStore = new GovernanceStore(db)
-export const actionGate = new ActionGate(governanceStore)
+// Management layer
+export const managementStore = new ManagementStore(db)
+export const actionGate = new ActionGate(managementStore)
 
-// Load governance.yaml if BPS_DB_PATH points to a project
+// Load management.yaml if BPS_DB_PATH points to a project
 const aidaDir = process.env.AIDA_HOME || (dbPath ? path.resolve(path.dirname(dbPath), '..') : '')
-const govYamlPath = aidaDir ? path.join(aidaDir, 'governance.yaml') : ''
+const govYamlPath = aidaDir ? path.join(aidaDir, 'management.yaml') : ''
 if (govYamlPath && fs.existsSync(govYamlPath)) {
-  const result = loadGovernanceFile(govYamlPath)
+  const result = loadManagementFile(govYamlPath)
   if (result.errors.length === 0) {
-    const count = governanceStore.loadConstraints(result.constraints)
-    console.log(`[governance] Loaded ${count} constraints from governance.yaml`)
+    const count = managementStore.loadConstraints(result.constraints)
+    console.log(`[management] Loaded ${count} constraints from management.yaml`)
   } else {
-    console.warn(`[governance] governance.yaml errors: ${result.errors.join('; ')}`)
+    console.warn(`[management] management.yaml errors: ${result.errors.join('; ')}`)
   }
 }
 

@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { createTestContext, getJson, postJson, type TestContext } from './helpers.js'
 
-describe('Governance API', () => {
+describe('Management API', () => {
   let ctx: TestContext
 
   beforeEach(() => {
     ctx = createTestContext()
   })
 
-  it('GET /api/governance/status returns initial state', async () => {
-    const { status, body } = await getJson(ctx.app, '/api/governance/status')
+  it('GET /api/management/status returns initial state', async () => {
+    const { status, body } = await getJson(ctx.app, '/api/management/status')
     expect(status).toBe(200)
     expect(body.circuitBreaker.state).toBe('NORMAL')
     expect(body.constraintCount).toBe(0)
@@ -17,8 +17,8 @@ describe('Governance API', () => {
     expect(body.recentViolations).toEqual([])
   })
 
-  it('GET /api/governance/status reflects loaded constraints', async () => {
-    ctx.governanceStore.loadConstraints([{
+  it('GET /api/management/status reflects loaded constraints', async () => {
+    ctx.managementStore.loadConstraints([{
       id: 'test-c1',
       policyId: 'test-policy',
       label: 'Test constraint',
@@ -29,12 +29,12 @@ describe('Governance API', () => {
       message: 'Not allowed',
     }])
 
-    const { body } = await getJson(ctx.app, '/api/governance/status')
+    const { body } = await getJson(ctx.app, '/api/management/status')
     expect(body.constraintCount).toBe(1)
   })
 
-  it('GET /api/governance/status reflects violations', async () => {
-    ctx.governanceStore.recordViolation({
+  it('GET /api/management/status reflects violations', async () => {
+    ctx.managementStore.recordViolation({
       constraintId: 'c1',
       policyId: 'p1',
       severity: 'HIGH',
@@ -46,14 +46,14 @@ describe('Governance API', () => {
       circuitBreakerState: 'NORMAL',
     })
 
-    const { body } = await getJson(ctx.app, '/api/governance/status')
+    const { body } = await getJson(ctx.app, '/api/management/status')
     expect(body.recentViolations.length).toBe(1)
     expect(body.recentViolations[0].severity).toBe('HIGH')
     expect(body.recentViolations[0].message).toBe('Blocked: outside hours')
   })
 
-  it('GET /api/governance/violations returns violation list', async () => {
-    ctx.governanceStore.recordViolation({
+  it('GET /api/management/violations returns violation list', async () => {
+    ctx.managementStore.recordViolation({
       constraintId: 'c1',
       policyId: 'p1',
       severity: 'CRITICAL',
@@ -65,7 +65,7 @@ describe('Governance API', () => {
       circuitBreakerState: 'NORMAL',
     })
 
-    const { status, body } = await getJson(ctx.app, '/api/governance/violations')
+    const { status, body } = await getJson(ctx.app, '/api/management/violations')
     expect(status).toBe(200)
     expect(body.length).toBe(1)
     expect(body[0].severity).toBe('CRITICAL')
@@ -73,9 +73,9 @@ describe('Governance API', () => {
     expect(body[0].condition).toBe('weekday != 0')
   })
 
-  it('GET /api/governance/violations respects limit param', async () => {
+  it('GET /api/management/violations respects limit param', async () => {
     for (let i = 0; i < 5; i++) {
-      ctx.governanceStore.recordViolation({
+      ctx.managementStore.recordViolation({
         constraintId: `c${i}`,
         policyId: 'p1',
         severity: 'HIGH',
@@ -88,12 +88,12 @@ describe('Governance API', () => {
       })
     }
 
-    const { body } = await getJson(ctx.app, '/api/governance/violations?limit=3')
+    const { body } = await getJson(ctx.app, '/api/management/violations?limit=3')
     expect(body.length).toBe(3)
   })
 
-  it('GET /api/governance/constraints returns constraint list', async () => {
-    ctx.governanceStore.loadConstraints([
+  it('GET /api/management/constraints returns constraint list', async () => {
+    ctx.managementStore.loadConstraints([
       {
         id: 'c-test-1', policyId: 'p1', label: 'Test 1',
         scope: { tools: ['bps_update_entity'], entityTypes: ['store'], dataFields: ['address'] },
@@ -106,7 +106,7 @@ describe('Governance API', () => {
       },
     ])
 
-    const { status, body } = await getJson(ctx.app, '/api/governance/constraints')
+    const { status, body } = await getJson(ctx.app, '/api/management/constraints')
     expect(status).toBe(200)
     expect(body.length).toBe(2)
     expect(body[0].id).toBe('c-test-1')
@@ -114,8 +114,8 @@ describe('Governance API', () => {
     expect(body[1].onViolation).toBe('BLOCK')
   })
 
-  it('GET /api/governance/approvals returns pending approvals', async () => {
-    ctx.governanceStore.createApproval({
+  it('GET /api/management/approvals returns pending approvals', async () => {
+    ctx.managementStore.createApproval({
       constraintId: 'c1', tool: 'bps_update_entity',
       toolInput: { entityType: 'store', entityId: 's1', data: { address: 'new' } },
       entityType: 'store', entityId: 's1',
@@ -123,7 +123,7 @@ describe('Governance API', () => {
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
     })
 
-    const { status, body } = await getJson(ctx.app, '/api/governance/approvals')
+    const { status, body } = await getJson(ctx.app, '/api/management/approvals')
     expect(status).toBe(200)
     expect(body.length).toBe(1)
     expect(body[0].constraintId).toBe('c1')
@@ -131,15 +131,15 @@ describe('Governance API', () => {
     expect(body[0].toolInput.entityType).toBe('store')
   })
 
-  it('POST /api/governance/approvals/:id/decide approves and executes the operation', async () => {
-    const approval = ctx.governanceStore.createApproval({
+  it('POST /api/management/approvals/:id/decide approves and executes the operation', async () => {
+    const approval = ctx.managementStore.createApproval({
       constraintId: 'c1', tool: 'bps_update_entity',
       toolInput: { entityType: 'store', entityId: 'replay-test', data: { name: 'Replay Store' } },
       message: 'Needs approval',
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
     })
 
-    const { status, body } = await postJson(ctx.app, `/api/governance/approvals/${approval.id}/decide`, {
+    const { status, body } = await postJson(ctx.app, `/api/management/approvals/${approval.id}/decide`, {
       decision: 'APPROVED', decidedBy: 'test-user',
     })
     expect(status).toBe(200)
@@ -156,19 +156,19 @@ describe('Governance API', () => {
     expect(entity!.data.name).toBe('Replay Store')
 
     // Verify no longer pending
-    const { body: pending } = await getJson(ctx.app, '/api/governance/approvals')
+    const { body: pending } = await getJson(ctx.app, '/api/management/approvals')
     expect(pending.length).toBe(0)
   })
 
-  it('POST /api/governance/approvals/:id/decide rejection does not execute', async () => {
-    const approval = ctx.governanceStore.createApproval({
+  it('POST /api/management/approvals/:id/decide rejection does not execute', async () => {
+    const approval = ctx.managementStore.createApproval({
       constraintId: 'c1', tool: 'bps_update_entity',
       toolInput: { entityType: 'store', entityId: 'reject-test', data: { name: 'Should Not Exist' } },
       message: 'Needs approval',
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
     })
 
-    const { status, body } = await postJson(ctx.app, `/api/governance/approvals/${approval.id}/decide`, {
+    const { status, body } = await postJson(ctx.app, `/api/management/approvals/${approval.id}/decide`, {
       decision: 'REJECTED', decidedBy: 'test-user',
     })
     expect(status).toBe(200)
@@ -180,21 +180,21 @@ describe('Governance API', () => {
     expect(entity).toBeNull()
   })
 
-  it('POST /api/governance/approvals/:id/decide rejects invalid decision', async () => {
-    const { status } = await postJson(ctx.app, '/api/governance/approvals/fake-id/decide', {
+  it('POST /api/management/approvals/:id/decide rejects invalid decision', async () => {
+    const { status } = await postJson(ctx.app, '/api/management/approvals/fake-id/decide', {
       decision: 'INVALID',
     })
     expect(status).toBe(400)
   })
 
-  it('POST /api/governance/circuit-breaker/reset resets to NORMAL', async () => {
+  it('POST /api/management/circuit-breaker/reset resets to NORMAL', async () => {
     // Push circuit breaker to non-normal state
-    ctx.governanceStore.updateCircuitBreaker('RESTRICTED', { critical: 0, high: 5, windowStart: new Date().toISOString() })
-    expect(ctx.governanceStore.getCircuitBreakerState().state).toBe('RESTRICTED')
+    ctx.managementStore.updateCircuitBreaker('RESTRICTED', { critical: 0, high: 5, windowStart: new Date().toISOString() })
+    expect(ctx.managementStore.getCircuitBreakerState().state).toBe('RESTRICTED')
 
-    const { status, body } = await postJson(ctx.app, '/api/governance/circuit-breaker/reset', {})
+    const { status, body } = await postJson(ctx.app, '/api/management/circuit-breaker/reset', {})
     expect(status).toBe(200)
     expect(body.state).toBe('NORMAL')
-    expect(ctx.governanceStore.getCircuitBreakerState().state).toBe('NORMAL')
+    expect(ctx.managementStore.getCircuitBreakerState().state).toBe('NORMAL')
   })
 })

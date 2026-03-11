@@ -5,9 +5,9 @@ import { createDatabase } from '../store/db.js';
 import { createBpsEngine, type BpsEngine, type BpsEngineConfig } from '../index.js';
 import { loadProject, type ProjectLoadResult } from './project-loader.js';
 import { loadSystemKnowledge } from '../knowledge/system-knowledge.js';
-import { GovernanceStore } from '../governance/governance-store.js';
-import { ActionGate } from '../governance/action-gate.js';
-import { loadGovernanceFile } from '../governance/governance-loader.js';
+import { ManagementStore } from '../management/management-store.js';
+import { ActionGate } from '../management/action-gate.js';
+import { loadManagementFile } from '../management/management-loader.js';
 
 export const AIDA_DIR_NAME = '.aida';
 
@@ -31,9 +31,9 @@ export interface AidaProjectResult {
   project: ProjectLoadResult | null;
   aidaDir: string;
   systemKnowledge: { loaded: number; skipped: number };
-  governance: {
+  management: {
     constraintCount: number;
-    store: GovernanceStore;
+    store: ManagementStore;
     gate: ActionGate;
   } | null;
 }
@@ -65,31 +65,31 @@ export function loadAidaProject(options?: {
   }
 
   // 尝试加载治理层
-  let governance: AidaProjectResult['governance'] = null;
-  const governanceYamlPath = path.join(aidaDir, 'governance.yaml');
-  const govStore = new GovernanceStore(db);
-  const gate = new ActionGate(govStore);
-  if (fs.existsSync(governanceYamlPath)) {
-    const result = loadGovernanceFile(governanceYamlPath);
+  let management: AidaProjectResult['management'] = null;
+  const managementYamlPath = path.join(aidaDir, 'management.yaml');
+  const mgmtStore = new ManagementStore(db);
+  const gate = new ActionGate(mgmtStore);
+  if (fs.existsSync(managementYamlPath)) {
+    const result = loadManagementFile(managementYamlPath);
     if (result.errors.length === 0) {
-      const count = govStore.loadConstraints(result.constraints);
+      const count = mgmtStore.loadConstraints(result.constraints);
       if (result.circuitBreaker) {
-        governance = {
+        management = {
           constraintCount: count,
-          store: govStore,
-          gate: new ActionGate(govStore, result.circuitBreaker),
+          store: mgmtStore,
+          gate: new ActionGate(mgmtStore, result.circuitBreaker),
         };
       } else {
-        governance = { constraintCount: count, store: govStore, gate };
+        management = { constraintCount: count, store: mgmtStore, gate };
       }
     } else {
-      // Governance file exists but has errors — still provide store/gate (no constraints loaded)
-      governance = { constraintCount: 0, store: govStore, gate };
+      // Management file exists but has errors — still provide store/gate (no constraints loaded)
+      management = { constraintCount: 0, store: mgmtStore, gate };
     }
   } else {
-    // No governance file — still provide store/gate for programmatic use
-    governance = { constraintCount: 0, store: govStore, gate };
+    // No management file — still provide store/gate for programmatic use
+    management = { constraintCount: 0, store: mgmtStore, gate };
   }
 
-  return { engine, project, aidaDir, systemKnowledge, governance };
+  return { engine, project, aidaDir, systemKnowledge, management };
 }

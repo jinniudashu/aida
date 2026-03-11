@@ -47,10 +47,10 @@ dash_get_file() {
 log "  Querying Dashboard API..."
 
 dash_get_file "/api/entities" "$METRICS_TMP/entities.json"
-dash_get_file "/api/governance/status" "$METRICS_TMP/gov-status.json"
-dash_get_file "/api/governance/violations?limit=100" "$METRICS_TMP/gov-violations.json"
-dash_get_file "/api/governance/approvals" "$METRICS_TMP/gov-approvals.json"
-dash_get_file "/api/governance/constraints" "$METRICS_TMP/gov-constraints.json"
+dash_get_file "/api/management/status" "$METRICS_TMP/gov-status.json"
+dash_get_file "/api/management/violations?limit=100" "$METRICS_TMP/gov-violations.json"
+dash_get_file "/api/management/approvals" "$METRICS_TMP/gov-approvals.json"
+dash_get_file "/api/management/constraints" "$METRICS_TMP/gov-constraints.json"
 
 # Build metrics from temp files (no process.argv overflow)
 node -e '
@@ -84,14 +84,14 @@ console.log(JSON.stringify({
     total: Array.isArray(entities) ? entities.length : 0,
     byType,
   },
-  governance: {
+  management: {
     constraints: Array.isArray(constraints) ? constraints.length : 0,
     violations: Array.isArray(violations) ? violations.length : 0,
     approvals: approvalStats,
     circuitBreaker: (govStatus && !Array.isArray(govStatus)) ? govStatus.circuitBreaker || null : null,
   },
 }, null, 2));
-' "$METRICS_TMP" > "$METRICS_TMP/metrics-base.json" 2>/dev/null || echo '{"timestamp":"","entities":{"total":0,"byType":{}},"governance":{}}' > "$METRICS_TMP/metrics-base.json"
+' "$METRICS_TMP" > "$METRICS_TMP/metrics-base.json" 2>/dev/null || echo '{"timestamp":"","entities":{"total":0,"byType":{}},"management":{}}' > "$METRICS_TMP/metrics-base.json"
 
 # Enrich with remote filesystem data (skills, agent workspaces, blueprints, mock-publish)
 REMOTE_COUNTS=$(ssh_run 'node -e "

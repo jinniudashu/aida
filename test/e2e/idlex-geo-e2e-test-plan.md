@@ -4,7 +4,7 @@
 
 End-to-end validation of AIDA platform running a real business scenario: IdleX GEO (Generative Engine Optimization) daily operations for partner store AI visibility management.
 
-**Test lifecycle**: Clean install -> Business context + requirements -> Aida modeling -> User review via Dashboard -> Aida execution -> Governance interception -> Dashboard approval -> Execution completion -> Daily summary
+**Test lifecycle**: Clean install -> Business context + requirements -> Aida modeling -> User review via Dashboard -> Aida execution -> Management interception -> Dashboard approval -> Execution completion -> Daily summary
 
 ## Environment
 
@@ -26,7 +26,7 @@ End-to-end validation of AIDA platform running a real business scenario: IdleX G
 | store-wh-ktv-01 | Music Box KTV (Jianghan Road) | Wuhan | Self-service KTV | 12 |
 | store-wh-tea-01 | Quiet Tea (Chu River Han Street) | Wuhan | Self-service Tea Room | 8 |
 
-### Governance Constraints (GEO-specific)
+### Management Constraints (GEO-specific)
 
 | Constraint | Trigger | Action | Severity |
 |------------|---------|--------|----------|
@@ -67,14 +67,14 @@ Subdirectories: `douban/`, `qianwen/`, `yuanbao/`, `general/`
 **Executor**: Script (automated)
 
 1. Create `~/.aida/project.yaml` (IdleX GEO project manifest)
-2. Create `~/.aida/governance.yaml` (GEO governance constraints)
+2. Create `~/.aida/management.yaml` (GEO management constraints)
 3. Run seed script to create 5 store entities in bps.db
 4. Copy IdleX business docs to `~/.aida/context/`
 5. Create `~/.aida/mock-publish/{douban,qianwen,yuanbao,general}/` directories
 
 **Verification V1**:
 - [ ] `curl /api/entities?entityType=store` returns 5 stores
-- [ ] `curl /api/governance/constraints` returns 3 constraints
+- [ ] `curl /api/management/constraints` returns 3 constraints
 - [ ] `ls ~/.aida/context/` shows 7 IdleX docs
 - [ ] `ls ~/.aida/mock-publish/` shows 4 subdirectories
 
@@ -147,35 +147,35 @@ Subdirectories: `douban/`, `qianwen/`, `yuanbao/`, `general/`
 - Analyze probe results
 - Generate GEO content (create geo-content entity)
 - Attempt to publish content (set publishReady=1)
-- **Governance interception**: c-content-publish triggers REQUIRE_APPROVAL
-- Aida reports governance block + approval ID + Dashboard link
+- **Management interception**: c-content-publish triggers REQUIRE_APPROVAL
+- Aida reports management block + approval ID + Dashboard link
 
 **Verification V3**:
 - [ ] geo-probe entity created with probe results
 - [ ] geo-content entity created with generated content
-- [ ] `curl /api/governance/violations` shows violation record
-- [ ] `curl /api/governance/approvals` shows PENDING approval
-- [ ] Aida reported governance interception to user
+- [ ] `curl /api/management/violations` shows violation record
+- [ ] `curl /api/management/approvals` shows PENDING approval
+- [ ] Aida reported management interception to user
 
 ### Phase 4: Dashboard Approval
 
 **Executor**: Script (automated via curl)
 
-#### Turn 4 -- Acknowledge Governance Block
+#### Turn 4 -- Acknowledge Management Block
 
 ```
 明白了，我去Dashboard处理审批。
 ```
 
 **Script actions**:
-1. Query pending approvals: `GET /api/governance/approvals`
-2. Approve the content publish: `POST /api/governance/approvals/:id/decide` with `{decision: "APPROVED"}`
+1. Query pending approvals: `GET /api/management/approvals`
+2. Approve the content publish: `POST /api/management/approvals/:id/decide` with `{decision: "APPROVED"}`
 3. Verify approval execution (replayToolCall)
 
 **Verification V4**:
 - [ ] Approval status changed to APPROVED
 - [ ] replayToolCall executed successfully (entity updated)
-- [ ] `curl /api/governance/approvals` shows no PENDING items
+- [ ] `curl /api/management/approvals` shows no PENDING items
 
 ### Phase 5: Post-Approval Summary (Aida Conversation)
 
@@ -201,15 +201,15 @@ Subdirectories: `douban/`, `qianwen/`, `yuanbao/`, `general/`
 **Executor**: Script (automated)
 
 1. Count all entities: stores(5) + GEO entities (strategy/probe/content/plan/summary)
-2. Check governance audit trail (violations + approvals)
+2. Check management audit trail (violations + approvals)
 3. Check mock-publish directory for output files (if Aida wrote there)
 4. Verify Dashboard pages render correctly
 5. Generate test report
 
 **Verification V6**:
 - [ ] Total entity count >= 7 (5 stores + at least 2 GEO entities)
-- [ ] Governance violation count >= 1
-- [ ] Governance approval APPROVED count >= 1
+- [ ] Management violation count >= 1
+- [ ] Management approval APPROVED count >= 1
 - [ ] Dashboard overview shows GEO activity
 - [ ] Agent Log page shows full audit trail
 
@@ -228,10 +228,10 @@ Subdirectories: `douban/`, `qianwen/`, `yuanbao/`, `general/`
 | Risk | Mitigation |
 |------|-----------|
 | Blueprint YAML format incompatibility (P0 from OpenClaw E2E) | Focus on Entity+Skill path; blueprint is optional |
-| Aida may not create governance-triggering entity fields | Conversation prompt hints at "publish" action |
+| Aida may not create management-triggering entity fields | Conversation prompt hints at "publish" action |
 | Context loss between openclaw agent calls | Aida's MEMORY.md + DossierStore provide continuity |
 | LLM response non-determinism | Verification checks are flexible (>= thresholds) |
-| Governance condition may not match Aida's field naming | Constraints use common field names (publishReady) |
+| Management condition may not match Aida's field naming | Constraints use common field names (publishReady) |
 | OpenClaw gateway may need restart after plugin install | Script handles gateway restart |
 
 ## Test Script
@@ -253,7 +253,7 @@ ssh -i .dev/oc-alicloud.pem root@47.236.109.62 "bash /tmp/idlex-geo-e2e-test.sh"
 | Data seeding successful | 10% | 5 stores + 3 constraints |
 | Aida creates GEO modeling artifacts | 25% | >= 2 new entities + action plan |
 | Aida executes GEO operations | 20% | probe + content entities created |
-| Governance interception fires | 15% | >= 1 violation + approval |
+| Management interception fires | 15% | >= 1 violation + approval |
 | Dashboard approval -> execution | 10% | Approval replay succeeds |
 | Daily summary produced | 5% | Aida outputs structured summary |
 | **Total weighted score** | 100% | >= 70% = PASS |

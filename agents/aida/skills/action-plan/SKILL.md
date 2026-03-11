@@ -38,10 +38,10 @@ When woken by the OpenClaw cron scheduler:
 
 When the user describes a goal or initiative:
 
-1. **Layer classification**: For each item, classify as **Governance** or **Operations**.
-   - Governance directive (when X → must Y) → if Y=block/limit: `governance.yaml`; otherwise: `blueprint-modeling` skill
+1. **Layer classification**: For each item, classify as **Management** or **Operations**.
+   - Management directive (when X → must Y) → if Y=block/limit: `management.yaml`; otherwise: `blueprint-modeling` skill
    - Operations (do something, produce output, collect data) → implement via Entity + Skill
-   - Default to Operations when unclear. Only choose Governance for explicit constraints.
+   - Default to Operations when unclear. Only choose Management for explicit constraints.
 2. Draft the plan structure (type, items with layer tags, observation points, budget)
 3. Skill gap check: scan existing Skills and match against each plan item. Flag items with no obvious Skill match — propose upfront Skill creation for recurring ones, or note that ad-hoc execution is acceptable for one-offs.
 4. Present the plan (with layer tags and any skill gap notes) to the user for review

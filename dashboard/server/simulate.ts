@@ -22,7 +22,7 @@
  *   Freq 3 (Cron):         Weekly inventory, daily revenue check, monthly review
  */
 import path from 'node:path'
-import { createBpsEngine, createDatabase, loadBlueprintFromYaml, GovernanceStore } from '../../src/index.js'
+import { createBpsEngine, createDatabase, loadBlueprintFromYaml, ManagementStore } from '../../src/index.js'
 import type { BpsEngine } from '../../src/index.js'
 
 const DB_PATH = process.env.BPS_DB_PATH || path.resolve(process.env.HOME || '/root', '.aida', 'data', 'bps.db')
@@ -400,15 +400,15 @@ for (const store of [
 }
 
 // ═══════════════════════════════════════════════════════
-// PHASE 10: Governance Data (Constraints + Violations)
+// PHASE 10: Management Data (Constraints + Violations)
 // ═══════════════════════════════════════════════════════
 
-console.log('[simulate] Phase 10: Governance constraints & violation history...')
+console.log('[simulate] Phase 10: Management constraints & violation history...')
 
-const govStore = new GovernanceStore(db)
+const mgmtStore = new ManagementStore(db)
 
-// Load business governance constraints
-govStore.loadConstraints([
+// Load business management constraints
+mgmtStore.loadConstraints([
   {
     id: 'c-large-purchase',
     policyId: 'p-financial',
@@ -454,7 +454,7 @@ govStore.loadConstraints([
 ])
 
 // Record some realistic violations that happened over the past few days
-govStore.recordViolation({
+mgmtStore.recordViolation({
   constraintId: 'c-business-hours',
   policyId: 'p-operational',
   severity: 'MEDIUM',
@@ -468,7 +468,7 @@ govStore.recordViolation({
   circuitBreakerState: 'NORMAL',
 })
 
-govStore.recordViolation({
+mgmtStore.recordViolation({
   constraintId: 'c-large-purchase',
   policyId: 'p-financial',
   severity: 'HIGH',
@@ -482,7 +482,7 @@ govStore.recordViolation({
   circuitBreakerState: 'NORMAL',
 })
 
-govStore.recordViolation({
+mgmtStore.recordViolation({
   constraintId: 'c-store-modify-guard',
   policyId: 'p-data-integrity',
   severity: 'HIGH',
@@ -496,8 +496,8 @@ govStore.recordViolation({
   circuitBreakerState: 'NORMAL',
 })
 
-// Create pending governance approvals
-govStore.createApproval({
+// Create pending management approvals
+mgmtStore.createApproval({
   constraintId: 'c-large-purchase',
   tool: 'bps_update_entity',
   toolInput: { entityType: 'procurement', entityId: 'po-coffee-machine', data: { amount: 68000, vendor: '意大利进口直营' } },
@@ -507,7 +507,7 @@ govStore.createApproval({
   expiresAt: h(48),
 })
 
-govStore.createApproval({
+mgmtStore.createApproval({
   constraintId: 'c-store-modify-guard',
   tool: 'bps_update_entity',
   toolInput: { entityType: 'store', entityId: 'store-001', data: { address: '北京市朝阳区建国路88号新址' } },
@@ -528,14 +528,14 @@ for (const t of allTasks) byState[t.state] = (byState[t.state] ?? 0) + 1
 console.log('\n[simulate] ✅ Scenario loaded successfully!')
 console.log(`  Tasks:     ${allTasks.length} total (${Object.entries(byState).map(([s, n]) => `${s}: ${n}`).join(', ')})`)
 console.log(`  Dossiers:  action-plan ×2, approval ×4, store ×4, skill-creation ×1`)
-console.log(`  Governance: 4 constraints, 3 violations, 2 pending approvals`)
+console.log(`  Management: 4 constraints, 3 violations, 2 pending approvals`)
 console.log(`  Agent Log: ${allTasks.length * 2}+ entries (create + state changes)`)
 console.log(`  Charts:    14 days of timeseries data`)
 console.log('')
 console.log('  Dashboard pages to check:')
-console.log('    /                — overview: 现状/目标/下一步 三面板 + governance status')
+console.log('    /                — overview: 现状/目标/下一步 三面板 + management status')
 console.log('    /business-goals  — 2 action plans with items + completion stats')
 console.log('    /approvals       — 3 pending + 1 approved')
-console.log('    /governance      — circuit breaker + constraints + violations + gov approvals')
+console.log('    /management      — circuit breaker + constraints + violations + gov approvals')
 console.log('    /agent-log       — full audit trail of all operations')
 console.log('    /kanban          — tasks by state')

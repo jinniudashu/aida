@@ -4,18 +4,18 @@ import path from 'node:path'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { streamSSE } from 'hono/streaming'
-import { type BpsEngine, GovernanceStore, loadBlueprintFromString, loadGovernanceFromString } from '../../src/index.js'
-import { engine, governanceStore as defaultGovernanceStore } from './engine.js'
+import { type BpsEngine, ManagementStore, loadBlueprintFromString, loadManagementFromString } from '../../src/index.js'
+import { engine, managementStore as defaultManagementStore } from './engine.js'
 
 /**
- * Replay a previously governance-blocked tool call directly on the engine.
+ * Replay a previously management-blocked tool call directly on the engine.
  * Called after a human approves the operation in the Dashboard.
  */
 function replayToolCall(
   engine: BpsEngine,
   tool: string,
   toolInput: Record<string, unknown>,
-  opts?: { governanceStore?: GovernanceStore },
+  opts?: { managementStore?: ManagementStore },
 ): Record<string, unknown> {
   switch (tool) {
     case 'bps_update_entity': {
@@ -23,7 +23,7 @@ function replayToolCall(
         entityType: string; entityId: string; data: Record<string, unknown>; message?: string
       }
       const dossier = engine.dossierStore.getOrCreate(entityType, entityId)
-      const version = engine.dossierStore.commit(dossier.id, data, { message: message ?? 'Approved via governance' })
+      const version = engine.dossierStore.commit(dossier.id, data, { message: message ?? 'Approved via management' })
 
       // Two-stage publish: promote drafts from mock-publish-tmp/ to mock-publish/
       let promotedFiles: string[] = []
@@ -103,23 +103,23 @@ function replayToolCall(
       // After approval, the agent should retry the tool call directly.
       return { success: true, tool, note: 'Agent registration approved. The agent should retry bps_register_agent.' }
     }
-    case 'bps_load_governance': {
-      const govStore = opts?.governanceStore
-      if (!govStore) return { success: false, tool, error: 'Governance store not available' }
+    case 'bps_load_management': {
+      const mgmtStore = opts?.managementStore
+      if (!mgmtStore) return { success: false, tool, error: 'Management store not available' }
       const { yaml: govYaml } = toolInput as { yaml?: string }
       if (!govYaml) {
         // Reload from file
-        const govPath = path.join(os.homedir(), '.aida', 'governance.yaml')
-        if (!fs.existsSync(govPath)) return { success: false, tool, error: 'governance.yaml not found' }
+        const govPath = path.join(os.homedir(), '.aida', 'management.yaml')
+        if (!fs.existsSync(govPath)) return { success: false, tool, error: 'management.yaml not found' }
         const content = fs.readFileSync(govPath, 'utf-8')
-        const parsed = loadGovernanceFromString(content)
+        const parsed = loadManagementFromString(content)
         if (parsed.errors.length > 0) return { success: false, tool, errors: parsed.errors }
-        const count = govStore.loadConstraints(parsed.constraints)
+        const count = mgmtStore.loadConstraints(parsed.constraints)
         return { success: true, tool, constraintsLoaded: count }
       }
-      const parsed = loadGovernanceFromString(govYaml)
+      const parsed = loadManagementFromString(govYaml)
       if (parsed.errors.length > 0) return { success: false, tool, errors: parsed.errors }
-      const count = govStore.loadConstraints(parsed.constraints)
+      const count = mgmtStore.loadConstraints(parsed.constraints)
       return { success: true, tool, constraintsLoaded: count }
     }
     default:
@@ -127,9 +127,9 @@ function replayToolCall(
   }
 }
 
-export function createApp(engine: BpsEngine, opts?: { governanceStore?: GovernanceStore }): Hono {
+export function createApp(engine: BpsEngine, opts?: { managementStore?: ManagementStore }): Hono {
 
-const governanceStore = opts?.governanceStore ?? defaultGovernanceStore
+const managementStore = opts?.managementStore ?? defaultManagementStore
 
 const app = new Hono()
 
@@ -157,24 +157,24 @@ app.get('/api/events', (c) => {
     relay('process:error')
     relay('dossier:committed')
 
-    // Governance events
+    // Management events
     function relayGov(event: string) {
       const fn = (payload: unknown) => {
         stream.writeSSE({ event, data: JSON.stringify(payload) }).catch(() => {})
       }
-      governanceStore.on(event, fn)
+      managementStore.on(event, fn)
       listeners.push({ event, fn })
     }
 
-    relayGov('governance:violation')
-    relayGov('governance:approval_created')
-    relayGov('governance:approval_decided')
-    relayGov('governance:circuit_breaker_changed')
+    relayGov('management:violation')
+    relayGov('management:approval_created')
+    relayGov('management:approval_decided')
+    relayGov('management:circuit_breaker_changed')
 
     stream.onAbort(() => {
       for (const { event, fn } of listeners) {
         tracker.removeListener(event, fn)
-        governanceStore.removeListener(event, fn)
+        managementStore.removeListener(event, fn)
       }
     })
 
@@ -1016,20 +1016,20 @@ app.post('/api/approvals/:id/decide', async (c) => {
   }
 })
 
-// --- Governance API ---
+// --- Management API ---
 
-app.get('/api/governance/status', (c) => {
+app.get('/api/management/status', (c) => {
   try {
-    const cbState = governanceStore.getCircuitBreakerState()
-    const constraints = governanceStore.listConstraints()
-    const pendingApprovals = governanceStore.getPendingApprovals()
-    const recentViolations = governanceStore.getRecentViolations(5)
+    const cbState = managementStore.getCircuitBreakerState()
+    const constraints = managementStore.listConstraints()
+    const pendingApprovals = managementStore.getPendingApprovals()
+    const recentViolations = managementStore.getRecentViolations(5)
 
     return c.json({
       circuitBreaker: cbState,
       circuitBreakerState: cbState.state,
       constraintCount: constraints.length,
-      constraintEffectiveness: governanceStore.getConstraintEffectiveness(),
+      constraintEffectiveness: managementStore.getConstraintEffectiveness(),
       pendingApprovalCount: pendingApprovals.length,
       recentViolations: recentViolations.map(v => ({
         id: v.id,
@@ -1046,10 +1046,10 @@ app.get('/api/governance/status', (c) => {
   }
 })
 
-app.get('/api/governance/violations', (c) => {
+app.get('/api/management/violations', (c) => {
   try {
     const limit = Number(c.req.query('limit') || '50')
-    const violations = governanceStore.getRecentViolations(limit)
+    const violations = managementStore.getRecentViolations(limit)
     return c.json(violations.map(v => ({
       id: v.id,
       constraintId: v.constraintId,
@@ -1069,9 +1069,9 @@ app.get('/api/governance/violations', (c) => {
   }
 })
 
-app.get('/api/governance/constraints', (c) => {
+app.get('/api/management/constraints', (c) => {
   try {
-    const constraints = governanceStore.listConstraints()
+    const constraints = managementStore.listConstraints()
     return c.json(constraints.map(c => ({
       id: c.id,
       policyId: c.policyId,
@@ -1088,9 +1088,9 @@ app.get('/api/governance/constraints', (c) => {
   }
 })
 
-app.get('/api/governance/approvals', (c) => {
+app.get('/api/management/approvals', (c) => {
   try {
-    const approvals = governanceStore.getPendingApprovals()
+    const approvals = managementStore.getPendingApprovals()
     return c.json(approvals.map(a => ({
       id: a.id,
       constraintId: a.constraintId,
@@ -1110,7 +1110,7 @@ app.get('/api/governance/approvals', (c) => {
   }
 })
 
-app.post('/api/governance/approvals/:id/decide', async (c) => {
+app.post('/api/management/approvals/:id/decide', async (c) => {
   try {
     const id = c.req.param('id')
     const body = await c.req.json()
@@ -1120,17 +1120,17 @@ app.post('/api/governance/approvals/:id/decide', async (c) => {
       return c.json({ error: 'Invalid decision (must be "APPROVED" or "REJECTED")' }, 400)
     }
 
-    const approval = governanceStore.getApproval(id)
+    const approval = managementStore.getApproval(id)
     if (!approval) return c.json({ error: 'Approval not found' }, 404)
     if (approval.status !== 'PENDING') return c.json({ error: 'Approval already decided' }, 400)
 
-    governanceStore.decideApproval(id, decision, decidedBy ?? 'dashboard-user')
+    managementStore.decideApproval(id, decision, decidedBy ?? 'dashboard-user')
 
     // On APPROVED: replay the originally-blocked operation
     let executionResult: Record<string, unknown> | null = null
     if (decision === 'APPROVED') {
       try {
-        executionResult = replayToolCall(engine, approval.tool, approval.toolInput, { governanceStore })
+        executionResult = replayToolCall(engine, approval.tool, approval.toolInput, { managementStore })
       } catch (err) {
         executionResult = { success: false, error: `Replay failed: ${err instanceof Error ? err.message : String(err)}` }
       }
@@ -1142,9 +1142,9 @@ app.post('/api/governance/approvals/:id/decide', async (c) => {
   }
 })
 
-app.post('/api/governance/circuit-breaker/reset', async (c) => {
+app.post('/api/management/circuit-breaker/reset', async (c) => {
   try {
-    governanceStore.resetCircuitBreaker()
+    managementStore.resetCircuitBreaker()
     return c.json({ success: true, state: 'NORMAL' })
   } catch (err) {
     return c.json({ error: String(err) }, 500)
