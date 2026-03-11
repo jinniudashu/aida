@@ -58,7 +58,7 @@ if (!config.agents) config.agents = {};
 if (!config.agents.defaults) config.agents.defaults = {};
 config.agents.defaults.model = {
   primary: primary,
-  fallbacks: fallbacksRaw ? JSON.parse(fallbacksRaw) : ["dashscope/qwen3.5-plus", "moonshot/kimi-k2.5"]
+  fallbacks: fallbacksRaw ? JSON.parse(fallbacksRaw) : ["dashscope/qwen3.5-plus", "kimi/kimi-for-coding"]
 };
 
 // Register model alias so OpenClaw recognizes it
@@ -128,17 +128,18 @@ if (env.GOOGLE_API_KEY) {
   };
 }
 
-// Moonshot (Kimi)
-if (env.MOONSHOT_API_KEY) {
-  data.providers.moonshot = {
-    baseUrl: "https://api.moonshot.ai/v1",
+// Kimi Coding Plan
+if (env.KIMI_API_KEY) {
+  data.providers.kimi = {
+    baseUrl: "https://api.kimi.com/coding/v1",
     api: "openai-completions",
     models: [
-      { id: "kimi-k2.5", name: "Kimi K2.5", reasoning: false, input: ["text", "image"], cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 256000, maxTokens: 8192 }
+      { id: "kimi-for-coding", name: "Kimi for Coding", reasoning: false, input: ["text", "image"], cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 256000, maxTokens: 8192 }
     ],
-    apiKey: env.MOONSHOT_API_KEY
+    apiKey: env.KIMI_API_KEY
   };
 }
+delete data.providers.moonshot; // remove legacy
 
 // DashScope (Qwen) — domestic endpoint
 if (env.DASHSCOPE_API_KEY) {

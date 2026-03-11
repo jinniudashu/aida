@@ -47,7 +47,7 @@ get_model_config_string() {
     claude-opus-4.6) echo "openrouter/anthropic/claude-opus-4.6" ;;
     gpt-5.4) echo "openrouter/openai/gpt-5.4" ;;
     gemini-3.1-pro) echo "google/gemini-3.1-pro-preview" ;;
-    kimi-k2.5) echo "moonshot/kimi-k2.5" ;;
+    kimi-k2.5|kimi-for-coding) echo "kimi/kimi-for-coding" ;;
     glm-5) echo "zhipu/glm-5" ;;
     qwen3.5-plus) echo "dashscope/qwen3.5-plus" ;;
     *) echo "$1" ;;
@@ -95,7 +95,7 @@ generate_openclaw_json() {
   
   # Fallback models
   local fb1="dashscope/qwen3.5-plus"
-  local fb2="moonshot/kimi-k2.5"
+  local fb2="kimi/kimi-for-coding"
 
   cat << JSON
 {

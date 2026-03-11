@@ -16,7 +16,7 @@ get_model_config() {
     claude-opus-4.6) echo "openrouter/anthropic/claude-opus-4.6" ;;
     gpt-5.4) echo "openrouter/openai/gpt-5.4" ;;
     gemini-3.1-pro) echo "google/gemini-3.1-pro-preview" ;;
-    kimi-k2.5) echo "moonshot/kimi-k2.5" ;;
+    kimi-k2.5|kimi-for-coding) echo "kimi/kimi-for-coding" ;;
     glm-5) echo "zhipu/glm-5" ;;
     qwen3.5-plus) echo "dashscope/qwen3.5-plus" ;;
     *) echo "$1" ;;
@@ -51,7 +51,7 @@ config.agents = config.agents || {};
 config.agents.defaults = config.agents.defaults || {};
 config.agents.defaults.model = {
   primary: '$PRIMARY',
-  fallbacks: ['dashscope/qwen3.5-plus', 'moonshot/kimi-k2.5']
+  fallbacks: ['dashscope/qwen3.5-plus', 'kimi/kimi-for-coding']
 };
 fs.writeFileSync('$OPENCLAW_HOME/openclaw.json', JSON.stringify(config, null, 2));
 console.log('Model configured: $PRIMARY');

@@ -70,14 +70,14 @@
       }
     },
     {
-      "id": "kimi-k2.5",
-      "name": "Kimi K2.5",
-      "provider": "moonshot",
-      "primary": "moonshot/kimi-k2.5",
-      "envVar": "MOONSHOT_API_KEY",
+      "id": "kimi-for-coding",
+      "name": "Kimi for Coding",
+      "provider": "kimi",
+      "primary": "kimi/kimi-for-coding",
+      "envVar": "KIMI_API_KEY",
       "envFile": ".dev/model-api-keys.env",
       "providerConfig": {
-        "baseUrl": "https://api.moonshot.ai/v1",
+        "baseUrl": "https://api.kimi.com/coding/v1",
         "api": "openai-completions"
       },
       "modelSpec": {
@@ -129,7 +129,7 @@
   ],
   "fallbacks": [
     "dashscope/qwen3.5-plus",
-    "moonshot/kimi-k2.5"
+    "kimi/kimi-for-coding"
   ],
   "scoring": {
     "scale": 10,

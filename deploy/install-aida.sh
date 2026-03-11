@@ -358,7 +358,7 @@ if (typeof config.agents.defaults.model === "string") {
   config.agents.defaults.model = { primary: config.agents.defaults.model };
 }
 config.agents.defaults.model.fallbacks = [
-  "moonshot/kimi-k2.5"
+  "kimi/kimi-for-coding"
 ];
 
 // 7. Hooks — enable internal hooks so BOOT.md executes on Gateway restart (P1)
@@ -389,9 +389,9 @@ fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
 # ============================================================
 # Section 5b: Custom Model Providers (models.json)
 # ============================================================
-# Default models (dashscope/qwen3.5-plus, moonshot/kimi-k2.5) are custom providers
+# Default models (dashscope/qwen3.5-plus, kimi/kimi-for-coding) are custom providers
 # not built into OpenClaw. models.json defines baseUrl, API format, and model specs.
-# API keys are read from env vars: DASHSCOPE_API_KEY, MOONSHOT_API_KEY
+# API keys are read from env vars: DASHSCOPE_API_KEY, KIMI_API_KEY
 AGENT_AUTH_DIR="$OC_HOME/agents/main/agent"
 MODELS_JSON="$AGENT_AUTH_DIR/models.json"
 
@@ -400,7 +400,7 @@ node -e '
 const fs = require("fs");
 const modelsPath = process.argv[1];
 const dashscopeKey = process.argv[2] || "";
-const moonshotKey = process.argv[3] || "";
+const kimiKey = process.argv[3] || "";
 
 let data = {};
 if (fs.existsSync(modelsPath)) {
@@ -429,34 +429,37 @@ if (dashscopeKey) {
   console.error("[models] DASHSCOPE_API_KEY not set, skipping dashscope provider");
 }
 
-// Moonshot (Kimi) — fallback model
-if (moonshotKey) {
-  data.providers.moonshot = {
-    baseUrl: "https://api.moonshot.ai/v1",
+// Kimi Coding Plan — fallback model
+if (kimiKey) {
+  data.providers.kimi = {
+    baseUrl: "https://api.kimi.com/coding/v1",
     api: "openai-completions",
     models: [{
-      id: "kimi-k2.5",
-      name: "Kimi K2.5",
+      id: "kimi-for-coding",
+      name: "Kimi for Coding",
       reasoning: false,
       input: ["text", "image"],
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
       contextWindow: 256000,
       maxTokens: 8192
     }],
-    apiKey: moonshotKey
+    apiKey: kimiKey
   };
-  console.error("[models] moonshot provider configured (kimi-k2.5)");
+  console.error("[models] kimi provider configured (kimi-for-coding)");
 } else {
-  console.error("[models] MOONSHOT_API_KEY not set, skipping moonshot provider");
+  console.error("[models] KIMI_API_KEY not set, skipping kimi provider");
 }
 
+// Remove legacy moonshot provider if present
+delete data.providers.moonshot;
+
 fs.writeFileSync(modelsPath, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
-' "$MODELS_JSON" "${DASHSCOPE_API_KEY:-}" "${MOONSHOT_API_KEY:-}" && \
+' "$MODELS_JSON" "${DASHSCOPE_API_KEY:-}" "${KIMI_API_KEY:-}" && \
   log "models.json 已更新" || warn "models.json 写入失败"
 
-if [ -z "${DASHSCOPE_API_KEY:-}" ] && [ -z "${MOONSHOT_API_KEY:-}" ]; then
-  warn "DASHSCOPE_API_KEY 和 MOONSHOT_API_KEY 均未设置"
-  info "  设置方法: export DASHSCOPE_API_KEY=sk-... MOONSHOT_API_KEY=sk-... && bash deploy/install-aida.sh"
+if [ -z "${DASHSCOPE_API_KEY:-}" ] && [ -z "${KIMI_API_KEY:-}" ]; then
+  warn "DASHSCOPE_API_KEY 和 KIMI_API_KEY 均未设置"
+  info "  设置方法: export DASHSCOPE_API_KEY=sk-... KIMI_API_KEY=sk-... && bash deploy/install-aida.sh"
 fi
 
 # ============================================================
