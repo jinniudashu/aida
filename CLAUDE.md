@@ -639,6 +639,22 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **文档**：`agents/Aida/TOOLS.md` 新增 "Governance Constraint Syntax" 节（可用变量、scope 规则、示例）
 - **测试**：原 1 个 fail-closed 测试拆为 2 个（undefined variable → PASS + 语法错误 → BLOCK），总计 437 tests
 
+### 测试自主性优化（2026-03-11，R3 #1/#5 修复）
+- **#1 路径自主**：Turn 3 删除 mock-publish-tmp 路径指令，Phase 1 不再预创建目录，B4.12/V5.6 改为 session JSONL write tool 调用检测
+- **#5 两阶段发现**：TOOLS.md 删除 two-stage 完整流程预设，仅保留治理拦截行为说明
+- 测试不再指定 Aida 的内容输出路径，也不再预置发布工作流——观察 Aida 是否自主发现
+
+### 结构能力 E2E 测试 R4 — 修正效果验证（2026-03-11）
+- R4 报告：`test/e2e/structural-capability/R4-REPORT.md`
+- **目标**：验证 R3 修正（#2 治理语法 + #1 路径自主 + #5 两阶段发现）的效果
+- **结果**：92 PASS / 1 FAIL / 4 WARN / 97 TOTAL（847s, 14 分钟）
+- **修正效果**：
+  - #2 治理语法：violations 19→4（-79%），B4.17/B4.18/B4.19 从 WARN→PASS，HITL 闭环首次完整通过
+  - #1 路径自主：Aida 自主选择 `~/.aida/geo-content/`，JSONL 检测 6 次 write calls，V5.6 PASS
+  - #5 两阶段发现：Aida 从治理拦截自然推导出发布→审批→分发流程
+- **1 FAIL**：V5.2 constraints=2（Aida 自建覆盖种子 3），建议阈值改为 ≥2
+- **遗留**：Turn 6 `unexpected_state` 仍阻止 Agent workspace 创建（OpenClaw 框架问题）
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
