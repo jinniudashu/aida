@@ -468,25 +468,54 @@ fi
 # Optional: OpenRouter auth for fallback or alternative models.
 AUTH_PROFILES="$AGENT_AUTH_DIR/auth-profiles.json"
 
-if [ -n "${OPENROUTER_API_KEY:-}" ]; then
-  node -e '
+node -e '
 const fs = require("fs");
-const path = process.argv[1];
-const key = process.argv[2];
+const authPath = process.argv[1];
+const modelsPath = process.argv[2];
+const orKey = process.argv[3] || "";
+
 let data = { version: 1, profiles: {}, lastGood: {}, usageStats: {} };
-if (fs.existsSync(path)) {
-  try { data = JSON.parse(fs.readFileSync(path, "utf-8")); } catch {}
+if (fs.existsSync(authPath)) {
+  try { data = JSON.parse(fs.readFileSync(authPath, "utf-8")); } catch {}
 }
-data.profiles["openrouter:manual"] = {
-  type: "api_key",
-  provider: "openrouter",
-  key: key
-};
-data.lastGood.openrouter = "openrouter:manual";
-fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
-' "$AUTH_PROFILES" "$OPENROUTER_API_KEY" && log "Gateway auth: OpenRouter API key → auth-profiles.json" || \
+
+// OpenRouter (from env)
+if (orKey) {
+  data.profiles["openrouter:manual"] = { type: "api_key", provider: "openrouter", key: orKey };
+  data.lastGood.openrouter = "openrouter:manual";
+}
+
+// Sync provider keys from models.json → auth-profiles.json
+if (fs.existsSync(modelsPath)) {
+  try {
+    const models = JSON.parse(fs.readFileSync(modelsPath, "utf-8"));
+    for (const [name, provider] of Object.entries(models.providers || {})) {
+      if (provider.apiKey) {
+        const profileId = name + ":manual";
+        data.profiles[profileId] = { type: "api_key", provider: name, key: provider.apiKey };
+        data.lastGood[name] = profileId;
+        // Clear any stale cooldown/errors
+        if (data.usageStats[profileId]) {
+          delete data.usageStats[profileId].failureCounts;
+          delete data.usageStats[profileId].cooldownUntil;
+          delete data.usageStats[profileId].lastFailureAt;
+          data.usageStats[profileId].errorCount = 0;
+        }
+      }
+    }
+  } catch {}
+}
+
+// Remove legacy moonshot
+delete data.profiles["moonshot:manual"];
+delete data.lastGood.moonshot;
+delete data.usageStats["moonshot:manual"];
+
+fs.writeFileSync(authPath, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
+console.error("[auth] auth-profiles.json synced from models.json");
+' "$AUTH_PROFILES" "$MODELS_JSON" "${OPENROUTER_API_KEY:-}" && \
+    log "Gateway auth: auth-profiles.json 已同步" || \
     warn "auth-profiles.json 写入失败"
-fi
 
 # ============================================================
 # Section 6: 验证
