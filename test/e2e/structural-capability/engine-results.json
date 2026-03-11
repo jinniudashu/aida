@@ -1,0 +1,241 @@
+{
+  "timestamp": "2026-03-11T09:22:41.571Z",
+  "passed": 39,
+  "failed": 0,
+  "total": 39,
+  "results": [
+    {
+      "id": "S2.01",
+      "description": "GATED_WRITE_TOOLS has 9 entries",
+      "passed": true,
+      "detail": "got 9: bps_update_entity, bps_create_task, bps_update_task, bps_complete_task, bps_create_skill, bps_load_blueprint, bps_register_agent, bps_load_governance, bps_batch_update"
+    },
+    {
+      "id": "S2.02",
+      "description": "Read-only tool bypasses governance",
+      "passed": true
+    },
+    {
+      "id": "S2.03",
+      "description": "BLOCK verdict for CRITICAL constraint",
+      "passed": true,
+      "detail": "verdict=BLOCK, checks=1"
+    },
+    {
+      "id": "S2.04",
+      "description": "REQUIRE_APPROVAL verdict for HIGH constraint",
+      "passed": true,
+      "detail": "verdict=REQUIRE_APPROVAL"
+    },
+    {
+      "id": "S2.05",
+      "description": "PASS verdict for non-matching scope",
+      "passed": true,
+      "detail": "verdict=PASS"
+    },
+    {
+      "id": "S2.06",
+      "description": "Constraint scope: entityType filter matches",
+      "passed": true,
+      "detail": "verdict=REQUIRE_APPROVAL"
+    },
+    {
+      "id": "S2.07",
+      "description": "Constraint scope: dataFields filter (no match → PASS)",
+      "passed": true,
+      "detail": "verdict=PASS"
+    },
+    {
+      "id": "S2.08",
+      "description": "New tools (batch_update, load_blueprint, register_agent, load_governance) are gated",
+      "passed": true,
+      "detail": "missing: none"
+    },
+    {
+      "id": "S2.08b",
+      "description": "Governance BLOCK throws Error (not {success:false})",
+      "passed": true,
+      "detail": "threw=true, msg contains GOVERNANCE BLOCKED: true"
+    },
+    {
+      "id": "S2.08c",
+      "description": "REQUIRE_APPROVAL throws Error with approval ID",
+      "passed": true,
+      "detail": "threw=true"
+    },
+    {
+      "id": "S2.09",
+      "description": "CRITICAL violation → DISCONNECTED",
+      "passed": true,
+      "detail": "state=DISCONNECTED"
+    },
+    {
+      "id": "S2.10",
+      "description": "DISCONNECTED blocks all writes immediately",
+      "passed": true,
+      "detail": "verdict=BLOCK, cbState=DISCONNECTED"
+    },
+    {
+      "id": "S2.11",
+      "description": "HIGH violations → WARNING",
+      "passed": true,
+      "detail": "state=WARNING"
+    },
+    {
+      "id": "S2.12",
+      "description": "Cooldown recovery: WARNING → NORMAL",
+      "passed": true,
+      "detail": "state=NORMAL, verdict=PASS"
+    },
+    {
+      "id": "S2.13",
+      "description": "No recovery if violations exist in window",
+      "passed": true,
+      "detail": "before=WARNING, after=WARNING"
+    },
+    {
+      "id": "S2.14",
+      "description": "Oscillation detection (>3 transitions/1h → lock)",
+      "passed": true,
+      "detail": "oscillation_detected event fired: true"
+    },
+    {
+      "id": "S2.15",
+      "description": "bps_scan_work returns topN shape {items, total, showing}",
+      "passed": true,
+      "detail": "openTasks keys: items, total, showing"
+    },
+    {
+      "id": "S2.16",
+      "description": "bps_scan_work summary is non-empty string",
+      "passed": true,
+      "detail": "summary: \"3 open, 0 in-progress\""
+    },
+    {
+      "id": "S2.17",
+      "description": "bps_scan_work sortByUrgency (deadline ASC, nulls last)",
+      "passed": true,
+      "detail": "order: probe-store-01(d=2026-03-15T10:00:00Z,p=3) > analysis-01(d=2026-03-16T10:00:00Z,p=1) > content-01(d=null,p=5)"
+    },
+    {
+      "id": "S2.18",
+      "description": "bps_query_entities brief=true returns compact (no data)",
+      "passed": true,
+      "detail": "brief keys: entityType,entityId,version,updatedAt"
+    },
+    {
+      "id": "S2.19",
+      "description": "bps_next_steps returns recommendation field",
+      "passed": true,
+      "detail": "recommendation: \"Recommended: start_service → Data Analysis\""
+    },
+    {
+      "id": "S2.20",
+      "description": "bps_scan_work outcomeDistribution has success/partial/failed",
+      "passed": true,
+      "detail": "keys: success, partial, failed"
+    },
+    {
+      "id": "S2.21",
+      "description": "Tasks created with groupId are queryable via groupId field",
+      "passed": true,
+      "detail": "found 3 tasks with groupId=group-structural-batch (expected 3)"
+    },
+    {
+      "id": "S2.22",
+      "description": "bps_batch_update completes all tasks in group",
+      "passed": true,
+      "detail": "updated=3, total=3"
+    },
+    {
+      "id": "S2.23",
+      "description": "bps_batch_update filterState only updates matching",
+      "passed": true,
+      "detail": "updated=1 (should be 1 — only OPEN task)"
+    },
+    {
+      "id": "S2.24",
+      "description": "Filtered batch: non-matching task unchanged",
+      "passed": true,
+      "detail": "state=IN_PROGRESS"
+    },
+    {
+      "id": "S2.25",
+      "description": "bps_get_entity returns relatedEntities",
+      "passed": true,
+      "detail": "relatedEntities count: 2"
+    },
+    {
+      "id": "S2.26",
+      "description": "Relations include version and updatedAt",
+      "passed": true,
+      "detail": "version=1, updatedAt=2026-03-11T09:22:37.571Z"
+    },
+    {
+      "id": "S2.27",
+      "description": "Relation types: depends_on and references",
+      "passed": true,
+      "detail": "types: references, depends_on"
+    },
+    {
+      "id": "S2.27b",
+      "description": "bps_update_entity with relations parameter",
+      "passed": true,
+      "detail": "version=2"
+    },
+    {
+      "id": "S2.27c",
+      "description": "Relations set via update tool are retrievable",
+      "passed": true,
+      "detail": "relatedEntities: 1"
+    },
+    {
+      "id": "S2.28",
+      "description": "Skill metric recorded",
+      "passed": true,
+      "detail": "id=9275bec6-6579-4a15-b01c-11ab7c92a1fc"
+    },
+    {
+      "id": "S2.29",
+      "description": "Skill metric summaries include counts",
+      "passed": true,
+      "detail": "invocations=3"
+    },
+    {
+      "id": "S2.30",
+      "description": "Dormant skill detection (never-invoked + old-invocation)",
+      "passed": true,
+      "detail": "dormant: 7/7, builtins all dormant: true"
+    },
+    {
+      "id": "S2.31",
+      "description": "getConstraintEffectiveness returns per-constraint stats",
+      "passed": true,
+      "detail": "constraints: 3"
+    },
+    {
+      "id": "S2.32",
+      "description": "Effectiveness stats include required fields",
+      "passed": true,
+      "detail": "fields: constraintId, label, severity, onViolation, violationCount, approvalCount, approvedCount, rejectedCount, approvalRate, suggestion"
+    },
+    {
+      "id": "S2.33",
+      "description": "Constraint effectiveness reflects actual violations",
+      "passed": true,
+      "detail": "c-publish-approval violations: 3"
+    },
+    {
+      "id": "S2.34",
+      "description": "Total tools = 17 (15 base + 2 governance)",
+      "passed": true,
+      "detail": "got 17: bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_register_agent, bps_batch_update, bps_governance_status, bps_load_governance"
+    },
+    {
+      "id": "S2.35",
+      "description": "DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_governance",
+      "passed": true,
+      "detail": "count: 8 (GATED: 9)"
+    }
+  ]
+}

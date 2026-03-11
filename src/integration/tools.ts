@@ -197,6 +197,9 @@ function createQueryTasksTool(deps: BpsToolDeps): OpenClawAgentTool {
           state: t.state,
           entityType: t.entityType,
           entityId: t.entityId,
+          priority: t.priority,
+          deadline: t.deadline,
+          groupId: t.groupId,
           createdAt: t.createdAt,
         })),
       };

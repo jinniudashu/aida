@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --skip-install) SKIP_INSTALL=true; shift ;;
     --engine-only)  ENGINE_ONLY=true; shift ;;
-    --phase)        START_PHASE="${2:-0}"; shift 2 ;;
+    --phase)        START_PHASE="${2:-0}"; [[ "$START_PHASE" =~ ^[0-9]+$ ]] || { echo "Error: --phase requires a numeric value"; exit 1; }; shift 2 ;;
     *)              shift ;;
   esac
 done
@@ -51,7 +51,7 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 log()     { echo -e "${CYAN}[$(date +%H:%M:%S)]${NC} $*"; }
 pass()    { echo -e "  ${GREEN}PASS${NC} $*"; PASS=$((PASS+1)); TOTAL=$((TOTAL+1)); }
 fail()    { echo -e "  ${RED}FAIL${NC} $*"; FAIL=$((FAIL+1)); TOTAL=$((TOTAL+1)); }
-warn_()   { echo -e "  ${YELLOW}WARN${NC} $*"; WARNS=$((WARNS+1)); }
+warn_()   { echo -e "  ${YELLOW}WARN${NC} $*"; WARNS=$((WARNS+1)); TOTAL=$((TOTAL+1)); }
 section() { echo -e "\n${BOLD}${YELLOW}══════════════════════════════════════════════${NC}"; \
             echo -e "${BOLD}  Phase $*${NC}"; \
             echo -e "${BOLD}${YELLOW}══════════════════════════════════════════════${NC}\n"; }
@@ -314,7 +314,7 @@ fs.writeFileSync(
 );
 
 // --- Seed 3 tasks with groupId, priority, deadline ---
-const tracker = engine.processTracker;
+const tracker = engine.tracker;
 
 const task1 = tracker.createTask({
   serviceId: 'svc-probe',
@@ -454,7 +454,7 @@ const gate = new ActionGate(govStore, {
 
 // Create tools with governance
 const tools = createBpsTools({
-  tracker: engine.processTracker,
+  tracker: engine.tracker,
   blueprintStore: engine.blueprintStore,
   processStore: engine.processStore,
   dossierStore: engine.dossierStore,
@@ -477,6 +477,13 @@ function assert(id: string, desc: string, condition: boolean, detail?: string) {
   results.push({ id, description: desc, passed: condition, detail });
   const icon = condition ? '✓' : '✗';
   console.log(`  ${icon} ${id} ${desc}${detail ? ` — ${detail}` : ''}`);
+}
+
+// Helper: fully reset governance state (CB + violations + approvals)
+function resetGovernance() {
+  db.exec('DELETE FROM bps_governance_violations');
+  db.exec('DELETE FROM bps_governance_approvals');
+  govStore.resetCircuitBreaker();
 }
 
 // ═════════════════════════════════════════════
@@ -510,7 +517,7 @@ assert('S2.01', 'GATED_WRITE_TOOLS has 9 entries',
 }
 
 // Reset circuit breaker after CRITICAL violation
-govStore.resetCircuitBreaker();
+resetGovernance();
 
 // S2.04: REQUIRE_APPROVAL verdict for HIGH constraint
 {
@@ -527,7 +534,7 @@ govStore.resetCircuitBreaker();
 
 // S2.05: PASS verdict for non-matching tool call
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gate3 = new ActionGate(govStore);
   // Update a store entity (no constraints on 'store' entityType)
   const result = gate3.check('bps_update_entity', {
@@ -542,7 +549,7 @@ govStore.resetCircuitBreaker();
 
 // S2.06: Constraint scope - entityType filter
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gate4 = new ActionGate(govStore);
   // strategy entityType with majorChange should trigger c-strategy-approval
   const result = gate4.check('bps_update_entity', {
@@ -557,7 +564,7 @@ govStore.resetCircuitBreaker();
 
 // S2.07: Constraint scope - dataFields filter
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gate5 = new ActionGate(govStore);
   // content entity but without publishReady or lifecycle field → no constraint matches
   const result = gate5.check('bps_update_entity', {
@@ -581,7 +588,7 @@ govStore.resetCircuitBreaker();
 
 // S2.08b: Governance wrapper throws Error (not returns {success:false})
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const wrappedTool = tools.find(t => t.name === 'bps_update_entity');
   let threwError = false;
   let errorMsg = '';
@@ -602,7 +609,7 @@ govStore.resetCircuitBreaker();
 
 // S2.08c: REQUIRE_APPROVAL throws Error with approval ID
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const wrappedTool = tools.find(t => t.name === 'bps_update_entity');
   let threwError = false;
   let errorMsg = '';
@@ -628,7 +635,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.09: CRITICAL violation → DISCONNECTED
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gateC = new ActionGate(govStore);
   gateC.check('bps_update_entity', {
     entityType: 'content', entityId: 'cb-test-1',
@@ -651,7 +658,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.11: HIGH violations accumulate → WARNING
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gateH = new ActionGate(govStore);
   // Trigger 2 HIGH violations (threshold for WARNING)
   gateH.check('bps_update_entity', { entityType: 'content', entityId: 'high-1', data: { publishReady: true } });
@@ -664,7 +671,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.12: Cooldown recovery auto-downgrades
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   // Set state to WARNING manually
   govStore.updateCircuitBreaker('WARNING', { critical: 0, high: 0, windowStart: new Date().toISOString() });
 
@@ -696,7 +703,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.13: No recovery if new violations in window
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gateNR = new ActionGate(govStore, {
     thresholds: [
       { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
@@ -722,7 +729,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 
 // S2.14: Oscillation detection
 {
-  govStore.resetCircuitBreaker();
+  resetGovernance();
   const gateOsc = new ActionGate(govStore, {
     thresholds: [
       { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
@@ -753,7 +760,7 @@ console.log('\n--- D2: Circuit Breaker ---');
 // ═════════════════════════════════════════════
 console.log('\n--- D3: Information Summary ---');
 
-govStore.resetCircuitBreaker();
+resetGovernance();
 
 // S2.15: scan_work topN shape
 {
@@ -780,19 +787,21 @@ govStore.resetCircuitBreaker();
 {
   const scanTool = tools.find(t => t.name === 'bps_scan_work')!;
   const result = await scanTool.execute('test', {}) as any;
-  const openItems = result.openTasks.items;
-  if (openItems.length >= 2) {
-    // First item should have earliest deadline (or highest priority if no deadline)
-    const first = openItems[0];
-    const second = openItems[1];
-    const sorted = !first.deadline || !second.deadline
-      || first.deadline <= second.deadline;
-    assert('S2.17', 'bps_scan_work sortByUrgency (deadline ASC)',
+  const items = result.openTasks.items;
+  if (items.length >= 2) {
+    // Verify: deadline ASC (nulls last), then priority DESC
+    let sorted = true;
+    for (let i = 0; i < items.length - 1; i++) {
+      const a = items[i], b = items[i + 1];
+      if (!a.deadline && b.deadline) { sorted = false; break; }
+      if (a.deadline && b.deadline && a.deadline > b.deadline) { sorted = false; break; }
+    }
+    assert('S2.17', 'bps_scan_work sortByUrgency (deadline ASC, nulls last)',
       sorted,
-      `first.deadline=${first.deadline}, second.deadline=${second.deadline}`);
+      `order: ${items.map((i: any) => `${i.entityId}(d=${i.deadline||'null'},p=${i.priority})`).join(' > ')}`);
   } else {
     assert('S2.17', 'bps_scan_work sortByUrgency (not enough items to verify)',
-      true, `items=${openItems.length}, skipped`);
+      false, `items=${items.length}, need >=2`);
   }
 }
 
@@ -846,10 +855,10 @@ const groupId = seedIds.groupId;
 {
   const queryTool = tools.find(t => t.name === 'bps_query_tasks')!;
   const result = await queryTool.execute('test', { state: 'OPEN' }) as any;
-  const groupedTasks = result.tasks.filter((t: any) => t.entityId === 'probe-store-01' || t.entityId === 'analysis-01' || t.entityId === 'content-01');
-  assert('S2.21', 'Tasks created with groupId are queryable',
-    groupedTasks.length >= 1,
-    `found ${groupedTasks.length} grouped tasks`);
+  const withGroupId = result.tasks.filter((t: any) => t.groupId === 'group-structural-batch');
+  assert('S2.21', 'Tasks created with groupId are queryable via groupId field',
+    withGroupId.length >= 3,
+    `found ${withGroupId.length} tasks with groupId=group-structural-batch (expected 3)`);
 }
 
 // S2.22: Batch update completes all
@@ -866,12 +875,12 @@ const groupId = seedIds.groupId;
 
 // S2.23: Create new tasks for filterState test
 {
-  const t1 = engine.processTracker.createTask({
+  const t1 = engine.tracker.createTask({
     serviceId: 'svc-probe', entityType: 'probe', entityId: 'filter-1',
     groupId: 'group-filter-test',
   });
-  engine.processTracker.updateTask(t1.id, { state: 'IN_PROGRESS' });
-  const t2 = engine.processTracker.createTask({
+  engine.tracker.updateTask(t1.id, { state: 'IN_PROGRESS' });
+  const t2 = engine.tracker.createTask({
     serviceId: 'svc-analyze', entityType: 'analysis', entityId: 'filter-2',
     groupId: 'group-filter-test',
   });
@@ -976,20 +985,23 @@ console.log('\n--- D6: Skill Metrics ---');
     `invocations=${testSummary?.totalInvocations}`);
 }
 
-// S2.30: Dormant skill detection
+// S2.30: Dormant skill detection (combined: never-invoked + old-invocation)
 {
-  // Any skill in the skills directory that has no metrics is dormant
   if (fs.existsSync(SKILLS_DIR)) {
     const allSkills = fs.readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter(d => d.isDirectory() && fs.existsSync(path.join(SKILLS_DIR, d.name, 'SKILL.md')))
       .map(d => d.name);
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-    const dormant = skillMetrics.getDormantSkillNames(ninetyDaysAgo);
-    // All built-in skills should be dormant since we only recorded 'test-skill'
-    const hasDormant = allSkills.some(s => s !== 'test-skill');
-    assert('S2.30', 'Dormant skill detection works',
-      hasDormant,
-      `all skills: ${allSkills.length}, dormant from metrics: ${dormant.length}`);
+    // Combined logic (same as bps_scan_work): never-invoked OR old-invocation
+    const dormantFromMetrics = new Set(skillMetrics.getDormantSkillNames(ninetyDaysAgo));
+    const metricsSkills = new Set(skillMetrics.getSummaries().map(s => s.skillName));
+    const dormant = allSkills.filter(s => !metricsSkills.has(s) || dormantFromMetrics.has(s));
+    // All built-in skills should be dormant (only 'test-skill' has metrics)
+    const builtinSkills = allSkills.filter(s => s !== 'test-skill');
+    const allBuiltinDormant = builtinSkills.every(s => dormant.includes(s));
+    assert('S2.30', 'Dormant skill detection (never-invoked + old-invocation)',
+      dormant.length >= builtinSkills.length && allBuiltinDormant,
+      `dormant: ${dormant.length}/${allSkills.length}, builtins all dormant: ${allBuiltinDormant}`);
   } else {
     assert('S2.30', 'Dormant skill detection (skills dir missing)',
       false, `SKILLS_DIR not found: ${SKILLS_DIR}`);
@@ -1001,9 +1013,18 @@ console.log('\n--- D6: Skill Metrics ---');
 // ═════════════════════════════════════════════
 console.log('\n--- D7: Constraint Analytics ---');
 
+// Seed violations for analytics testing
+resetGovernance();
+{
+  const analyticsGate = new ActionGate(govStore);
+  // Trigger c-publish-approval (REQUIRE_APPROVAL) 3 times
+  analyticsGate.check('bps_update_entity', { entityType: 'content', entityId: 'analytics-1', data: { publishReady: true } });
+  analyticsGate.check('bps_update_entity', { entityType: 'content', entityId: 'analytics-2', data: { publishReady: true } });
+  analyticsGate.check('bps_update_entity', { entityType: 'content', entityId: 'analytics-3', data: { publishReady: true } });
+}
+
 // S2.31: getConstraintEffectiveness returns stats
 {
-  govStore.resetCircuitBreaker();
   const effectiveness = govStore.getConstraintEffectiveness();
   assert('S2.31', 'getConstraintEffectiveness returns per-constraint stats',
     Array.isArray(effectiveness) && effectiveness.length >= 3,
@@ -1143,13 +1164,27 @@ if [ "$START_PHASE" -le 3 ]; then
   ENTITY_COUNT=$(api_get "/api/entities" | jlen)
   check "S3.06 Entity count >= 7 (got $ENTITY_COUNT)" "test $ENTITY_COUNT -ge 7"
 
-  # S3.07: Circuit breaker reset endpoint
-  RESET_RESULT=$(api_post "/api/governance/circuit-breaker/reset" '{}' 2>/dev/null || echo '{}')
-  check "S3.07 Circuit breaker reset returns response" "test -n '$RESET_RESULT'"
+  # S3.07: Circuit breaker reset endpoint returns valid JSON
+  RESET_OK=$(api_post "/api/governance/circuit-breaker/reset" '{}' 2>/dev/null | node -e "
+    try{JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('yes')}catch{console.log('no')}" 2>/dev/null || echo 'no')
+  check "S3.07 Circuit breaker reset returns valid JSON" "test '$RESET_OK' = 'yes'"
 
-  # S3.08: Dashboard pages accessible
+  # S3.08: Approvals decide endpoint
+  FIRST_APPROVAL_ID=$(api_get "/api/governance/approvals" 2>/dev/null | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    const p=d.find(a=>a.status==='PENDING');
+    console.log(p?p.id:'')}catch{console.log('')}" 2>/dev/null)
+  if [ -n "$FIRST_APPROVAL_ID" ]; then
+    DECIDE_OK=$(api_post "/api/governance/approvals/$FIRST_APPROVAL_ID/decide" '{"decision":"REJECTED","reason":"structural test"}' 2>/dev/null | node -e "
+      try{JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('yes')}catch{console.log('no')}" 2>/dev/null || echo 'no')
+    check "S3.08 Approvals decide endpoint works" "test '$DECIDE_OK' = 'yes'"
+  else
+    soft "S3.08 Approvals decide endpoint (no pending approvals to test)" "false"
+  fi
+
+  # S3.09: Dashboard pages accessible
   for page in "/" "/business-goals" "/governance"; do
-    check "S3.08 Dashboard page $page" "curl -sf $DASHBOARD_URL$page >/dev/null"
+    check "S3.09 Dashboard page $page" "curl -sf $DASHBOARD_URL$page >/dev/null"
   done
 
   log "Phase 3 complete."
@@ -1257,15 +1292,15 @@ echo "Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL"
 echo ""
 
 echo "Coverage:"
-echo "  D1: Governance Gating     (S2.01-S2.08c)"
-echo "  D2: Circuit Breaker       (S2.09-S2.14)"
-echo "  D3: Information Summary   (S2.15-S2.20)"
-echo "  D4: Process Groups        (S2.21-S2.24)"
-echo "  D5: Entity Relations      (S2.25-S2.27c)"
-echo "  D6: Skill Metrics         (S2.28-S2.30)"
-echo "  D7: Constraint Analytics  (S2.31-S2.33)"
-echo "  D8: Tool Registration     (S2.34-S2.35)"
-echo "  Dashboard API             (S3.01-S3.08)"
+echo "  D1: Governance Gating     (S2.01-S2.08c)  10 checks"
+echo "  D2: Circuit Breaker       (S2.09-S2.14)    6 checks"
+echo "  D3: Information Summary   (S2.15-S2.20)    6 checks"
+echo "  D4: Process Groups        (S2.21-S2.24)    4 checks"
+echo "  D5: Entity Relations      (S2.25-S2.27c)   5 checks"
+echo "  D6: Skill Metrics         (S2.28-S2.30)    3 checks"
+echo "  D7: Constraint Analytics  (S2.31-S2.33)    3 checks"
+echo "  D8: Tool Registration     (S2.34-S2.35)    2 checks"
+echo "  D9: Dashboard API         (S3.01-S3.09)   11 checks"
 if [ "$ENGINE_ONLY" = false ]; then
 echo "  Agent Integration         (V4.1-V4.8)"
 fi

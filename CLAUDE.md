@@ -591,6 +591,18 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - **不做自动调整** — 策略变更始终由人类确认
 - **测试**：+2 新测试，总计 436 tests（P0→P3 共 +45 新测试）
 
+### 结构能力 E2E 测试 R1（2026-03-11）
+- 测试方案：`test/e2e/structural-capability-test.md`，脚本：`test/e2e/structural-capability.sh`
+- R1 报告：`test/e2e/structural-capability/R1-REPORT.md`
+- **目标**：验证测试框架自身（P0-P3 全 9 维度 50 结构检查点）
+- **结果**：63 PASS / 0 FAIL / 1 WARN / 64 TOTAL — ALL CHECKS PASSED（5 秒，engine-only 模式）
+- **框架修复 7 项**：processTracker→tracker, DB 清理, 违规累积隔离 `resetGovernance()`, 递归修复, D7 违规补种
+- **代码 bug 修复 2 项**：
+  - `bps_query_tasks` 缺少 `groupId/priority/deadline` 字段（`src/integration/tools.ts`）
+  - Dashboard `/api/governance/status` 缺少 `constraintEffectiveness` 和 `circuitBreakerState`（`dashboard/server/routes.ts`）
+- **评审修订 7 项**：覆盖矩阵计数, S2.17/S2.30/S2.33 测试逻辑, warn_ TOTAL, --phase 校验, S3.08 approvals decide
+- **测试**：436 单元测试全部通过
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

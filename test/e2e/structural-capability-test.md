@@ -14,15 +14,16 @@ Test all structural engine features through the deployed AIDA system. This is th
 
 | Dimension | # Checks | Features Tested |
 |-----------|----------|-----------------|
-| D1: Governance Gating | 12 | 9 tool coverage, PASS/BLOCK/REQUIRE_APPROVAL verdicts, error throwing |
-| D2: Circuit Breaker | 8 | Escalation (NORMAL→WARNING→RESTRICTED→DISCONNECTED), cooldown recovery, oscillation detection |
-| D3: Information Summary | 8 | topN shape, summary string, brief mode, recommendation, sortByUrgency, dormant skills |
-| D4: Process Groups | 5 | groupId creation, batch update (COMPLETED/FAILED), filterState |
-| D5: Entity Relations | 5 | relation declaration, relatedEntities resolution, relation types |
-| D6: Skill Metrics | 5 | metric recording, outcome tracking, dormant detection |
-| D7: Constraint Analytics | 4 | effectiveness stats, approval rate, suggestions |
-| D8: Dashboard API | 8 | governance status endpoint shape, entity shapes, scan_work API shape |
-| **Total** | **55** | |
+| D1: Governance Gating | 10 | 9 tool coverage, PASS/BLOCK/REQUIRE_APPROVAL verdicts, error throwing, scope matching |
+| D2: Circuit Breaker | 6 | Escalation (NORMAL→WARNING→DISCONNECTED), cooldown recovery, oscillation detection |
+| D3: Information Summary | 6 | topN shape, summary string, brief mode, recommendation, sortByUrgency, outcomeDistribution |
+| D4: Process Groups | 4 | groupId creation, batch update, filterState, non-matching preservation |
+| D5: Entity Relations | 5 | relation declaration, relatedEntities resolution, relation types, update tool integration |
+| D6: Skill Metrics | 3 | metric recording, summary aggregation, dormant detection |
+| D7: Constraint Analytics | 3 | effectiveness stats, field completeness, violation count accuracy |
+| D8: Tool Registration | 2 | total tool count, DEFAULT_SCOPE_WRITE_TOOLS exclusion |
+| D9: Dashboard API | 11 | governance endpoints shape, entity listing, circuit breaker reset, approval decide, page accessibility |
+| **Total** | **50** | |
 
 ## Execution
 
@@ -60,7 +61,9 @@ Inline TypeScript imports the engine and exercises every P0-P3 feature:
 - S2.05: PASS verdict executes normally
 - S2.06: Constraint scope matching (entityType filter)
 - S2.07: Constraint scope matching (dataFields filter)
-- S2.08: New tools (bps_batch_update, bps_load_blueprint, bps_register_agent) are gated
+- S2.08: New tools (bps_batch_update, bps_load_blueprint, bps_register_agent, bps_load_governance) are gated
+- S2.08b: Governance BLOCK throws Error (not `{success:false}`)
+- S2.08c: REQUIRE_APPROVAL throws Error with approval ID
 
 **D2: Circuit Breaker**
 - S2.09: CRITICAL violation → DISCONNECTED
@@ -82,12 +85,14 @@ Inline TypeScript imports the engine and exercises every P0-P3 feature:
 - S2.21: bps_create_task with groupId stores correctly
 - S2.22: bps_batch_update completes all tasks in group
 - S2.23: bps_batch_update with filterState only updates matching
-- S2.24: bps_batch_update FAILED with reason stores in snapshot
+- S2.24: Filtered batch: non-matching task state unchanged
 
 **D5: Entity Relations**
-- S2.25: bps_update_entity with relations stores them
-- S2.26: bps_get_entity returns relatedEntities with version/updatedAt
-- S2.27: Relation types: depends_on, part_of, references
+- S2.25: bps_get_entity returns relatedEntities array
+- S2.26: Relations include version and updatedAt
+- S2.27: Relation types: depends_on and references present
+- S2.27b: bps_update_entity with relations parameter stores them
+- S2.27c: Relations set via update tool are retrievable
 
 **D6: Skill Metrics**
 - S2.28: bps_complete_task records skill metric when serviceId matches skill dir
@@ -97,9 +102,13 @@ Inline TypeScript imports the engine and exercises every P0-P3 feature:
 **D7: Constraint Analytics**
 - S2.31: getConstraintEffectiveness returns per-constraint stats
 - S2.32: Stats include violationCount, approvalCount, approvalRate
-- S2.33: Suggestion generated when approvalRate > 0.9 (too strict)
+- S2.33: Constraint effectiveness reflects actual violation counts
 
-### Phase 3: Dashboard API Structural Tests
+**D8: Tool Registration**
+- S2.34: Total tools = 17 (15 base + 2 governance)
+- S2.35: DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_governance
+
+### Phase 3: Dashboard API Structural Tests (D9)
 Curl-based checks on the running Dashboard to verify API shapes:
 
 - S3.01: GET /api/governance/status returns constraintEffectiveness array
@@ -108,8 +117,9 @@ Curl-based checks on the running Dashboard to verify API shapes:
 - S3.04: GET /api/governance/constraints returns array with scope object
 - S3.05: GET /api/governance/approvals returns array with status field
 - S3.06: GET /api/entities returns entities (≥7 seeded)
-- S3.07: POST /api/governance/circuit-breaker/reset returns success
+- S3.07: POST /api/governance/circuit-breaker/reset returns valid JSON
 - S3.08: POST /api/governance/approvals/:id/decide works
+- S3.09: Dashboard pages accessible (/, /business-goals, /governance)
 
 ### Phase 4: Agent Integration Turns (optional, --full mode)
 3 focused turns testing structural features through Aida:
@@ -138,8 +148,8 @@ Binary PASS/FAIL per check. No weighted dimensions.
 ## Check ID Convention
 
 - `V0.x`: Install verification (reused from v3)
-- `S2.xx`: Engine structural (programmatic, Phase 2)
-- `S3.xx`: Dashboard API structural (Phase 3)
+- `S2.xx`: Engine structural (programmatic, Phase 2, D1-D8)
+- `S3.xx`: Dashboard API structural (Phase 3, D9)
 - `V4.x`: Agent integration (Phase 4)
 - `V5.x`: Final verification (Phase 5)
 
@@ -158,6 +168,6 @@ Binary PASS/FAIL per check. No weighted dimensions.
 | Test Suite | Purpose | Duration | When to Run |
 |------------|---------|----------|-------------|
 | `npx vitest run` | Unit tests (436) | ~30s | Every code change |
-| **structural-capability.sh** | **Structural E2E (55 checks)** | **5-10 min** | **Every deploy / feature merge** |
+| **structural-capability.sh** | **Structural E2E (50 checks)** | **5-10 min** | **Every deploy / feature merge** |
 | `idlex-geo-v3.sh` | Business scenario E2E | 20-30 min | Before release |
 | `benchmark/run-all-models.sh` | Multi-model comparison | 3-4 hours | Monthly evaluation |

@@ -1027,7 +1027,9 @@ app.get('/api/governance/status', (c) => {
 
     return c.json({
       circuitBreaker: cbState,
+      circuitBreakerState: cbState.state,
       constraintCount: constraints.length,
+      constraintEffectiveness: governanceStore.getConstraintEffectiveness(),
       pendingApprovalCount: pendingApprovals.length,
       recentViolations: recentViolations.map(v => ({
         id: v.id,

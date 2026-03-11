@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-11T09:22:41Z",
+  "entities": 9,
+  "violations": 3,
+  "constraints": 3,
+  "skills": 7,
+  "blueprints": 1,
+  "testResults": {
+    "pass": 63,
+    "fail": 0,
+    "warn": 1,
+    "total": 64
+  }
+}
