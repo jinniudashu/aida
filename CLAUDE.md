@@ -603,6 +603,18 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **评审修订 7 项**：覆盖矩阵计数, S2.17/S2.30/S2.33 测试逻辑, warn_ TOTAL, --phase 校验, S3.08 approvals decide
 - **测试**：436 单元测试全部通过
 
+### 结构能力 E2E 测试 R2（2026-03-11）
+- R2 报告：`test/e2e/structural-capability/R2-REPORT.md`
+- **目标**：验证 Agent 工具调用 + 治理拦截（full 模式，含 Phase 4 Agent turns）
+- **结果**：70 PASS / 0 FAIL / 2 WARN / 72 TOTAL — ALL CHECKS PASSED（70 秒）
+- **模型**：moonshot/kimi-k2.5，3 个 Agent turns
+- **Agent 表现**：
+  - Turn 1：`bps_scan_work` + `bps_query_entities` → 工作全景 + 实体清单
+  - Turn 2：`bps_get_entity` + `bps_governance_status` → 实体关系 + 治理效能分析
+  - Turn 3：`bps_update_entity` → 治理 REQUIRE_APPROVAL 拦截成功，输出审批 ID + Dashboard 引导
+- **2 WARN**：S3.08（Dashboard 审批 API 无 PENDING 数据）、V4.2（中文"总结"未匹配英文 summary 关键词）
+- **结论**：Kimi K2.5 可有效消费 P0-P3 全部新增结构能力
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

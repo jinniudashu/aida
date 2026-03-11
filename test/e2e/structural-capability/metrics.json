@@ -1,14 +1,14 @@
 {
-  "timestamp": "2026-03-11T09:22:41Z",
+  "timestamp": "2026-03-11T09:32:53Z",
   "entities": 9,
-  "violations": 3,
+  "violations": 4,
   "constraints": 3,
   "skills": 7,
   "blueprints": 1,
   "testResults": {
-    "pass": 63,
+    "pass": 70,
     "fail": 0,
-    "warn": 1,
-    "total": 64
+    "warn": 2,
+    "total": 72
   }
 }

@@ -1,14 +1,14 @@
 AIDA Structural Capability E2E Test
 ====================================
-Date:     Wed Mar 11 05:22:41 PM CST 2026
+Date:     Wed Mar 11 05:32:53 PM CST 2026
 Server:   iZt4n7qaa80fqgnql0diggZ
-Duration: 5s
-Mode:     engine-only
+Duration: 70s
+Mode:     full
 
-Results: 63 PASS / 0 FAIL / 1 WARN / 64 TOTAL
+Results: 70 PASS / 0 FAIL / 2 WARN / 72 TOTAL
 
 Entities:    9
-Violations:  3
+Violations:  4
 Constraints: 3
 Skills:      7
 Blueprints:  1

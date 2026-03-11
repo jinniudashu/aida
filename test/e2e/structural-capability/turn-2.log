@@ -1,0 +1,56 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 实体详情：`store-cs-ktv-01`
+
+### 基本信息
+| 属性 | 值 |
+|------|-----|
+| **名称** | 声临其境KTV |
+| **城市** | 长沙 |
+| **空间类型** | KTV |
+| **状态** | active |
+| **生命周期** | ACTIVE |
+| **版本** | 1 |
+
+### 实体关系
+| 关系类型 | 目标实体 | 说明 |
+|----------|----------|------|
+| `references` | `action-plan/ap-structural-test` | 引用结构测试行动计划 |
+| `depends_on` | `strategy/st-geo-master` | 依赖地理主策略 |
+
+---
+
+## 治理状态
+
+### 熔断器状态
+🟢 **NORMAL**（正常）— 最后变更时间：2026-03-11 09:31:48
+
+### 活跃约束
+**总计**: 3 个约束规则
+
+| 约束 ID | 标签 | 严重级别 | 触发动作 | 违规次数 | 审批状态 |
+|---------|------|----------|----------|----------|----------|
+| `c-no-archive` | 禁止归档内容实体 | CRITICAL | BLOCK | 0 | — |
+| `c-publish-approval` | 发布内容需审批 | HIGH | REQUIRE_APPROVAL | **3** | 待审批: 0 |
+| `c-strategy-approval` | 策略变更需审批 | HIGH | REQUIRE_APPROVAL | 0 | — |
+
+### 近期违规记录
+最近 3 次违规均来自 `c-publish-approval` 约束：
+- `analytics-3` — 2026-03-11 09:31:48
+- `analytics-2` — 2026-03-11 09:31:48
+- `analytics-1` — 2026-03-11 09:31:48
+
+### 约束有效性分析
+
+| 指标 | 数值 |
+|------|------|
+| 总违规次数 | 3 |
+| 待审批请求 | 0 |
+| 已批准 | 0 |
+| 已拒绝 | 0 |
+| 审批通过率 | N/A（无审批记录） |
+
+**观察**: 
+- `c-publish-approval` 约束正在有效工作，成功拦截了 3 次内容发布操作
+- 所有拦截的内容（analytics-1/2/3）目前都处于待审批状态
+- `c-no-archive` 和 `c-strategy-approval` 尚未触发，说明相关操作合规或尚未发生

@@ -1,0 +1,18 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 治理拦截成功 ✅
+
+操作已被治理系统拦截，需要人工审批。
+
+| 属性 | 值 |
+|------|-----|
+| **操作** | `bps_update_entity` |
+| **目标实体** | `content/test-publish-check` |
+| **审批 ID** | `5c95d763-24c8-422a-b251-d6398ed6d9e8` |
+| **触发约束** | `c-publish-approval` [HIGH] |
+| **拦截原因** | Content publish requires approval: test-publish-check |
+
+### 状态
+🛑 **操作未执行** — 等待人工审批
+
+用户需要前往 Dashboard 查看并审批此请求，操作才会继续执行。这是两阶段发布流程的正常行为：草稿先写入 `mock-publish-tmp/`，审批通过后自动提升到 `mock-publish/`。

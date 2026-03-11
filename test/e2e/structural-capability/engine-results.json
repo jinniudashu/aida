@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-11T09:22:41.571Z",
+  "timestamp": "2026-03-11T09:31:48.490Z",
   "passed": 39,
   "failed": 0,
   "total": 39,
@@ -169,7 +169,7 @@
       "id": "S2.26",
       "description": "Relations include version and updatedAt",
       "passed": true,
-      "detail": "version=1, updatedAt=2026-03-11T09:22:37.571Z"
+      "detail": "version=1, updatedAt=2026-03-11T09:31:44.510Z"
     },
     {
       "id": "S2.27",
@@ -193,7 +193,7 @@
       "id": "S2.28",
       "description": "Skill metric recorded",
       "passed": true,
-      "detail": "id=9275bec6-6579-4a15-b01c-11ab7c92a1fc"
+      "detail": "id=5b5a5efd-d582-4293-96ce-0f4ce5e570e9"
     },
     {
       "id": "S2.29",
