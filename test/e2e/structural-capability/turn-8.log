@@ -1,0 +1,82 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 🔒 管理制度执行报告
+
+---
+
+### 一、熔断器状态
+
+| 状态 | 等级 | 说明 |
+|------|------|------|
+| **WARNING** | 🟡 黄色警告 | 最近有约束违规触发，系统处于警戒状态 |
+| 状态变更时间 | 10:20:33 | 今日已触发多次 |
+
+---
+
+### 二、活跃约束清单
+
+| 约束ID | 名称 | 严重级别 | 触发动作 |
+|--------|------|---------|---------|
+| `content-publish-approval` | 内容发布审批制度 | MEDIUM | REQUIRE_APPROVAL |
+| `strategy-change-approval` | 战略方向调整审批 | MEDIUM | REQUIRE_APPROVAL |
+
+**当前待审批**：0个（之前的3个内容审批已处理）
+
+---
+
+### 三、违规记录分析
+
+**今日累计违规**：19次
+
+| 约束 | 违规次数 | 主要原因 |
+|------|---------|---------|
+| content-publish-approval | 8次 | 条件语法错误：`undefined variable: publishReady` |
+| strategy-change-approval | 11次 | 条件语法错误：`undefined variable: isMajorChange` |
+
+**⚠️ 关键问题**：约束条件表达式存在语法缺陷，导致**误报**——每次`bps_update_entity`调用都触发违规，无论是否真的是内容发布或战略变更。
+
+---
+
+### 四、约束效能分析
+
+#### 内容发布审批制度
+| 指标 | 数值 |
+|------|------|
+| 违规触发 | 8次 |
+| 审批请求 | 8次 |
+| 已通过 | **8次** |
+| 已拒绝 | 0次 |
+| **审批通过率** | **100%** |
+
+#### 战略方向调整审批
+| 指标 | 数值 |
+|------|------|
+| 违规触发 | 11次 |
+| 审批请求 | 3次（其余为误触发） |
+| 已通过 | **3次** |
+| 已拒绝 | 0次 |
+| **审批通过率** | **100%** |
+
+---
+
+### 五、执行结论
+
+| 评估项 | 结果 |
+|--------|------|
+| 规矩#1（内容审批） | ✅ 已执行 — 所有标记`publishReady`的内容均被拦截并送审 |
+| 规矩#2（战略审批） | ✅ 已执行 — 战略调整需审批 |
+| 审批完成率 | ✅ 100% — 所有审批申请均已处理 |
+| 违规误报 | ⚠️ 存在 — 约束条件语法需修复 |
+
+---
+
+### 六、改进建议
+
+**问题根因**：Governance约束条件使用错误的表达式语法（`publishReady == true`），无法正确解析实体数据字段。
+
+**修复方案**：
+1. 重写约束条件，使用正确的字段访问语法
+2. 或改用蓝图流程控制（svc-geo-review manual executor）代替Governance拦截
+3. 当前已通过`svc-geo-review`服务实现人工审核节点，弥补了Governance语法问题
+
+**实际执行效果**：尽管Governance有技术缺陷，但**管理规矩已通过流程设计有效落实**——所有内容都经过你审批后才标记为发布就绪。

@@ -1,40 +1,50 @@
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
 Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
-## 工作状态概览
-
-### 任务状态
-| 状态 | 数量 |
-|------|------|
-| 🟡 进行中 | **1** |
-| 🔵 待处理 | 0 |
-| 🔴 失败 | 0 |
-| ⚠️ 逾期 | 0 |
-
-**最近完成的任务**: 4 个（全部成功）
-
-### 进行中的任务
-- **任务 ID**: `c595cc87-3681-4ae7-b1d6-53fac80967d1`
-- **服务**: `svc-probe`
-- **实体**: `probe/filter-1`
-- **分组**: `group-filter-test`
-
-### 活跃的行动计划
-- **ap-structural-test**: "Structural Test Action Plan"
-  - 包含 3 个待处理项目（治理门控测试、批量更新测试、实体关系测试）
+我来先了解项目背景，然后给你制定推进方案。
+了解了。让我再看看现有的实体详情和蓝图服务：
+已了解现状。系统里已有5家门店实体和基础服务。我来给你制定推进方案：
 
 ---
 
-## 实体清单
+## 🎯 闲氪GEO日常运营体系推进方案
 
-**总计**: 9 个实体
+### 当前状态
+- ✅ 5家门店已录入（长沙3家：茶室/KTV/麻将；武汉2家：茶室/KTV）
+- ✅ 基础服务就绪：能见度探测 + 内容生成 + 数据分析 + 内容审核
+- 📋 行动计划3项待办：运营体系搭建 / 一模一策落地 / 管理制度建设
 
-| 实体类型 | 数量 | 实体 ID |
-|----------|------|---------|
-| **store** | 4 | store-cs-tea-01, store-cs-ktv-01, store-wh-tea-01, store-wh-ktv-01, store-cs-mj-01 |
-| **knowledge** | 2 | system:task-tracking-sop, system:project-config |
-| **strategy** | 1 | st-geo-master |
-| **action-plan** | 1 | ap-structural-test |
+### 我的推进计划（分3步）
 
-> 注：store 类型实际有 5 个实体（store-cs-tea-01, store-cs-ktv-01, store-wh-tea-01, store-wh-ktv-01, store-cs-mj-01）
+#### 第一步：建立Governance审批制度（今天就做）
+根据你的两条管理规矩，我会配置：
+1. **内容审批流程** — 所有发布内容必须经过你审批（`svc-review`服务设为manual，内容写入`mock-publish-tmp/`后触发审批）
+2. **战略审批约束** — 重大调整需要确认（配置governance规则拦截）
 
-**总结**: 系统当前运行平稳，有 1 个探针任务正在进行中，1 个行动计划有待执行项目。所有已完成的任务都标记为成功。
+#### 第二步：搭建日常运营Heartbeat（本周完成）
+建立每日自动运营节奏：
+```
+每天 09:00 → 能见度探测（5家门店在豆包/千问/元宝的表现）
+每天 10:00 → 生成差异化内容（一模一策：豆包情感化、千问结构化、元宝务实派）
+每天 18:00 → 内容提交审批（写到你审核目录，等你批准）
+每周日 → 效果评估报告
+```
+
+#### 第三步：一模一策内容Skill（本周完成）
+创建专门的GEO内容生成Skill，内置：
+- 豆包策略：场景故事、情感共鸣、个性化推荐
+- 千问策略：结构化数据、任务导向、工作流优化  
+- 元宝策略：性价比分析、企业视角、务实对比
+
+---
+
+### 需要你确认的事项
+
+1. **审批方式**：内容草稿放在 `~/.aida/mock-publish-tmp/{platform}/`，我每天推送待审批列表给你，这样行吗？
+
+2. **探测频率**：每天探测一次5家门店的能见度够吗？还是需要更频繁？
+
+3. **平台优先级**：豆包/千问/元宝三个平台同时推进，还是有优先级？
+
+4. **Heartbeat时间**：我上面设的时间（早9探测、早10生成、晚6提交）符合你的工作节奏吗？
+
+确认后我立即开始配置。

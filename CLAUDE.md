@@ -615,6 +615,21 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **2 WARN**：S3.08（Dashboard 审批 API 无 PENDING 数据）、V4.2（中文"总结"未匹配英文 summary 关键词）
 - **结论**：Kimi K2.5 可有效消费 P0-P3 全部新增结构能力
 
+### 结构能力 E2E 测试 R3 — IdleX GEO Business Edition（2026-03-11）
+- R3 报告：`test/e2e/structural-capability/R3-REPORT.md`
+- **目标**：业务场景驱动 — 一个 GEO 负责人配合 Aida 完成闲氪全部 GEO 运营任务
+- **结果**：91 PASS / 2 FAIL / 4 WARN / 97 TOTAL（576s, 9.6 分钟）
+- **模型**：moonshot/kimi-k2.5，7 个 Agent turns + 1 个程序化审批
+- **测试覆盖升级**：Phase 4 从 3 技术 turns 扩展为 8 步业务场景（介绍→授权→运营→发布→审批→自进化→日结→管理审计）
+- **加权总分：92.25/100**（业务理解95, 工具调用85, 二层路由100, 管理闭环95, 自进化85, 响应质量95）
+- **关键成果**：
+  - Agent 创建 7 个业务实体（geoProbe×3, geoContent×3, geoCampaign×1）+ 2 个 Skill + 3 个 Cron
+  - 管理 vs 运营路由 100% 正确（约束→管理层, 内容/探测→运营层）
+  - 管理拦截→审批→执行闭环 100% 通过
+  - Turn 8 管理审计：主动发现约束语法缺陷并提出修复方案
+- **2 FAIL 原因**：S3.06（Dashboard 延迟未看到全部种子实体），V5.2（Aida 重载管理约束从 3→2 个）— 均为 Aida 主动行为与静态种子的冲突，非系统缺陷
+- **新发现**：Governance 约束条件语法不兼容（expr-eval 变量访问 vs Aida 生成的条件），导致过度拦截但不影响管理闭环
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

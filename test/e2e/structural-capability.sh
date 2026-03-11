@@ -142,15 +142,60 @@ if [ "$START_PHASE" -le 1 ]; then
   # 1a. project.yaml
   log "Creating project.yaml..."
   mkdir -p "$AIDA_HOME"/{blueprints,data,context}
+  mkdir -p "$AIDA_HOME"/mock-publish-tmp/{doubao,qianwen,yuanbao}
+  mkdir -p "$AIDA_HOME"/mock-publish/{doubao,qianwen,yuanbao}
   cat > "$AIDA_HOME/project.yaml" << 'YAML'
 version: "1.1"
-name: "Structural Capability Test"
-projectId: "structural-test"
-description: "AIDA structural capability E2E test project"
+name: "IdleX GEO Operations"
+projectId: "idlex-geo"
+description: "IdleX partner store AI visibility (GEO) daily operations"
 language: "zh"
 blueprints: []
 knowledge: []
 YAML
+
+  # 1a-2. Business context document for Aida
+  log "Creating business context..."
+  cat > "$AIDA_HOME/context/idlex-geo-background.md" << 'CTXEOF'
+# 闲氪 GEO 业务背景
+
+## 闲氪是谁
+闲氪 = AI时代城市第三空间基础设施。连接大模型、空间供给方、消费者的中立可信平台。
+使命：让第三空间闲置时段成为AI可发现、可调用、可交付的数字资产。
+
+## GEO（生成式引擎优化）
+GEO不是AI版SEO。核心区别：
+- GEO是"抢心智"而非"抢流量"——让AI优先推荐闲氪
+- 数据必须真实、结构化、可履约
+- "一模一策"：不同AI模型偏好不同，必须差异化优化
+
+### 目标AI平台
+| 平台 | 厂商 | 内容偏好 |
+|------|------|---------|
+| 豆包 | 字节跳动 | 情感化、个性化、场景故事 |
+| 千问 | 阿里巴巴 | 结构化、任务导向、工作流 |
+| 元宝 | 腾讯 | 务实、企业视角、性价比 |
+
+## 合作门店（当前5家）
+长沙3家 + 武汉2家，覆盖KTV、茶室、麻将三种空间类型。
+时空SKU = 门店 + 包厢/房间 + 时段（最小可交易单元）。
+
+## 日常运营节奏
+1. 能见度探测：监测各门店在AI平台的推荐情况
+2. 深度洞察：分析各平台偏好差异
+3. 内容生成：一模一策，差异化GEO内容
+4. 内容分发：写入对应平台优化渠道
+5. 效果评估：日小结、周总结
+6. 战略校准：阶段性回顾，调整策略
+
+## 管理规矩
+- 所有对外发布内容必须经GEO负责人审批
+- 战略方向重大调整需要负责人确认
+- 内容草稿先写到 mock-publish-tmp/，审批后提升到 mock-publish/
+
+## 业务指标
+核心KPI："被看见"指标上升——在AI平台的能见度持续提升
+CTXEOF
 
   # 1b. governance.yaml — 3 constraints covering different verdicts
   log "Creating governance.yaml..."
@@ -232,18 +277,58 @@ const db = createDatabase(DB_PATH);
 const engine = createBpsEngine({ db });
 const { dossierStore, blueprintStore, processStore } = engine;
 
-// --- Seed 5 store entities ---
+// --- Seed 5 store entities (IdleX partner stores with rich business data) ---
 const stores = [
-  { id: 'store-cs-ktv-01', nameCN: '声临其境KTV', city: '长沙', type: 'ktv' },
-  { id: 'store-cs-tea-01', nameCN: '悠然茶室', city: '长沙', type: 'tearoom' },
-  { id: 'store-cs-mj-01', nameCN: '棋乐无穷', city: '长沙', type: 'mahjong' },
-  { id: 'store-wh-ktv-01', nameCN: '音乐盒KTV', city: '武汉', type: 'ktv' },
-  { id: 'store-wh-tea-01', nameCN: '静享茶空间', city: '武汉', type: 'tearoom' },
+  {
+    id: 'store-cs-ktv-01', nameCN: '声临其境KTV', city: '长沙', type: 'ktv',
+    district: '天心区', businessCircle: '五一广场',
+    roomTypes: ['小包(2-4人)', '中包(4-8人)', '大包(8-15人)'],
+    features: ['自助点歌', '24小时营业', '零食饮料自取'],
+    operatingHours: '10:00-02:00',
+    basePrice: 39,
+  },
+  {
+    id: 'store-cs-tea-01', nameCN: '悠然茶室', city: '长沙', type: 'tearoom',
+    district: '岳麓区', businessCircle: '大学城',
+    roomTypes: ['2人雅间', '4人茶室', '8人包厢'],
+    features: ['自助泡茶', '安静环境', '免费WiFi'],
+    operatingHours: '09:00-23:00',
+    basePrice: 29,
+  },
+  {
+    id: 'store-cs-mj-01', nameCN: '棋乐无穷', city: '长沙', type: 'mahjong',
+    district: '雨花区', businessCircle: '红星商圈',
+    roomTypes: ['标准麻将房', 'VIP棋牌室'],
+    features: ['自动麻将桌', '空调独立控制', '免费茶水'],
+    operatingHours: '10:00-24:00',
+    basePrice: 35,
+  },
+  {
+    id: 'store-wh-ktv-01', nameCN: '音乐盒KTV', city: '武汉', type: 'ktv',
+    district: '武昌区', businessCircle: '楚河汉街',
+    roomTypes: ['迷你包(2人)', '标准包(4-6人)', '豪华包(8-12人)'],
+    features: ['K歌评分', '主题包厢', '无人值守'],
+    operatingHours: '11:00-01:00',
+    basePrice: 45,
+  },
+  {
+    id: 'store-wh-tea-01', nameCN: '静享茶空间', city: '武汉', type: 'tearoom',
+    district: '江汉区', businessCircle: '江汉路步行街',
+    roomTypes: ['单人静读位', '双人对饮室', '多人会客厅'],
+    features: ['精品茶叶', '禅意装修', '背景音乐可选'],
+    operatingHours: '08:00-22:00',
+    basePrice: 25,
+  },
 ];
 
 for (const s of stores) {
   const d = dossierStore.getOrCreate('store', s.id);
-  dossierStore.commit(d.id, { nameCN: s.nameCN, city: s.city, spaceType: s.type, status: 'active' }, {
+  dossierStore.commit(d.id, {
+    nameCN: s.nameCN, city: s.city, spaceType: s.type, status: 'active',
+    district: s.district, businessCircle: s.businessCircle,
+    roomTypes: s.roomTypes, features: s.features,
+    operatingHours: s.operatingHours, basePrice: s.basePrice,
+  }, {
     committedBy: 'structural-test:seed',
     message: `Seed store: ${s.nameCN}`,
   });
@@ -253,22 +338,25 @@ for (const s of stores) {
 // --- Seed 1 action-plan entity ---
 const apDossier = dossierStore.getOrCreate('action-plan', 'ap-structural-test');
 dossierStore.commit(apDossier.id, {
-  title: 'Structural Test Action Plan',
+  title: 'IdleX GEO Operations Action Plan',
   items: [
-    { id: 'item-1', description: 'Test governance gating', status: 'pending' },
-    { id: 'item-2', description: 'Test batch update', status: 'pending' },
-    { id: 'item-3', description: 'Test entity relations', status: 'pending' },
+    { id: 'item-1', description: '建立GEO运营体系：能见度探测 + 内容生成 + 效果评估', status: 'pending' },
+    { id: 'item-2', description: '一模一策落地：豆包/千问/元宝差异化内容', status: 'pending' },
+    { id: 'item-3', description: '管理制度建设：内容审批 + 战略审批 + 质量管控', status: 'pending' },
   ],
-}, { committedBy: 'structural-test:seed', message: 'Seed action plan' });
+}, { committedBy: 'structural-test:seed', message: 'Seed GEO action plan' });
 console.log('[seed] + action-plan/ap-structural-test');
 
 // --- Seed 1 strategy entity ---
 const stDossier = dossierStore.getOrCreate('strategy', 'st-geo-master');
 dossierStore.commit(stDossier.id, {
-  title: 'GEO Master Strategy',
+  title: 'IdleX GEO Master Strategy',
+  vision: '让每家合作门店在AI时代被看见',
   platforms: ['doubao', 'qianwen', 'yuanbao'],
+  coreStrategy: '一模一策：不同AI模型差异化优化',
+  kpi: '被看见指标持续上升',
   majorChange: false,
-}, { committedBy: 'structural-test:seed', message: 'Seed strategy' });
+}, { committedBy: 'structural-test:seed', message: 'Seed GEO strategy' });
 console.log('[seed] + strategy/st-geo-master');
 
 // --- Seed 1 blueprint with flow rules ---
@@ -1195,33 +1283,168 @@ fi
 # ════════════════════════════════════════════════════════════
 
 if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
-  section "4: Agent Integration Turns"
+  section "4: Business Scenario — IdleX GEO Operations"
 
   # Clean sessions for fresh agent context
   rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
 
-  # Turn 1: Information summary (scan_work + brief mode)
-  aida_say 1 'Use bps_scan_work to check the current work landscape. Then use bps_query_entities with brief=true to get a compact entity listing. Report what you find, including the total counts and showing counts.'
+  # Capture baseline metrics before business scenario
+  BASELINE_ENTITIES=$(api_get "/api/entities" | jlen)
+  BASELINE_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
+  BASELINE_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
+  BASELINE_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
+  BASELINE_PUBLISH=$(find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | wc -l)
+  BASELINE_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
+  log "Baseline: entities=$BASELINE_ENTITIES, violations=$BASELINE_VIOLATIONS, skills=$BASELINE_SKILLS, blueprints=$BASELINE_BLUEPRINTS, publish=$BASELINE_PUBLISH, workspaces=$BASELINE_WORKSPACES"
 
-  check "V4.1 Turn 1 produced response" "test -s $LOG_DIR/turn-1.log"
-  soft  "V4.2 Response mentions summary/total" "grep -qiE 'total|summary|showing|open|entities' $LOG_DIR/turn-1.log"
+  # ── Turn 1: Business Briefing ──────────────────────────
+  log "Turn 1: Business briefing..."
+  aida_say 1 "我是闲氪的GEO负责人。系统里已经有5家合作门店（长沙3家+武汉2家）。
 
-  # Turn 2: Entity relations + governance status
-  aida_say 2 'Check the entity store-cs-ktv-01 — it should have relations to other entities. Also check governance status and report the constraint effectiveness analytics.'
+闲氪帮合作门店在AI时代\"被看见\"——在豆包、千问、元宝这三大AI平台上获得更高的能见度。我们的核心策略是\"一模一策\"：每个AI模型有不同的内容偏好，需要差异化优化。豆包偏好情感化场景故事，千问偏好结构化任务数据，元宝偏好务实性价比分析。
 
-  check "V4.3 Turn 2 produced response" "test -s $LOG_DIR/turn-2.log"
-  soft  "V4.4 Response mentions relations" "grep -qiE 'relation|depends_on|references|related' $LOG_DIR/turn-2.log"
-  soft  "V4.5 Response mentions effectiveness" "grep -qiE 'effectiveness|violation|constraint|analytics' $LOG_DIR/turn-2.log"
+我需要你帮我建立日常GEO运营体系，每天推进工作让\"被看见\"指标持续上升。
 
-  # Turn 3: Governance trigger
-  aida_say 3 'Update entity content/test-publish-check with data {publishReady: true, title: "Test Content"}. This should trigger governance.'
+两条管理规矩：
+1. 所有对外发布的内容必须经过我审批
+2. 战略方向的重大调整也需要我确认
 
-  check "V4.6 Turn 3 produced response" "test -s $LOG_DIR/turn-3.log"
-  soft  "V4.7 Response mentions governance/approval" "grep -qiE 'governance|approval|blocked|REQUIRE_APPROVAL|审批' $LOG_DIR/turn-3.log"
+业务背景资料在 ~/.aida/context/idlex-geo-background.md，请先看一下。然后告诉我你打算怎么推进。"
 
-  # Verify governance triggered via API
-  VIO_COUNT=$(api_get "/api/governance/violations" | jlen)
-  soft "V4.8 Governance violations exist after Turn 3 (got $VIO_COUNT)" "test $VIO_COUNT -ge 1"
+  check "B4.01 Turn 1 produced response" "test -s $LOG_DIR/turn-1.log"
+  soft  "B4.02 Mentions plan/strategy" "grep -qiE '计划|方案|策略|运营|plan|strategy' $LOG_DIR/turn-1.log"
+  soft  "B4.03 Mentions GEO/stores/platforms" "grep -qiE '门店|GEO|能见度|豆包|千问|元宝|被看见' $LOG_DIR/turn-1.log"
+  soft  "B4.04 Mentions management/governance" "grep -qiE '审批|管理|治理|governance|approval|约束|规矩' $LOG_DIR/turn-1.log"
+
+  # ── Turn 2: Authorization + Modeling ────────────────────
+  log "Turn 2: Authorization to model..."
+  aida_say 2 "方案可以，全权交给你落地。需要创建什么实体、Skill、蓝图就直接建。我关注的是：
+- 运营实体要覆盖探测、分析、内容、分发全流程
+- 管理规矩要正式化成系统约束
+- 重复性工作要提炼成可复用的Skill"
+
+  check "B4.05 Turn 2 produced response" "test -s $LOG_DIR/turn-2.log"
+
+  # Give Aida time to complete tool calls
+  sleep 5
+
+  # Check entity creation
+  POST_MODEL_ENTITIES=$(api_get "/api/entities" | jlen)
+  NEW_ENTITIES=$((POST_MODEL_ENTITIES - BASELINE_ENTITIES))
+  check "B4.06 New entities created >= 3 (got $NEW_ENTITIES)" "test $NEW_ENTITIES -ge 3"
+  soft  "B4.07 Mentions entity/skill/blueprint creation" "grep -qiE '创建|实体|entity|skill|blueprint|蓝图|技能' $LOG_DIR/turn-2.log"
+
+  # Check for new skills
+  POST_MODEL_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
+  NEW_SKILLS=$((POST_MODEL_SKILLS - BASELINE_SKILLS))
+  soft "B4.08 New Skills created (got $NEW_SKILLS new)" "test $NEW_SKILLS -ge 1"
+
+  # Check for new blueprints
+  POST_MODEL_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
+  NEW_BLUEPRINTS=$((POST_MODEL_BLUEPRINTS - BASELINE_BLUEPRINTS))
+  soft "B4.09 New Blueprint created (got $NEW_BLUEPRINTS new)" "test $NEW_BLUEPRINTS -ge 1"
+
+  # ── Turn 3: Daily GEO Operations ───────────────────────
+  log "Turn 3: Daily GEO operations..."
+  aida_say 3 "开始今天的GEO运营工作。
+
+第一步：做一轮能见度探测——模拟检查长沙3家门店在豆包上的推荐情况，把探测结果记录为实体。
+
+第二步：基于探测结果，为长沙3家门店各生成一份面向豆包的GEO优化内容。要求体现豆包的情感化偏好风格——场景故事、氛围感、用户体验。
+
+草稿内容写到 ~/.aida/mock-publish-tmp/doubao/ 目录，文件名包含门店标识。"
+
+  check "B4.10 Turn 3 produced response" "test -s $LOG_DIR/turn-3.log"
+
+  sleep 3
+
+  # Check for content/probe entities
+  POST_OPS_ENTITIES=$(api_get "/api/entities" | jlen)
+  OPS_NEW_ENTITIES=$((POST_OPS_ENTITIES - POST_MODEL_ENTITIES))
+  soft "B4.11 Operations created new entities (got $OPS_NEW_ENTITIES)" "test $OPS_NEW_ENTITIES -ge 1"
+
+  # Check for mock-publish-tmp files
+  POST_OPS_PUBLISH=$(find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | wc -l)
+  NEW_PUBLISH=$((POST_OPS_PUBLISH - BASELINE_PUBLISH))
+  soft "B4.12 Content files in mock-publish-tmp (got $NEW_PUBLISH)" "test $NEW_PUBLISH -ge 1"
+
+  soft "B4.13 Response mentions specific stores" "grep -qiE '声临其境|悠然茶室|棋乐无穷|store-cs' $LOG_DIR/turn-3.log"
+
+  # ── Turn 4: Governance Trigger — Content Publish ────────
+  log "Turn 4: Governance trigger — content publish..."
+  aida_say 4 "草稿内容我过目了，质量不错。请把今天生成的GEO内容全部标记为发布就绪（publishReady: true），准备对外分发。"
+
+  check "B4.14 Turn 4 produced response" "test -s $LOG_DIR/turn-4.log"
+
+  sleep 3
+
+  # Check governance triggered
+  POST_GOV_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
+  GOV_NEW_VIOLATIONS=$((POST_GOV_VIOLATIONS - BASELINE_VIOLATIONS))
+  POST_GOV_APPROVALS=$(api_get "/api/governance/approvals" | jlen)
+  soft "B4.15 Governance violations increased (new=$GOV_NEW_VIOLATIONS)" "test $GOV_NEW_VIOLATIONS -ge 1"
+  soft "B4.16 Aida reports governance interception" "grep -qiE '审批|approval|拦截|governance|blocked|REQUIRE_APPROVAL|等待' $LOG_DIR/turn-4.log"
+  soft "B4.17 Aida mentions approval ID or Dashboard" "grep -qiE 'Approval|Dashboard|3456|审批单|审批.*ID|id.*审批' $LOG_DIR/turn-4.log"
+
+  # ── Step 5: Programmatic Approval (no agent turn) ───────
+  log "Step 5: Programmatic approval via Dashboard API..."
+  PENDING_IDS=$(api_get "/api/governance/approvals" 2>/dev/null | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    const pending=d.filter(a=>a.status==='PENDING').map(a=>a.id);
+    console.log(pending.join(' '))}catch{console.log('')}" 2>/dev/null || echo "")
+  PENDING_COUNT=$(echo "$PENDING_IDS" | wc -w)
+
+  soft "B4.18 Pending approvals exist (count=$PENDING_COUNT)" "test $PENDING_COUNT -ge 1"
+
+  APPROVED_COUNT=0
+  for aid in $PENDING_IDS; do
+    if [ -n "$aid" ]; then
+      RESULT=$(api_post "/api/governance/approvals/$aid/decide" '{"decision":"APPROVED","decidedBy":"geo-lead","reason":"R3 test: content quality verified"}' 2>/dev/null || echo '{}')
+      if echo "$RESULT" | node -e "try{JSON.parse(require('fs').readFileSync(0,'utf8'));process.exit(0)}catch{process.exit(1)}" 2>/dev/null; then
+        APPROVED_COUNT=$((APPROVED_COUNT + 1))
+      fi
+    fi
+  done
+  soft "B4.19 Approvals processed ($APPROVED_COUNT approved)" "test $APPROVED_COUNT -ge 1"
+  log "  Approved $APPROVED_COUNT of $PENDING_COUNT pending approvals."
+
+  # ── Turn 6: Skill/Agent Creation ────────────────────────
+  log "Turn 6: Skill and Agent creation..."
+  aida_say 6 "GEO运营里有不少重复性工作模式。请帮我做两件事：
+
+1. 把\"能见度探测\"这个流程提炼成一个可复用的Skill——以后每天自动跑探测就靠它了。
+
+2. 我还需要一个面向顾客的\"闲氪门店小助手\"Agent——语气要亲切活泼，专门回答顾客关于门店的咨询问题。它的人格风格应该跟你的管理风格完全不同。"
+
+  check "B4.20 Turn 6 produced response" "test -s $LOG_DIR/turn-6.log"
+
+  sleep 5
+
+  # Check skill creation
+  POST_SKILL_ENTITIES=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
+  TOTAL_NEW_SKILLS=$((POST_SKILL_ENTITIES - BASELINE_SKILLS))
+  soft "B4.21 New Skill(s) created total (got $TOTAL_NEW_SKILLS)" "test $TOTAL_NEW_SKILLS -ge 1"
+
+  # Check agent workspace creation
+  POST_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
+  NEW_WORKSPACES=$((POST_WORKSPACES - BASELINE_WORKSPACES))
+  soft "B4.22 New Agent workspace created (got $NEW_WORKSPACES)" "test $NEW_WORKSPACES -ge 1"
+
+  soft "B4.23 Response describes creation" "grep -qiE 'skill|技能|agent|助手|探测|probe|visibility|创建|workspace' $LOG_DIR/turn-6.log"
+
+  # ── Turn 7: Daily Summary ──────────────────────────────
+  log "Turn 7: Daily summary..."
+  aida_say 7 "做一个今天的运营小结。覆盖了哪些门店、生成了什么内容、审批了几件事、创建了哪些新能力。用数据说话。"
+
+  check "B4.24 Turn 7 produced response" "test -s $LOG_DIR/turn-7.log"
+  soft  "B4.25 Summary has business content" "grep -qiE '门店|内容|审批|GEO|运营|content|store|approval' $LOG_DIR/turn-7.log"
+
+  # ── Turn 8: Management Review ──────────────────────────
+  log "Turn 8: Management review..."
+  aida_say 8 "看看管理制度执行得怎么样——有没有违规记录、约束效能分析、熔断器什么状态。我要知道管理规矩有没有被有效执行。"
+
+  check "B4.26 Turn 8 produced response" "test -s $LOG_DIR/turn-8.log"
+  soft  "B4.27 Mentions governance details" "grep -qiE 'violation|constraint|熔断|circuit|违规|约束|效能|effectiveness' $LOG_DIR/turn-8.log"
 
   log "Phase 4 complete."
 fi
@@ -1240,10 +1463,38 @@ FINAL_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
 FINAL_CONSTRAINTS=$(api_get "/api/governance/constraints" | jlen)
 FINAL_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
 FINAL_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
+FINAL_PUBLISH=$(find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | wc -l)
+FINAL_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
 
 check "V5.1 Final entity count stable (got $FINAL_ENTITIES)" "test $FINAL_ENTITIES -ge 7"
 check "V5.2 Governance constraints loaded (got $FINAL_CONSTRAINTS)" "test $FINAL_CONSTRAINTS -ge 3"
 check "V5.3 Skills intact (got $FINAL_SKILLS)" "test $FINAL_SKILLS -ge 7"
+
+if [ "$ENGINE_ONLY" = false ]; then
+  # Business scenario final checks
+  AGENT_ENTITIES=$((FINAL_ENTITIES - ${BASELINE_ENTITIES:-0}))
+  soft "V5.4 Agent created entities >= 3 (got $AGENT_ENTITIES)" "test ${AGENT_ENTITIES:-0} -ge 3"
+
+  # Check for business entity types (content, probe, observation, geo-content)
+  BIZ_TYPES=$(api_get "/api/entities" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    const bizTypes=['content','geo-content','probe','observation','action-plan','strategy'];
+    const found=d.filter(e=>bizTypes.includes(e.entityType)).map(e=>e.entityType);
+    const unique=[...new Set(found)];
+    console.log(unique.join(','))}catch{console.log('')}" 2>/dev/null || echo "")
+  BIZ_TYPE_COUNT=$(echo "$BIZ_TYPES" | tr ',' '\n' | grep -c '.' || echo 0)
+  soft "V5.5 Business entity types >= 2 (got $BIZ_TYPE_COUNT: $BIZ_TYPES)" "test $BIZ_TYPE_COUNT -ge 2"
+
+  AGENT_PUBLISH=$((FINAL_PUBLISH - ${BASELINE_PUBLISH:-0}))
+  soft "V5.6 Mock-publish content files >= 1 (got $AGENT_PUBLISH)" "test ${AGENT_PUBLISH:-0} -ge 1"
+
+  soft "V5.7 Governance was exercised (violations=$FINAL_VIOLATIONS)" "test $FINAL_VIOLATIONS -ge 1"
+
+  AGENT_SKILLS=$((FINAL_SKILLS - ${BASELINE_SKILLS:-0}))
+  soft "V5.8 Agent created Skills >= 1 (got $AGENT_SKILLS)" "test ${AGENT_SKILLS:-0} -ge 1"
+
+  soft "V5.9 Agent workspace created (got $FINAL_WORKSPACES)" "test ${FINAL_WORKSPACES:-0} -ge 1"
+fi
 
 # Entity breakdown
 log "Entity breakdown:"
@@ -1254,6 +1505,28 @@ api_get "/api/entities" | node -e "
   Object.entries(t).sort().forEach(([k,v])=>console.log('  '+k+': '+v))
 " 2>/dev/null || true
 
+# Skills listing
+if [ "$ENGINE_ONLY" = false ]; then
+  log "Skills:"
+  find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | while read f; do
+    echo "  $(basename "$(dirname "$f")")"
+  done
+
+  # Agent workspaces
+  if [ "$FINAL_WORKSPACES" -gt 0 ]; then
+    log "Agent workspaces:"
+    find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | while read d; do
+      echo "  $(basename "$d")"
+    done
+  fi
+
+  # Mock publish files
+  log "Mock-publish files (total $FINAL_PUBLISH):"
+  find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | head -10 | while read f; do
+    echo "  ${f#$AIDA_HOME/}"
+  done
+fi
+
 # Write metrics JSON
 cat > "$LOG_DIR/metrics.json" << METRICS
 {
@@ -1263,6 +1536,8 @@ cat > "$LOG_DIR/metrics.json" << METRICS
   "constraints": $FINAL_CONSTRAINTS,
   "skills": $FINAL_SKILLS,
   "blueprints": $FINAL_BLUEPRINTS,
+  "mockPublishFiles": $FINAL_PUBLISH,
+  "agentWorkspaces": $FINAL_WORKSPACES,
   "testResults": {
     "pass": $PASS,
     "fail": $FAIL,
@@ -1302,7 +1577,10 @@ echo "  D7: Constraint Analytics  (S2.31-S2.33)    3 checks"
 echo "  D8: Tool Registration     (S2.34-S2.35)    2 checks"
 echo "  D9: Dashboard API         (S3.01-S3.09)   11 checks"
 if [ "$ENGINE_ONLY" = false ]; then
-echo "  Agent Integration         (V4.1-V4.8)"
+echo "  B:  Business Scenario     (B4.01-B4.27)   27 checks"
+echo "  V5: Final Verification    (V5.1-V5.9)      9 checks"
+else
+echo "  V5: Final Verification    (V5.1-V5.3)      3 checks"
 fi
 echo ""
 
@@ -1312,6 +1590,10 @@ echo "  Violations:  $FINAL_VIOLATIONS"
 echo "  Constraints: $FINAL_CONSTRAINTS"
 echo "  Skills:      $FINAL_SKILLS"
 echo "  Blueprints:  $FINAL_BLUEPRINTS"
+if [ "$ENGINE_ONLY" = false ]; then
+echo "  Publish:     $FINAL_PUBLISH"
+echo "  Workspaces:  $FINAL_WORKSPACES"
+fi
 echo ""
 
 if [ "$FAIL" -eq 0 ]; then
@@ -1324,12 +1606,12 @@ fi
 
 # Save report
 cat > "$LOG_DIR/report.txt" << REPORT
-AIDA Structural Capability E2E Test
-====================================
+AIDA Structural Capability E2E Test — IdleX GEO Business Edition
+=================================================================
 Date:     $(date)
 Server:   $(hostname)
 Duration: ${DURATION}s
-Mode:     $([ "$ENGINE_ONLY" = true ] && echo 'engine-only' || echo 'full')
+Mode:     $([ "$ENGINE_ONLY" = true ] && echo 'engine-only' || echo 'full (IdleX GEO business scenario)')
 
 Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL
 
@@ -1338,6 +1620,8 @@ Violations:  $FINAL_VIOLATIONS
 Constraints: $FINAL_CONSTRAINTS
 Skills:      $FINAL_SKILLS
 Blueprints:  $FINAL_BLUEPRINTS
+Publish:     $FINAL_PUBLISH
+Workspaces:  $FINAL_WORKSPACES
 
 Logs: $LOG_DIR/
 Dashboard: $DASHBOARD_URL

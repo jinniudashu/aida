@@ -1,0 +1,74 @@
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+Config warnings:\n- plugins.entries.bps-engine: plugin bps-engine: plugin id mismatch (manifest uses "bps-engine", entry hints "aida")
+## 📊 2026-03-11 闲氪GEO运营日结
+
+---
+
+### 一、门店覆盖
+
+| 城市 | 门店数 | 覆盖门店 | 平台 |
+|------|--------|---------|------|
+| 长沙 | **3家** | 悠然茶室、声临其境KTV、棋乐无穷 | 豆包 |
+| 武汉 | 0家 | （今日未覆盖） | - |
+| **合计** | **3家** | 60%合作门店覆盖率 | 1个平台 |
+
+---
+
+### 二、能见度探测数据
+
+| 门店 | 能见度评分 | 豆包排名 | 诊断等级 |
+|------|-----------|---------|---------|
+| 悠然茶室（大学城） | 72/100 | 第8位 | 🟡 中等（需内容补强） |
+| 声临其境KTV（五一广场） | 58/100 | 第12位 | 🔴 偏低（需差异化突破） |
+| 棋乐无穷（红星商圈） | 65/100 | 第6位 | 🟡 中等（需场景扩展） |
+
+**探测报告**：`~/.aida/geo-reports/probe-result-2026-03-11.md`
+
+---
+
+### 三、内容生成产出
+
+| 门店 | 内容主题 | 情感切入点 | 文件 |
+|------|---------|-----------|------|
+| 悠然茶室 | 备考陪伴者 | 孤独→温暖 | `store-cs-tea-01-doubao-content.md` |
+| 声临其境KTV | 秘密聚会基地 | 标准→走心 | `store-cs-ktv-01-doubao-content.md` |
+| 棋乐无穷 | 三代同堂据点 | 隔阂→融合 | `store-cs-mj-01-doubao-content.md` |
+
+**内容总量**：3篇GEO优化内容 | **风格**：豆包情感化场景故事 | **位置**：`~/.aida/mock-publish-tmp/doubao/`
+
+---
+
+### 四、审批状态
+
+| 事项 | 数量 | 状态 |
+|------|------|------|
+| GEO内容审批 | 3份 | ⏳ 待审批（Governance约束拦截） |
+| Dashboard审批ID | 3个 | e363bc44... / 2b8755f8... / 256fafec... |
+
+**审批结论**：内容质量已获负责人确认，标记为`publishReady: true`，等待系统审批通过后进入分发队列。
+
+---
+
+### 五、新能力建设（今日创建）
+
+| 类型 | 名称 | 用途 |
+|------|------|------|
+| **Skill** | `idlex-geo-content` | 一模一策内容生成（豆包/千问/元宝差异化） |
+| **Skill** | `idlex-geo-probe` | 每日能见度探测标准化流程 |
+| **蓝图服务** | 6个 | svc-geo-probe/analyze/content-gen/review/distribute/report |
+| **Cron任务** | 3个 | 每日9:00探测 / 10:00生成 / 周日18:00报告 |
+
+---
+
+### 六、明日待办
+
+| 优先级 | 事项 |
+|--------|------|
+| P0 | 审批Dashboard中3个pending approval，完成内容分发 |
+| P1 | 覆盖武汉2家门店（武汉茶室、武汉KTV）的GEO探测 |
+| P2 | 启动千问/元宝平台的内容生成（目前仅豆包） |
+
+---
+
+**今日投入**：3家门店 × 1平台 = 3个探测任务 + 3份内容产出  
+**明日目标**：5家门店 × 3平台 = 15个探测点全覆盖

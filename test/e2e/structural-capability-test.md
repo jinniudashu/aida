@@ -1,14 +1,27 @@
-# AIDA Structural Capability E2E Test
+# AIDA Structural Capability E2E Test — IdleX GEO Business Edition
 
 ## Purpose
 
-Test all structural engine features through the deployed AIDA system. This is the **primary iteration tool** for AIDA development — run after every significant code change to verify structural integrity.
+Test all structural engine features AND business scenario capabilities through the deployed AIDA system. This is the **primary iteration tool** for AIDA development — run after every significant code change to verify both structural integrity and business readiness.
 
 **Design Philosophy**:
-- **Deterministic over probabilistic**: Most checks are programmatic (direct engine API + Dashboard API), not dependent on LLM behavior
-- **Fast**: Target 5-10 minutes (vs 30+ minutes for full benchmark)
-- **Comprehensive**: Covers every structural feature from P0-P3 roadmap
+- **Deterministic backbone**: Phase 0-3 are programmatic (direct engine API + Dashboard API), 100% deterministic
+- **Business overlay**: Phase 4 is a realistic IdleX GEO business scenario with business-language dialogue
+- **Two-tier checks**: HARD checks (artifacts exist → FAIL) + SOFT checks (keywords in response → WARN)
+- **Fast**: Target 15-20 minutes in full mode, 5 minutes engine-only
 - **Self-contained**: Single script, seeds its own data, cleans up after itself
+
+## Business Scenario: IdleX GEO Operations
+
+A GEO负责人 (GEO Operations Lead) works with Aida to run daily AI visibility operations for IdleX partner stores.
+
+**Business context**:
+- IdleX helps partner stores "被看见" (be visible) on AI platforms (豆包/千问/元宝)
+- Core strategy: "一模一策" — differentiated content per AI model
+- Store types: self-serve KTV, tea rooms, mahjong rooms
+- Management rules: content publish requires approval; strategy changes require confirmation
+
+**Test flow**: Background briefing → Authorization → Business modeling → Content generation → Governance trigger → Approval → Skill/Agent creation → Daily summary
 
 ## Coverage Matrix
 
@@ -23,7 +36,8 @@ Test all structural engine features through the deployed AIDA system. This is th
 | D7: Constraint Analytics | 3 | effectiveness stats, field completeness, violation count accuracy |
 | D8: Tool Registration | 2 | total tool count, DEFAULT_SCOPE_WRITE_TOOLS exclusion |
 | D9: Dashboard API | 11 | governance endpoints shape, entity listing, circuit breaker reset, approval decide, page accessibility |
-| **Total** | **50** | |
+| B: Business Scenario | 25 | modeling, management routing, content gen, governance trigger, skill/agent creation, daily ops |
+| **Total** | **~80** | |
 
 ## Execution
 
@@ -40,134 +54,98 @@ bash test/e2e/structural-capability.sh --engine-only     # Skip agent turns (fas
 ## Phases
 
 ### Phase 0: Install Verification
-Reuses idlex-geo-v3 bootstrap checks: workspace files, skills, dashboard health.
+Checks workspace files, skills, dashboard health. Unchanged from R1/R2.
 
 ### Phase 1: Data Seeding
-Seeds controlled test data designed to exercise specific features:
-- **Governance**: 3 constraints (REQUIRE_APPROVAL × 2, BLOCK × 1)
-- **Entities**: 5 store entities + 1 action-plan + 1 strategy
-- **Blueprint**: 1 blueprint with flow (for next_steps)
-- **Skills**: 8 skill directories (7 base + 1 test skill)
-- **Tasks**: 3 tasks with groupId + priority + deadline (for batch/sort tests)
+Seeds IdleX GEO business data:
+- **Governance**: 3 constraints (content publish approval [HIGH], archive block [CRITICAL], strategy change approval [HIGH])
+- **Stores**: 5 partner stores (长沙 KTV/茶室/麻将 + 武汉 KTV/茶室) with full business data (rooms, hours, features)
+- **Strategy**: GEO master strategy (三大AI平台, 一模一策)
+- **Action Plan**: GEO operations action plan
+- **Blueprint**: Structural test flow (probe→analyze→content/review)
+- **Tasks**: 3 tasks with groupId + priority + deadline
+- **Context**: IdleX GEO business background document
+- **Mock dirs**: `~/.aida/mock-publish-tmp/` and `~/.aida/mock-publish/` for content output
 
 ### Phase 2: Engine Structural Tests (Programmatic)
-Inline TypeScript imports the engine and exercises every P0-P3 feature:
-
-**D1: Governance Gating**
-- S2.01: All 9 GATED_WRITE_TOOLS produce governance check
-- S2.02: Read-only tool (bps_list_services) bypasses governance
-- S2.03: BLOCK verdict throws Error with "GOVERNANCE BLOCKED"
-- S2.04: REQUIRE_APPROVAL verdict throws Error with approval ID
-- S2.05: PASS verdict executes normally
-- S2.06: Constraint scope matching (entityType filter)
-- S2.07: Constraint scope matching (dataFields filter)
-- S2.08: New tools (bps_batch_update, bps_load_blueprint, bps_register_agent, bps_load_governance) are gated
-- S2.08b: Governance BLOCK throws Error (not `{success:false}`)
-- S2.08c: REQUIRE_APPROVAL throws Error with approval ID
-
-**D2: Circuit Breaker**
-- S2.09: CRITICAL violation → DISCONNECTED
-- S2.10: DISCONNECTED blocks all writes immediately
-- S2.11: HIGH violations accumulate → WARNING → RESTRICTED
-- S2.12: Cooldown recovery auto-downgrades after elapsed time
-- S2.13: No recovery if new violations in window
-- S2.14: Oscillation detection locks state (>3 transitions/1h)
-
-**D3: Information Summary**
-- S2.15: bps_scan_work returns topN shape {items, total, showing}
-- S2.16: bps_scan_work summary string is non-empty
-- S2.17: bps_scan_work sortByUrgency (deadline ASC, priority DESC)
-- S2.18: bps_query_entities brief=true returns compact shape
-- S2.19: bps_next_steps returns recommendation field
-- S2.20: bps_scan_work outcomeDistribution has success/partial/failed
-
-**D4: Process Groups**
-- S2.21: bps_create_task with groupId stores correctly
-- S2.22: bps_batch_update completes all tasks in group
-- S2.23: bps_batch_update with filterState only updates matching
-- S2.24: Filtered batch: non-matching task state unchanged
-
-**D5: Entity Relations**
-- S2.25: bps_get_entity returns relatedEntities array
-- S2.26: Relations include version and updatedAt
-- S2.27: Relation types: depends_on and references present
-- S2.27b: bps_update_entity with relations parameter stores them
-- S2.27c: Relations set via update tool are retrievable
-
-**D6: Skill Metrics**
-- S2.28: bps_complete_task records skill metric when serviceId matches skill dir
-- S2.29: Skill metric not recorded when serviceId doesn't match
-- S2.30: Dormant skills detected (no invocation in 90 days)
-
-**D7: Constraint Analytics**
-- S2.31: getConstraintEffectiveness returns per-constraint stats
-- S2.32: Stats include violationCount, approvalCount, approvalRate
-- S2.33: Constraint effectiveness reflects actual violation counts
-
-**D8: Tool Registration**
-- S2.34: Total tools = 17 (15 base + 2 governance)
-- S2.35: DEFAULT_SCOPE_WRITE_TOOLS excludes bps_load_governance
+39 checks across D1-D8. Unchanged from R1/R2.
 
 ### Phase 3: Dashboard API Structural Tests (D9)
-Curl-based checks on the running Dashboard to verify API shapes:
+11 checks. Unchanged from R1/R2.
 
-- S3.01: GET /api/governance/status returns constraintEffectiveness array
-- S3.02: GET /api/governance/status circuitBreakerState is a string
-- S3.03: GET /api/governance/violations returns array with severity field
-- S3.04: GET /api/governance/constraints returns array with scope object
-- S3.05: GET /api/governance/approvals returns array with status field
-- S3.06: GET /api/entities returns entities (≥7 seeded)
-- S3.07: POST /api/governance/circuit-breaker/reset returns valid JSON
-- S3.08: POST /api/governance/approvals/:id/decide works
-- S3.09: Dashboard pages accessible (/, /business-goals, /governance)
+### Phase 4: Business Scenario (IdleX GEO, 8 steps)
 
-### Phase 4: Agent Integration Turns (optional, --full mode)
-3 focused turns testing structural features through Aida:
+All dialogue uses business-language goal statements ("我要什么"), NOT technical instructions ("怎么做").
 
-**Turn 1**: "Query the work landscape with bps_scan_work, then list entities in brief mode."
-- Verify: response contains structural metadata (total, showing)
+**Turn 1: Business Briefing**
+> "我是闲氪GEO负责人。系统里已有5家门店。闲氪帮门店在AI时代"被看见"——在豆包、千问、元宝上获得更高能见度。核心策略是"一模一策"。我需要你建立日常GEO运营体系。管理规矩：对外发布内容要经我审批，战略调整也需要我确认。"
+- Verify: response produced, mentions plan/GEO/management
 
-**Turn 2**: "Create a test entity 'structural-test' with relations to store-cs-ktv-01. Then complete the open tasks."
-- Verify: entity created, relations set, tasks updated
+**Turn 2: Authorization + Modeling**
+> "方案可以。全权交给你落地——实体、Skill、蓝图，需要什么就建什么。"
+- Verify: new entities created (>=3 above baseline), action plan or strategy entities
 
-**Turn 3**: "Check governance status and tell me about constraint effectiveness."
-- Verify: governance status reported, effectiveness stats mentioned
+**Turn 3: Daily GEO Operations**
+> "开始今天的GEO运营。先做能见度探测，然后为长沙3家门店各生成一份面向豆包的GEO优化内容。草稿写到 ~/.aida/mock-publish-tmp/ 目录。"
+- Verify: content/probe entities, mock-publish-tmp files
+
+**Turn 4: Governance Trigger**
+> "草稿我过目了，质量不错。把这些内容标记为发布就绪。"
+- Verify: governance violations or approvals increased
+
+**Step 5: Programmatic Approval (no agent turn)**
+> Script queries Dashboard API for pending approvals and approves them
+- Verify: approvals existed and were processed
+
+**Turn 6: Skill/Agent Creation**
+> "GEO运营里有很多重复工作。帮我把'能见度探测'提炼成一个可复用的Skill。另外，我需要一个面向顾客的门店咨询小助手，语气亲切活泼，跟你的管理风格完全不同。"
+- Verify: new Skill directory, new Agent workspace
+
+**Turn 7: Daily Summary**
+> "做一个今天的运营小结——覆盖了哪些门店、生成了什么内容、审批了几件事。"
+- Verify: summary with business content
+
+**Turn 8: Management Review**
+> "看看管理制度执行得怎么样——违规记录、约束效能、熔断器状态。"
+- Verify: governance details reported
 
 ### Phase 5: Final Verification + Report
-Comprehensive state checks + structured JSON report.
-
-## Scoring
-
-Binary PASS/FAIL per check. No weighted dimensions.
-
-**Thresholds**:
-- **GREEN**: 0 FAIL
-- **YELLOW**: 1-3 FAIL
-- **RED**: 4+ FAIL
+Enhanced metrics: entity count, business entity types, content files, governance stats, new skills, agent workspaces.
 
 ## Check ID Convention
 
-- `V0.x`: Install verification (reused from v3)
+- `V0.x`: Install verification
 - `S2.xx`: Engine structural (programmatic, Phase 2, D1-D8)
 - `S3.xx`: Dashboard API structural (Phase 3, D9)
-- `V4.x`: Agent integration (Phase 4)
+- `B4.xx`: Business scenario (Phase 4, B)
 - `V5.x`: Final verification (Phase 5)
 
 ## Output
 
 ```
 /tmp/structural-capability/
-├── report.txt         # Summary report
-├── engine-results.json # Phase 2 detailed results
-├── turn-{1,2,3}.log  # Agent turn logs (if --full)
-└── metrics.json       # Dashboard metrics snapshot
+├── report.txt              # Summary report
+├── engine-results.json     # Phase 2 detailed results (39 checks)
+├── turn-{1..8}.log         # Agent turn logs
+├── metrics.json            # Final metrics snapshot (structural + business)
+└── seed.log                # Data seeding output
 ```
+
+## Scoring
+
+**Structural (Phase 2+3)**: Binary PASS/FAIL per check.
+**Business (Phase 4)**: Two-tier — HARD checks (FAIL) + SOFT checks (WARN).
+
+**Thresholds**:
+- **GREEN**: 0 FAIL
+- **YELLOW**: 1-3 FAIL
+- **RED**: 4+ FAIL
 
 ## Relationship to Other Tests
 
 | Test Suite | Purpose | Duration | When to Run |
 |------------|---------|----------|-------------|
 | `npx vitest run` | Unit tests (436) | ~30s | Every code change |
-| **structural-capability.sh** | **Structural E2E (50 checks)** | **5-10 min** | **Every deploy / feature merge** |
-| `idlex-geo-v3.sh` | Business scenario E2E | 20-30 min | Before release |
+| **structural-capability.sh --engine-only** | **Structural only (50 checks)** | **~5 min** | **Every deploy** |
+| **structural-capability.sh** | **Structural + Business (~80 checks)** | **~18 min** | **Before release** |
 | `benchmark/run-all-models.sh` | Multi-model comparison | 3-4 hours | Monthly evaluation |

@@ -1,17 +1,19 @@
-AIDA Structural Capability E2E Test
-====================================
-Date:     Wed Mar 11 05:32:53 PM CST 2026
+AIDA Structural Capability E2E Test — IdleX GEO Business Edition
+=================================================================
+Date:     Wed Mar 11 06:22:30 PM CST 2026
 Server:   iZt4n7qaa80fqgnql0diggZ
-Duration: 70s
-Mode:     full
+Duration: 576s
+Mode:     full (IdleX GEO business scenario)
 
-Results: 70 PASS / 0 FAIL / 2 WARN / 72 TOTAL
+Results: 91 PASS / 2 FAIL / 4 WARN / 97 TOTAL
 
-Entities:    9
-Violations:  4
-Constraints: 3
-Skills:      7
-Blueprints:  1
+Entities:    16
+Violations:  22
+Constraints: 2
+Skills:      9
+Blueprints:  3
+Publish:     0
+Workspaces:  0
 
 Logs: /tmp/structural-capability/
 Dashboard: http://localhost:3456
