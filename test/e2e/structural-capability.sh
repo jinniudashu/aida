@@ -142,8 +142,6 @@ if [ "$START_PHASE" -le 1 ]; then
   # 1a. project.yaml
   log "Creating project.yaml..."
   mkdir -p "$AIDA_HOME"/{blueprints,data,context}
-  mkdir -p "$AIDA_HOME"/mock-publish-tmp/{doubao,qianwen,yuanbao}
-  mkdir -p "$AIDA_HOME"/mock-publish/{doubao,qianwen,yuanbao}
   cat > "$AIDA_HOME/project.yaml" << 'YAML'
 version: "1.1"
 name: "IdleX GEO Operations"
@@ -191,7 +189,6 @@ GEO不是AI版SEO。核心区别：
 ## 管理规矩
 - 所有对外发布内容必须经GEO负责人审批
 - 战略方向重大调整需要负责人确认
-- 内容草稿先写到 mock-publish-tmp/，审批后提升到 mock-publish/
 
 ## 业务指标
 核心KPI："被看见"指标上升——在AI平台的能见度持续提升
@@ -1293,9 +1290,8 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   BASELINE_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
   BASELINE_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
   BASELINE_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
-  BASELINE_PUBLISH=$(find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | wc -l)
   BASELINE_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
-  log "Baseline: entities=$BASELINE_ENTITIES, violations=$BASELINE_VIOLATIONS, skills=$BASELINE_SKILLS, blueprints=$BASELINE_BLUEPRINTS, publish=$BASELINE_PUBLISH, workspaces=$BASELINE_WORKSPACES"
+  log "Baseline: entities=$BASELINE_ENTITIES, violations=$BASELINE_VIOLATIONS, skills=$BASELINE_SKILLS, blueprints=$BASELINE_BLUEPRINTS, workspaces=$BASELINE_WORKSPACES"
 
   # ── Turn 1: Business Briefing ──────────────────────────
   log "Turn 1: Business briefing..."
@@ -1350,9 +1346,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
 
 第一步：做一轮能见度探测——模拟检查长沙3家门店在豆包上的推荐情况，把探测结果记录为实体。
 
-第二步：基于探测结果，为长沙3家门店各生成一份面向豆包的GEO优化内容。要求体现豆包的情感化偏好风格——场景故事、氛围感、用户体验。
-
-草稿内容写到 ~/.aida/mock-publish-tmp/doubao/ 目录，文件名包含门店标识。"
+第二步：基于探测结果，为长沙3家门店各生成一份面向豆包的GEO优化内容。要求体现豆包的情感化偏好风格——场景故事、氛围感、用户体验。内容生成后保存为文件备用。"
 
   check "B4.10 Turn 3 produced response" "test -s $LOG_DIR/turn-3.log"
 
@@ -1363,10 +1357,18 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   OPS_NEW_ENTITIES=$((POST_OPS_ENTITIES - POST_MODEL_ENTITIES))
   soft "B4.11 Operations created new entities (got $OPS_NEW_ENTITIES)" "test $OPS_NEW_ENTITIES -ge 1"
 
-  # Check for mock-publish-tmp files
-  POST_OPS_PUBLISH=$(find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | wc -l)
-  NEW_PUBLISH=$((POST_OPS_PUBLISH - BASELINE_PUBLISH))
-  soft "B4.12 Content files in mock-publish-tmp (got $NEW_PUBLISH)" "test $NEW_PUBLISH -ge 1"
+  # Check session JSONL for write tool calls (content artifact production)
+  SESS_JSONL=$(ls -t "$OPENCLAW_HOME/agents/main/sessions/"*.jsonl 2>/dev/null | head -1)
+  WRITE_CALLS=0
+  if [ -n "$SESS_JSONL" ]; then
+    WRITE_CALLS=$(node -e "
+      const lines=require('fs').readFileSync('$SESS_JSONL','utf8').trim().split('\n');
+      let n=0;for(const l of lines){try{const e=JSON.parse(l);
+      if(e.type==='message'&&e.message?.role==='assistant'&&Array.isArray(e.message.content)){
+        for(const b of e.message.content){if(b.name==='write')n++;}}}catch{}}
+      console.log(n)" 2>/dev/null || echo 0)
+  fi
+  soft "B4.12 Aida produced content files via write tool (got $WRITE_CALLS calls)" "test $WRITE_CALLS -ge 1"
 
   soft "B4.13 Response mentions specific stores" "grep -qiE '声临其境|悠然茶室|棋乐无穷|store-cs' $LOG_DIR/turn-3.log"
 
@@ -1463,7 +1465,6 @@ FINAL_VIOLATIONS=$(api_get "/api/governance/violations" | jlen)
 FINAL_CONSTRAINTS=$(api_get "/api/governance/constraints" | jlen)
 FINAL_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
 FINAL_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
-FINAL_PUBLISH=$(find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | wc -l)
 FINAL_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
 
 check "V5.1 Final entity count stable (got $FINAL_ENTITIES)" "test $FINAL_ENTITIES -ge 7"
@@ -1485,8 +1486,18 @@ if [ "$ENGINE_ONLY" = false ]; then
   BIZ_TYPE_COUNT=$(echo "$BIZ_TYPES" | tr ',' '\n' | grep -c '.' || echo 0)
   soft "V5.5 Business entity types >= 2 (got $BIZ_TYPE_COUNT: $BIZ_TYPES)" "test $BIZ_TYPE_COUNT -ge 2"
 
-  AGENT_PUBLISH=$((FINAL_PUBLISH - ${BASELINE_PUBLISH:-0}))
-  soft "V5.6 Mock-publish content files >= 1 (got $AGENT_PUBLISH)" "test ${AGENT_PUBLISH:-0} -ge 1"
+  # Check session JSONL for total write tool calls across all turns
+  FINAL_JSONL=$(ls -t "$OPENCLAW_HOME/agents/main/sessions/"*.jsonl 2>/dev/null | head -1)
+  TOTAL_WRITES=0
+  if [ -n "$FINAL_JSONL" ]; then
+    TOTAL_WRITES=$(node -e "
+      const lines=require('fs').readFileSync('$FINAL_JSONL','utf8').trim().split('\n');
+      let n=0;for(const l of lines){try{const e=JSON.parse(l);
+      if(e.type==='message'&&e.message?.role==='assistant'&&Array.isArray(e.message.content)){
+        for(const b of e.message.content){if(b.name==='write')n++;}}}catch{}}
+      console.log(n)" 2>/dev/null || echo 0)
+  fi
+  soft "V5.6 Aida produced content artifacts (write tool calls=$TOTAL_WRITES)" "test ${TOTAL_WRITES:-0} -ge 1"
 
   soft "V5.7 Governance was exercised (violations=$FINAL_VIOLATIONS)" "test $FINAL_VIOLATIONS -ge 1"
 
@@ -1520,11 +1531,17 @@ if [ "$ENGINE_ONLY" = false ]; then
     done
   fi
 
-  # Mock publish files
-  log "Mock-publish files (total $FINAL_PUBLISH):"
-  find "$AIDA_HOME/mock-publish-tmp/" -type f 2>/dev/null | head -10 | while read f; do
-    echo "  ${f#$AIDA_HOME/}"
-  done
+  # Content artifacts from session JSONL write targets
+  log "Content artifacts (write tool targets, total $TOTAL_WRITES):"
+  if [ -n "$FINAL_JSONL" ]; then
+    node -e "
+      const lines=require('fs').readFileSync('$FINAL_JSONL','utf8').trim().split('\n');
+      for(const l of lines){try{const e=JSON.parse(l);
+      if(e.type==='message'&&e.message?.role==='assistant'&&Array.isArray(e.message.content)){
+        for(const b of e.message.content){if(b.name==='write'){
+          const p=b.input?.path||b.input?.filePath||b.input?.file_path||'?';
+          console.log('  '+p);}}}}catch{}}" 2>/dev/null | head -15
+  fi
 fi
 
 # Write metrics JSON
@@ -1536,7 +1553,7 @@ cat > "$LOG_DIR/metrics.json" << METRICS
   "constraints": $FINAL_CONSTRAINTS,
   "skills": $FINAL_SKILLS,
   "blueprints": $FINAL_BLUEPRINTS,
-  "mockPublishFiles": $FINAL_PUBLISH,
+  "writeToolCalls": ${TOTAL_WRITES:-0},
   "agentWorkspaces": $FINAL_WORKSPACES,
   "testResults": {
     "pass": $PASS,
@@ -1591,7 +1608,7 @@ echo "  Constraints: $FINAL_CONSTRAINTS"
 echo "  Skills:      $FINAL_SKILLS"
 echo "  Blueprints:  $FINAL_BLUEPRINTS"
 if [ "$ENGINE_ONLY" = false ]; then
-echo "  Publish:     $FINAL_PUBLISH"
+echo "  WriteTools:  ${TOTAL_WRITES:-0}"
 echo "  Workspaces:  $FINAL_WORKSPACES"
 fi
 echo ""
@@ -1620,7 +1637,7 @@ Violations:  $FINAL_VIOLATIONS
 Constraints: $FINAL_CONSTRAINTS
 Skills:      $FINAL_SKILLS
 Blueprints:  $FINAL_BLUEPRINTS
-Publish:     $FINAL_PUBLISH
+WriteTools:  ${TOTAL_WRITES:-0}
 Workspaces:  $FINAL_WORKSPACES
 
 Logs: $LOG_DIR/
