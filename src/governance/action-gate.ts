@@ -238,13 +238,27 @@ export class ActionGate {
         message: passed ? undefined : this.interpolateMessage(constraint.message, ctx),
       };
     } catch (err) {
-      // If expression fails to evaluate, treat as BLOCK (fail-closed)
+      const msg = err instanceof Error ? err.message : String(err);
+
+      // "undefined variable" means the constraint references data fields not present
+      // in this operation — the constraint is simply not applicable (PASS).
+      // Other errors (syntax, type, etc.) remain fail-closed (BLOCK).
+      if (msg.includes('undefined variable')) {
+        return {
+          constraintId: constraint.id,
+          policyId: constraint.policyId,
+          passed: true, // not applicable — skip
+          severity: constraint.severity,
+          message: undefined,
+        };
+      }
+
       return {
         constraintId: constraint.id,
         policyId: constraint.policyId,
         passed: false,
         severity: constraint.severity,
-        message: `Constraint evaluation error: ${err instanceof Error ? err.message : String(err)}`,
+        message: `Constraint evaluation error: ${msg}`,
       };
     }
   }

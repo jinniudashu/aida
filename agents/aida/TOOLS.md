@@ -43,6 +43,45 @@
 - `bps_next_steps` returns downstream services based on rule topology + a `recommendation` field suggesting the best next action. For non-deterministic events (natural language conditions), evaluate the condition yourself before proceeding.
 - Write tools may return an approval ID instead of executing — this means governance requires human review. Report the approval ID and Dashboard link to the user.
 
+## Governance Constraint Syntax
+
+When writing constraint conditions for `governance.yaml` or `bps_load_governance`:
+
+### Available context variables
+| Variable | Source | Always present |
+|----------|--------|---------------|
+| `tool` | tool name | yes |
+| `entityType`, `entityId` | tool input | yes (empty string if absent) |
+| `hour`, `minute`, `weekday`, `date` | current time | yes |
+| Any key from `data` patch | `bps_update_entity` input | **only if the operation includes that field** |
+
+### Scoping rules
+- **`scope.tools`** (required): which write tools this constraint applies to
+- **`scope.entityTypes`** (optional): only trigger for these entity types
+- **`scope.dataFields`** (optional but recommended): only trigger when the operation touches these fields — prevents false positives on unrelated updates
+
+### Undefined variables are skipped
+If a condition references a variable not present in the operation context (e.g. `publishReady == true` but the update only has `{ title: "..." }`), the constraint is treated as **not applicable** and passes silently. This means you don't need to guard every condition — just make sure `scope.dataFields` narrows the trigger appropriately.
+
+### Examples
+```yaml
+# Good: scope.dataFields ensures this only fires when publishReady is in the patch
+- id: content-publish-approval
+  scope:
+    tools: [bps_update_entity]
+    entityTypes: [geo-content]
+    dataFields: [publishReady]
+  condition: "publishReady == true"
+  onViolation: REQUIRE_APPROVAL
+
+# Time-based: always evaluable (hour is always present)
+- id: after-hours-block
+  scope:
+    tools: [bps_update_entity, bps_create_task]
+  condition: "hour >= 22 or hour < 6"
+  onViolation: BLOCK
+```
+
 ## Config Safety
 
 **Never manually edit `openclaw.json`** to register agents. Use `bps_register_agent` instead — it validates `tools.profile` (must be `minimal/coding/messaging/full`) before writing. An invalid value corrupts the config and **disables ALL tools for ALL subsequent turns** with no way to self-repair.

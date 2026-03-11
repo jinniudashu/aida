@@ -630,6 +630,15 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **2 FAIL 原因**：S3.06（Dashboard 延迟未看到全部种子实体），V5.2（Aida 重载管理约束从 3→2 个）— 均为 Aida 主动行为与静态种子的冲突，非系统缺陷
 - **新发现**：Governance 约束条件语法不兼容（expr-eval 变量访问 vs Aida 生成的条件），导致过度拦截但不影响管理闭环
 
+### 治理约束语法修复（2026-03-11，R3 #2 修复）
+- **问题**：`evaluateConstraint()` 对所有 expr-eval 错误 fail-closed（`passed: false`），包括 "undefined variable" 错误 — 导致不含目标字段的操作被误报为违规
+- **根因链**：Aida 生成约束（如 `publishReady == true`）无 `scope.dataFields` → 所有 `bps_update_entity` 调用均触发该约束 → 操作上下文无 `publishReady` 变量 → expr-eval 抛 "undefined variable" → fail-closed → 过度拦截（含 `bps_register_agent`）→ Agent workspace 创建失败
+- **修复**：`src/governance/action-gate.ts` `evaluateConstraint()` 区分两类错误：
+  - "undefined variable" → `passed: true`（约束不适用于此操作，静默跳过）
+  - 其他表达式错误（语法错误等）→ `passed: false`（仍 fail-closed）
+- **文档**：`agents/Aida/TOOLS.md` 新增 "Governance Constraint Syntax" 节（可用变量、scope 规则、示例）
+- **测试**：原 1 个 fail-closed 测试拆为 2 个（undefined variable → PASS + 语法错误 → BLOCK），总计 437 tests
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

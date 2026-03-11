@@ -480,11 +480,27 @@ describe('ActionGate', () => {
     expect(result2.verdict).toBe('BLOCK');
   });
 
-  it('should handle constraint evaluation errors as BLOCK (fail-closed)', () => {
+  it('should treat undefined variable as not-applicable (PASS)', () => {
+    store.loadConstraints([{
+      id: 'needs-field', policyId: 'p', label: 'Needs publishReady',
+      scope: { tools: ['bps_update_entity'] },
+      condition: 'publishReady == true',
+      onViolation: 'REQUIRE_APPROVAL', severity: 'MEDIUM', message: 'Publish approval',
+    }]);
+
+    // Operation does NOT include publishReady — constraint not applicable
+    const result = gate.check('bps_update_entity', {
+      entityType: 'content', entityId: 'c1', data: { title: 'hello' },
+    });
+    expect(result.verdict).toBe('PASS');
+    expect(result.checks[0].passed).toBe(true);
+  });
+
+  it('should handle genuine expression errors as BLOCK (fail-closed)', () => {
     store.loadConstraints([{
       id: 'bad-expr', policyId: 'p', label: 'Bad expression',
       scope: { tools: ['bps_update_entity'] },
-      condition: 'undefined_var.nested > 0',
+      condition: '(unclosed', // parse error, not undefined variable
       onViolation: 'BLOCK', severity: 'HIGH', message: 'Error',
     }]);
 
