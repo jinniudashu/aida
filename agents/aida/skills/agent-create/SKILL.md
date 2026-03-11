@@ -41,33 +41,42 @@ Follow the pattern from Aida's own SOUL.md:
 - Safety constraints specific to this role
 - Keep operational, not theoretical
 
-### OpenClaw Config
-Generate the `agents.list` entry for `openclaw.json`:
-```json
-{
-  "id": "{agent-id}",
-  "workspace": "~/.openclaw/workspace-{agent-id}",
-  "identity": {
-    "name": "{Name}",
-    "theme": "{one-line description}",
-    "emoji": "{emoji}"
-  },
-  "tools": {
-    "profile": "full",
-    "allow": ["{minimum required tool groups}"]
-  }
-}
+### Deploy via `bps_register_agent`
+
+**Do NOT manually edit `openclaw.json`.** Use the `bps_register_agent` tool which validates config and prevents corruption:
+
 ```
+bps_register_agent({
+  id: "{agent-id}",
+  name: "{Name}",
+  theme: "{one-line description}",
+  emoji: "{emoji}",
+  toolsProfile: "{profile}",       // must be: "minimal" | "coding" | "messaging" | "full"
+  toolsAllow: ["{tool groups}"],   // optional
+  workspace: {
+    identity: "{IDENTITY.md content}",
+    soul: "{SOUL.md content}",
+    agents: "{AGENTS.md content}"
+  }
+})
+```
+
+**`toolsProfile` values:**
+- `"minimal"` — read-only tools only
+- `"coding"` — read + write + exec
+- `"messaging"` — read + messaging tools
+- `"full"` — all tools enabled
+
+Choose the minimum privilege level. When unsure, use `"full"`.
 
 ## Phase 3: Testing
 
-1. Deploy workspace files to `~/.openclaw/workspace-{agent-id}/`
-2. Merge config into `openclaw.json`
-3. Send test messages to verify:
+1. `bps_register_agent` has already deployed workspace files and registered the agent.
+2. Send test messages to verify:
    - Basic identity (ask "who are you?")
    - Core capability (a task within its role)
    - Boundary respect (something it should refuse)
-4. If tests fail, fix and re-test
+3. If tests fail, fix and re-test
 
 ## Phase 4: Deployment
 

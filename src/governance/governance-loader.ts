@@ -8,6 +8,7 @@ import type {
   Severity,
   ViolationAction,
 } from './types.js';
+import { DEFAULT_SCOPE_WRITE_TOOLS } from './constants.js';
 
 const VALID_SEVERITIES = new Set<Severity>(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 const VALID_ACTIONS = new Set<ViolationAction>(['BLOCK', 'REQUIRE_APPROVAL']);
@@ -47,13 +48,12 @@ export function loadGovernanceFromString(yamlContent: string): GovernanceLoadRes
   if (!Array.isArray(raw.policies) && Array.isArray(rawAny2.constraints)) {
     const flatConstraints = rawAny2.constraints as Array<Record<string, unknown>>;
     // Normalize flat constraint fields: Aida may write `action` instead of `onViolation`,
-    // and may omit `scope.tools` (default to all write tools)
-    const ALL_WRITE_TOOLS = ['bps_update_entity', 'bps_create_task', 'bps_update_task', 'bps_complete_task', 'bps_create_skill'];
+    // and may omit `scope.tools` (default to all write tools except bps_load_governance)
     const normalized = flatConstraints.map(c => ({
       ...c,
       label: c.label ?? c.id ?? 'unnamed',
       onViolation: c.onViolation ?? c.action ?? 'BLOCK',
-      scope: c.scope ?? { tools: ALL_WRITE_TOOLS },
+      scope: c.scope ?? { tools: [...DEFAULT_SCOPE_WRITE_TOOLS] },
     }));
     raw.policies = [{
       id: 'auto-policy',

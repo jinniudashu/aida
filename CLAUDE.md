@@ -528,6 +528,69 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - R6→R7 评分基准变化：R7 首次基于完整数据，分数变化含评分精度提升因素
 - **推荐生产配置**：`openrouter/openai/gpt-5.4`（主）+ `openrouter/anthropic/claude-opus-4.6`（备）+ `moonshot/kimi-k2.5`（替补）
 
+### 三框架差距分析 P0 实施（2026-03-11）
+- 差距分析报告：`archive/AIDA差距分析-三框架视角 (2026-03-11).md`
+- **分析框架**：操作系统理论 × 控制论 × 有限理性，三框架交叉验证
+- **P0-a 治理绕过封堵**（已完成）：
+  - `src/governance/constants.ts` 新建 — `GATED_WRITE_TOOLS` 单一来源（8 个写操作工具）
+  - `bps_load_blueprint`、`bps_register_agent`、`bps_load_governance` 纳入 ActionGate 治理
+  - `buildEvalContext` 新增工具专用上下文字段（toolsProfile、persist、hasYaml、inlineYaml）
+  - `DEFAULT_SCOPE_WRITE_TOOLS`（7 个，排除 `bps_load_governance`）用于 flat-format 约束默认 scope
+  - Dashboard `replayToolCall` 新增 3 个 case
+  - 治理覆盖：5/16 → 8/16 工具（8 读 + 8 写全部受治理管控）
+- **P0-b 调度器基础修复**（已完成）：
+  - ProcessDef 新增 `deadline` 字段，`bps_processes` 表新增 `deadline` 列
+  - `bps_create_task` 暴露 `priority`（int）+ `deadline`（ISO 8601）参数
+  - `bps_scan_work` 新增 `overdueTasks` 分组 + `sortByUrgency`（deadline ASC, priority DESC）
+- **P0-c outcome 结构化**（已完成）：
+  - `bps_complete_task` 新增 `outcome` 参数（success/partial/failed，默认 success）
+  - outcome 存入 context snapshot `_outcome` 字段
+  - `bps_scan_work` 新增 `outcomeDistribution` 摘要（success/partial/failed 计数）
+- **测试**：+20 新测试（13 P0-a + 4 P0-b + 3 P0-c），总计 419 tests
+- **BPS tools**：16 个（14 base + 2 conditional），8 个受治理管控
+
+### 三框架差距分析 P1 实施（2026-03-11）
+- **P1-a 熔断器自动恢复**（已完成）：
+  - `ActionGate.tryCooldownRecovery()` — 冷却期后自动降级（DISCONNECTED→RESTRICTED→WARNING→NORMAL）
+  - 振荡检测：1h 内 >3 次状态转移则锁定当前状态，emit `governance:oscillation_detected`
+  - `CB_DOWNGRADE` 映射 + `stateTransitionCount` 追踪
+- **P1-b 信息摘要层**（已完成）：
+  - `bps_scan_work` 增强：各分组返回 top-5（`{items, total, showing}` 元数据）+ `summary` 一行摘要
+  - `bps_query_entities` 新增 `brief` 模式（只返回 entityType/entityId/version/updatedAt，无 data）
+  - `bps_next_steps` 新增 `recommendation` 字段（推荐下一步动作）
+- **P1-c Skill 使用追踪**（已完成）：
+  - `bps_skill_metrics` SQLite 表（skillName, invokedAt, outcome, durationMs）
+  - `src/store/skill-metrics-store.ts` — record/getSummaries/getDormantSkillNames
+  - `bps_complete_task` 自动记录 skill 指标（serviceId 匹配 skillsDir 目录）
+  - `bps_scan_work` 新增 `dormantSkills`（90 天未使用的 Skill 列表）
+  - `BpsEngine` 接口扩展 `skillMetricsStore` 字段
+- **测试**：+10 新测试（2 P1-a + 4 P1-b + 4 P1-c），总计 429 tests
+
+### 三框架差距分析 P2 实施（2026-03-11）
+- **P2-a 进程组**（已完成）：
+  - `ProcessDef` 新增 `groupId` 字段，`bps_processes` 表新增 `group_id` 列 + 索引
+  - `bps_create_task` 暴露 `groupId` 参数
+  - 新增 `bps_batch_update` 工具（#17）：按 groupId 批量更新任务状态（支持 filterState 过滤）
+  - `GATED_WRITE_TOOLS` 扩展为 9 个（+bps_batch_update）
+  - `taskSummary` 返回 groupId 字段
+- **P2-b 实体关系声明**（已完成）：
+  - `DossierDef` 新增 `relations` 字段（`Array<EntityRelation>`），`bps_dossiers` 表新增 `relations TEXT` 列
+  - `EntityRelation` 类型定义：`targetEntityType + targetEntityId + relationType`（depends_on/part_of/references）
+  - `DossierStore.setRelations()` 方法
+  - `bps_update_entity` 接受 `relations` 参数（替换式）
+  - `bps_get_entity` 返回 `relatedEntities` 摘要（类型 + ID + updatedAt + version）
+  - **不做级联更新** — 变更传播由 Agent 决定
+- **测试**：+5 新测试（3 P2-a + 2 P2-b），总计 434 tests
+- **BPS tools**：17 个（15 base + 2 conditional），9 个受治理管控
+
+### 三框架差距分析 P3 实施（2026-03-11）
+- **P3 审批模式学习**（已完成）：
+  - `GovernanceStore.getConstraintEffectiveness()` — 按 constraintId 聚合违规计数 + 审批通过/拒绝率
+  - 策略建议引擎：审批通过率 >90%（样本≥20）→ "过于严格，考虑放宽"；拒绝率 >80% → "有效，考虑升级为 BLOCK"
+  - `bps_governance_status` 返回 `constraintEffectiveness` 字段
+  - **不做自动调整** — 策略变更始终由人类确认
+- **测试**：+2 新测试，总计 436 tests（P0→P3 共 +45 新测试）
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地

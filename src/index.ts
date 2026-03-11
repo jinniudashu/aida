@@ -20,6 +20,7 @@ export { DossierStore, type DossierSearchOptions, type DossierSearchResult, type
 export { StatsStore, type TimeSeriesPoint, type StatsSnapshot } from './store/stats-store.js';
 export { DashboardQueryService, type DashboardOverview, type ProcessKanbanColumn,
          type EntityDetail, type ProcessDetail } from './store/dashboard-query-service.js';
+export { SkillMetricsStore, type SkillMetricRecord, type SkillUsageSummary } from './store/skill-metrics-store.js';
 
 // ——— Knowledge exports ———
 export { KnowledgeStore } from './knowledge/knowledge-store.js';
@@ -40,6 +41,7 @@ export { loadAidaProject, initAidaProject, getDefaultAidaDir,
 export { GovernanceStore } from './governance/governance-store.js';
 export { ActionGate } from './governance/action-gate.js';
 export { loadGovernanceFile, loadGovernanceFromString, type GovernanceLoadResult } from './governance/governance-loader.js';
+export { GATED_WRITE_TOOLS, DEFAULT_SCOPE_WRITE_TOOLS } from './governance/constants.js';
 export * from './governance/types.js';
 
 // ——— Integration (OpenClaw) ———
@@ -58,6 +60,7 @@ import { DashboardQueryService } from './store/dashboard-query-service.js';
 import { ProcessTracker } from './engine/process-tracker.js';
 import type { DatabaseSync } from 'node:sqlite';
 import { KnowledgeStore } from './knowledge/knowledge-store.js';
+import { SkillMetricsStore } from './store/skill-metrics-store.js';
 
 export interface BpsEngineConfig {
   db?: DatabaseSync;
@@ -72,6 +75,7 @@ export interface BpsEngine {
   dashboardQuery: DashboardQueryService;
   tracker: ProcessTracker;
   knowledgeStore: KnowledgeStore;
+  skillMetricsStore: SkillMetricsStore;
 }
 
 /**
@@ -87,6 +91,7 @@ export function createBpsEngine(config: BpsEngineConfig = {}): BpsEngine {
 
   // Knowledge subsystem
   const knowledgeStore = new KnowledgeStore(dossierStore);
+  const skillMetricsStore = new SkillMetricsStore(db);
 
   const tracker = new ProcessTracker({
     processStore,
@@ -107,5 +112,5 @@ export function createBpsEngine(config: BpsEngineConfig = {}): BpsEngine {
     statsStore.recordEvent('dossier.committed', { entityType: e.entityType });
   });
 
-  return { db, processStore, blueprintStore, dossierStore, statsStore, dashboardQuery, tracker, knowledgeStore };
+  return { db, processStore, blueprintStore, dossierStore, statsStore, dashboardQuery, tracker, knowledgeStore, skillMetricsStore };
 }

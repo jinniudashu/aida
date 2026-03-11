@@ -15,6 +15,8 @@ export interface CreateProcessInput {
   entityId?: string;
   programEntrypoint?: string;
   priority?: number;
+  deadline?: string;
+  groupId?: string;
   name?: string;
 }
 
@@ -25,6 +27,7 @@ export interface ProcessQueryFilter {
   entityId?: string;
   operatorId?: string;
   parentId?: string;
+  groupId?: string;
   createdAfter?: string;
   createdBefore?: string;
   limit?: number;
@@ -64,10 +67,10 @@ export class ProcessStore {
     );
     this.insertStmt = db.prepare(`
       INSERT INTO bps_processes (id, pid, name, parent_id, previous_id, service_id,
-        state, priority, entity_type, entity_id, operator_id, creator_id,
+        state, priority, deadline, group_id, entity_type, entity_id, operator_id, creator_id,
         program_entrypoint, agent_session_key, created_at, updated_at)
       VALUES (@id, @pid, @name, @parentId, @previousId, @serviceId,
-        @state, @priority, @entityType, @entityId, @operatorId, @creatorId,
+        @state, @priority, @deadline, @groupId, @entityType, @entityId, @operatorId, @creatorId,
         @programEntrypoint, @agentSessionKey, @createdAt, @updatedAt)
     `);
     this.getStmt = db.prepare(`SELECT * FROM bps_processes WHERE id = ?`);
@@ -121,6 +124,8 @@ export class ProcessStore {
       serviceId: input.serviceId,
       state: input.state ?? 'OPEN',
       priority: input.priority ?? 0,
+      deadline: input.deadline ?? null,
+      groupId: input.groupId ?? null,
       entityType: input.entityType ?? null,
       entityId: input.entityId ?? null,
       operatorId: input.operatorId ?? null,
@@ -238,6 +243,10 @@ export class ProcessStore {
       conditions.push('parent_id = ?');
       params.push(filter.parentId);
     }
+    if (filter.groupId) {
+      conditions.push('group_id = ?');
+      params.push(filter.groupId);
+    }
     if (filter.createdAfter) {
       conditions.push('created_at > ?');
       params.push(filter.createdAfter);
@@ -311,6 +320,8 @@ export class ProcessStore {
       serviceId: row.service_id as string,
       state: row.state as ProcessDef['state'],
       priority: row.priority as number,
+      deadline: row.deadline as string | undefined,
+      groupId: row.group_id as string | undefined,
       entityType: row.entity_type as string | undefined,
       entityId: row.entity_id as string | undefined,
       operatorId: row.operator_id as string | undefined,

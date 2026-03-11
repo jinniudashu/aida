@@ -310,14 +310,14 @@ describe('Capability 2: bps_scan_work Efficiency', () => {
     expect(scan.activePlans).toBeDefined();
 
     // Verify correct categorization
-    expect(scan.failedTasks.length).toBeGreaterThanOrEqual(1);
-    expect(scan.failedTasks.some((t: any) => t.entityId === 'store-scan-3')).toBe(true);
+    expect(scan.failedTasks.total).toBeGreaterThanOrEqual(1);
+    expect(scan.failedTasks.items.some((t: any) => t.entityId === 'store-scan-3')).toBe(true);
 
-    expect(scan.inProgressTasks.length).toBeGreaterThanOrEqual(1);
-    expect(scan.inProgressTasks.some((t: any) => t.entityId === 'store-scan-1')).toBe(true);
+    expect(scan.inProgressTasks.total).toBeGreaterThanOrEqual(1);
+    expect(scan.inProgressTasks.items.some((t: any) => t.entityId === 'store-scan-1')).toBe(true);
 
-    expect(scan.recentlyCompleted.length).toBeGreaterThanOrEqual(1);
-    expect(scan.recentlyCompleted.some((t: any) => t.entityId === 'store-scan-2')).toBe(true);
+    expect(scan.recentlyCompleted.total).toBeGreaterThanOrEqual(1);
+    expect(scan.recentlyCompleted.items.some((t: any) => t.entityId === 'store-scan-2')).toBe(true);
 
     expect(scan.activePlans.length).toBeGreaterThanOrEqual(1);
     expect(scan.activePlans.some((p: any) => p.entityId === 'plan-geo-rollout')).toBe(true);
@@ -339,11 +339,11 @@ describe('Capability 2: bps_scan_work Efficiency', () => {
     // Method B: 1 call (new way)
     const scanResult = await call(tools, 'bps_scan_work');
 
-    // Verify equivalence
-    expect(scanResult.failedTasks.length).toBe(failedSeparate.count);
-    expect(scanResult.openTasks.length).toBe(openSeparate.count);
-    expect(scanResult.inProgressTasks.length).toBe(inProgressSeparate.count);
-    expect(scanResult.recentlyCompleted.length).toBe(Math.min(completedSeparate.count, 10));
+    // Verify equivalence (total counts match, items may be capped at top-N)
+    expect(scanResult.failedTasks.total).toBe(failedSeparate.count);
+    expect(scanResult.openTasks.total).toBe(openSeparate.count);
+    expect(scanResult.inProgressTasks.total).toBe(inProgressSeparate.count);
+    expect(scanResult.recentlyCompleted.total).toBe(Math.min(completedSeparate.count, 10));
     expect(scanResult.activePlans.length).toBe(plansSeparate.count);
   });
 });
@@ -613,9 +613,9 @@ describe('Integration: Full Heartbeat Inspection Cycle', () => {
     // --- Heartbeat Step 1: Scan work landscape ---
     const scan = await call(tools, 'bps_scan_work');
 
-    expect(scan.failedTasks.length).toBeGreaterThanOrEqual(1);
-    expect(scan.inProgressTasks.length).toBeGreaterThanOrEqual(1);
-    expect(scan.recentlyCompleted.length).toBeGreaterThanOrEqual(1);
+    expect(scan.failedTasks.total).toBeGreaterThanOrEqual(1);
+    expect(scan.inProgressTasks.total).toBeGreaterThanOrEqual(1);
+    expect(scan.recentlyCompleted.total).toBeGreaterThanOrEqual(1);
     expect(scan.activePlans.length).toBeGreaterThanOrEqual(1);
 
     // --- Heartbeat Step 2: Triage failed tasks ---

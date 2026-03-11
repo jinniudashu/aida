@@ -122,6 +122,8 @@ CREATE TABLE IF NOT EXISTS bps_processes (
   service_id TEXT NOT NULL,
   state TEXT NOT NULL DEFAULT 'OPEN',
   priority INTEGER DEFAULT 0,
+  deadline TEXT,
+  group_id TEXT,
   entity_type TEXT,
   entity_id TEXT,
   operator_id TEXT,
@@ -162,6 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_processes_state ON bps_processes(state);
 CREATE INDEX IF NOT EXISTS idx_processes_service ON bps_processes(service_id);
 CREATE INDEX IF NOT EXISTS idx_processes_operator ON bps_processes(operator_id);
 CREATE INDEX IF NOT EXISTS idx_processes_entity ON bps_processes(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_processes_group ON bps_processes(group_id);
 CREATE INDEX IF NOT EXISTS idx_snapshots_process ON bps_context_snapshots(process_id, version);
 CREATE INDEX IF NOT EXISTS idx_rules_target ON bps_service_rules(target_service_id, service_id);
 
@@ -171,6 +174,7 @@ CREATE TABLE IF NOT EXISTS bps_dossiers (
   entity_id TEXT NOT NULL,
   lifecycle TEXT NOT NULL DEFAULT 'ACTIVE',
   current_version INTEGER NOT NULL DEFAULT 0,
+  relations TEXT DEFAULT '[]',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   UNIQUE(entity_type, entity_id)
@@ -230,6 +234,18 @@ CREATE TABLE IF NOT EXISTS bps_task_log (
 
 CREATE INDEX IF NOT EXISTS idx_task_log_task ON bps_task_log(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_log_time ON bps_task_log(timestamp);
+
+-- Skill usage metrics
+CREATE TABLE IF NOT EXISTS bps_skill_metrics (
+  id TEXT PRIMARY KEY,
+  skill_name TEXT NOT NULL,
+  invoked_at TEXT NOT NULL,
+  outcome TEXT NOT NULL DEFAULT 'success',
+  duration_ms INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_skill_metrics_name ON bps_skill_metrics(skill_name);
+CREATE INDEX IF NOT EXISTS idx_skill_metrics_time ON bps_skill_metrics(invoked_at);
 `;
 
 export function createDatabase(dbPath: string): DatabaseSync {

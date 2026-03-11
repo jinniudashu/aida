@@ -32,6 +32,8 @@ export const ProcessDef = Type.Object({
   serviceId: BpsId,
   state: TaskState,
   priority: Type.Integer({ default: 0 }),
+  deadline: Type.Optional(Type.String({ description: 'ISO 8601 deadline for the task' })),
+  groupId: Type.Optional(Type.String({ description: 'Group ID for batch operations (e.g. action-plan ID)' })),
   entityType: Type.Optional(Type.String()),
   entityId: Type.Optional(Type.String()),
   operatorId: Type.Optional(BpsId),

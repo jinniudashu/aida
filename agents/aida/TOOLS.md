@@ -9,25 +9,29 @@
 | `bps_get_task` | Get a single task by ID |
 | `bps_query_tasks` | Query tasks (filter by state/serviceId/entityType) |
 | `bps_get_entity` | Get a single entity by erpsysId |
-| `bps_query_entities` | Query entities (filter by entityType, with search) |
-| `bps_next_steps` | Get downstream services from rules after a service completes |
-| `bps_scan_work` | Scan for actionable work: FAILED tasks, due plan items, pending approvals |
+| `bps_query_entities` | Query entities (filter by entityType). Use `brief: true` to get compact listing without full data |
+| `bps_next_steps` | Get downstream services from rules + `recommendation` field for next action |
+| `bps_scan_work` | Scan work landscape: top-5 per group (overdue/failed/open/in-progress) with `{total, showing}` metadata + `summary` string + outcome distribution + action-plans + dormant skills (90d unused) |
 | `bps_governance_status` | Query circuit breaker state, violations, pending approvals |
-| `bps_load_blueprint` | Load/compile a YAML blueprint (simplified format: services + flow) |
 
 ### Write (governance-gated — ActionGate checks constraints before execution)
-| Tool | Purpose | Governance |
-|------|---------|------------|
-| `bps_create_task` | Create a new task for a service | Checked |
-| `bps_update_task` | Update task metadata | Checked |
-| `bps_complete_task` | Mark a task as completed with result | Checked |
-| `bps_update_entity` | Update entity data (smartMerge: arrays append, objects deep-merge) | Checked |
-| `bps_create_skill` | Create a new Skill file in the workspace | Checked |
+| Tool | Purpose |
+|------|---------|
+| `bps_create_task` | Create a new task (accepts `priority` int + `deadline` ISO 8601 + `groupId`) |
+| `bps_update_task` | Update task metadata |
+| `bps_complete_task` | Mark task as completed (`outcome`: success/partial/failed) |
+| `bps_update_entity` | Update entity data (smartMerge: arrays append, objects deep-merge). Accepts `relations` for entity linking |
+| `bps_batch_update` | Batch-update all tasks in a group by `groupId` (e.g. cancel all tasks under an action plan) |
+| `bps_create_skill` | Create a new Skill file in the workspace |
+| `bps_load_blueprint` | Load/compile a YAML blueprint (simplified format: services + flow) |
+| `bps_register_agent` | Create a new Agent: workspace files + openclaw.json registration (validates config) |
+| `bps_load_governance` | Reload governance constraints from YAML (meta-governance: requires explicit scope) |
 
 ## Common Patterns
 
-- **Status check**: `bps_scan_work` → one call returns failures + due items + approvals
-- **Entity lifecycle**: `bps_query_entities` → `bps_get_entity` → `bps_update_entity`
+- **Status check**: `bps_scan_work` → one call returns top-5 per group (sorted by deadline then priority) + `summary` string + outcome distribution. Use `total` field to know if there are more.
+- **Entity lifecycle**: `bps_query_entities` (brief=true for listing) → `bps_get_entity` (includes related entities) → `bps_update_entity` (accepts `relations`)
+- **Batch operations**: `bps_create_task` with `groupId` → ... → `bps_batch_update` to cancel/complete all
 - **Task flow**: `bps_create_task` → `bps_update_task` → `bps_complete_task` → `bps_next_steps`
 - **Blueprint load**: write simplified YAML (services + flow) → `bps_load_blueprint` → verify `health: "complete"`
 - **Content publish (two-stage)**: `write` draft to `~/.aida/mock-publish-tmp/{platform}/` → `bps_update_entity` with `publishReady: true` (governance intercepts → REQUIRE_APPROVAL) → after human approves, files auto-promote to `mock-publish/`
@@ -36,5 +40,9 @@
 
 - `bps_update_entity` uses **smartMerge**: arrays are appended (not replaced), objects are deep-merged. To replace an array, set it to `null` first then set the new value.
 - `bps_load_blueprint` auto-compiles simplified format (services + flow) into full schema (events + instructions + rules). If the YAML already has events/instructions/rules, it loads directly without compilation.
-- `bps_next_steps` returns downstream services based on rule topology. For non-deterministic events (natural language conditions), evaluate the condition yourself before proceeding.
+- `bps_next_steps` returns downstream services based on rule topology + a `recommendation` field suggesting the best next action. For non-deterministic events (natural language conditions), evaluate the condition yourself before proceeding.
 - Write tools may return an approval ID instead of executing — this means governance requires human review. Report the approval ID and Dashboard link to the user.
+
+## Config Safety
+
+**Never manually edit `openclaw.json`** to register agents. Use `bps_register_agent` instead — it validates `tools.profile` (must be `minimal/coding/messaging/full`) before writing. An invalid value corrupts the config and **disables ALL tools for ALL subsequent turns** with no way to self-repair.

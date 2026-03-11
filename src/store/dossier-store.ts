@@ -1,7 +1,7 @@
 import type { DatabaseSync, StatementSync, SQLInputValue } from 'node:sqlite';
 import { v4 as uuid } from 'uuid';
 import { now } from '../schema/common.js';
-import type { DossierDef, DossierVersion, DossierLifecycle } from '../schema/dossier.js';
+import type { DossierDef, DossierVersion, DossierLifecycle, EntityRelation } from '../schema/dossier.js';
 
 export interface DossierSearchOptions {
   entityType?: string;
@@ -327,13 +327,29 @@ export class DossierStore {
     });
   }
 
+  /** Update relations for a dossier (replaces existing relations) */
+  setRelations(dossierId: string, relations: EntityRelation[]): void {
+    this.db.prepare(
+      'UPDATE bps_dossiers SET relations = ?, updated_at = ? WHERE id = ?',
+    ).run(JSON.stringify(relations), now(), dossierId);
+  }
+
   private rowToDossier(row: Record<string, unknown>): DossierDef {
+    const relationsRaw = row.relations as string | undefined;
+    let relations: EntityRelation[] | undefined;
+    if (relationsRaw) {
+      try {
+        const parsed = JSON.parse(relationsRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) relations = parsed;
+      } catch { /* ignore parse errors */ }
+    }
     return {
       id: row.id as string,
       entityType: row.entity_type as string,
       entityId: row.entity_id as string,
       lifecycle: row.lifecycle as DossierLifecycle,
       currentVersion: row.current_version as number,
+      relations,
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };

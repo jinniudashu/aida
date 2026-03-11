@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { streamSSE } from 'hono/streaming'
-import { type BpsEngine, GovernanceStore, loadBlueprintFromString } from '../../src/index.js'
+import { type BpsEngine, GovernanceStore, loadBlueprintFromString, loadGovernanceFromString } from '../../src/index.js'
 import { engine, governanceStore as defaultGovernanceStore } from './engine.js'
 
 /**
@@ -15,6 +15,7 @@ function replayToolCall(
   engine: BpsEngine,
   tool: string,
   toolInput: Record<string, unknown>,
+  opts?: { governanceStore?: GovernanceStore },
 ): Record<string, unknown> {
   switch (tool) {
     case 'bps_update_entity': {
@@ -81,6 +82,45 @@ function replayToolCall(
       fs.mkdirSync(skillDir, { recursive: true })
       fs.writeFileSync(skillPath, content, 'utf-8')
       return { success: true, tool, name, path: skillPath }
+    }
+    case 'bps_load_blueprint': {
+      const { yaml, persist } = toolInput as { yaml: string; persist?: boolean }
+      if (!yaml) return { success: false, tool, error: 'Missing yaml content' }
+      const loadResult = loadBlueprintFromString(yaml, engine.blueprintStore)
+      if (loadResult.errors.length > 0) {
+        return { success: false, tool, errors: loadResult.errors }
+      }
+      if (persist !== false && loadResult.services > 0) {
+        const blueprintsDir = path.join(os.homedir(), '.aida', 'blueprints')
+        fs.mkdirSync(blueprintsDir, { recursive: true })
+        const name = `approved-${Date.now()}.yaml`
+        fs.writeFileSync(path.join(blueprintsDir, name), yaml, 'utf-8')
+      }
+      return { success: true, tool, services: loadResult.services, rules: loadResult.rules }
+    }
+    case 'bps_register_agent': {
+      // Agent registration is complex (writes workspace + edits openclaw.json).
+      // After approval, the agent should retry the tool call directly.
+      return { success: true, tool, note: 'Agent registration approved. The agent should retry bps_register_agent.' }
+    }
+    case 'bps_load_governance': {
+      const govStore = opts?.governanceStore
+      if (!govStore) return { success: false, tool, error: 'Governance store not available' }
+      const { yaml: govYaml } = toolInput as { yaml?: string }
+      if (!govYaml) {
+        // Reload from file
+        const govPath = path.join(os.homedir(), '.aida', 'governance.yaml')
+        if (!fs.existsSync(govPath)) return { success: false, tool, error: 'governance.yaml not found' }
+        const content = fs.readFileSync(govPath, 'utf-8')
+        const parsed = loadGovernanceFromString(content)
+        if (parsed.errors.length > 0) return { success: false, tool, errors: parsed.errors }
+        const count = govStore.loadConstraints(parsed.constraints)
+        return { success: true, tool, constraintsLoaded: count }
+      }
+      const parsed = loadGovernanceFromString(govYaml)
+      if (parsed.errors.length > 0) return { success: false, tool, errors: parsed.errors }
+      const count = govStore.loadConstraints(parsed.constraints)
+      return { success: true, tool, constraintsLoaded: count }
     }
     default:
       return { success: false, error: `Unknown tool: ${tool}` }
@@ -1088,7 +1128,7 @@ app.post('/api/governance/approvals/:id/decide', async (c) => {
     let executionResult: Record<string, unknown> | null = null
     if (decision === 'APPROVED') {
       try {
-        executionResult = replayToolCall(engine, approval.tool, approval.toolInput)
+        executionResult = replayToolCall(engine, approval.tool, approval.toolInput, { governanceStore })
       } catch (err) {
         executionResult = { success: false, error: `Replay failed: ${err instanceof Error ? err.message : String(err)}` }
       }

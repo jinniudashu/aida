@@ -12,12 +12,24 @@ export type DossierLifecycle = Static<typeof DossierLifecycle>;
  * 实体档案定义
  * id 即 erpsysId —— 业务空间全局唯一标识，可跨 entityType 一步定位
  */
+export const EntityRelation = Type.Object({
+  targetEntityType: Type.String(),
+  targetEntityId: Type.String(),
+  relationType: Type.Union([
+    Type.Literal('depends_on'),
+    Type.Literal('part_of'),
+    Type.Literal('references'),
+  ]),
+});
+export type EntityRelation = Static<typeof EntityRelation>;
+
 export const DossierDef = Type.Object({
   id: BpsId,
   entityType: Type.String(),
   entityId: Type.String(),
   lifecycle: DossierLifecycle,
   currentVersion: Type.Integer({ minimum: 0 }),
+  relations: Type.Optional(Type.Array(EntityRelation)),
   createdAt: Type.String(),
   updatedAt: Type.String(),
 });

@@ -40,6 +40,7 @@ export function registerBpsPlugin(
     blueprintStore: engine.blueprintStore,
     processStore: engine.processStore,
     dossierStore: engine.dossierStore,
+    skillMetricsStore: engine.skillMetricsStore,
     logger,
   });
 

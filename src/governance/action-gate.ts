@@ -8,15 +8,10 @@ import type {
   CircuitBreakerConfig,
   Verdict,
 } from './types.js';
+import { GATED_WRITE_TOOLS } from './constants.js';
 
 /** Tools that are subject to governance checks (write operations) */
-const GATED_TOOLS = new Set([
-  'bps_update_entity',
-  'bps_create_task',
-  'bps_update_task',
-  'bps_complete_task',
-  'bps_create_skill',
-]);
+const GATED_TOOLS = new Set<string>(GATED_WRITE_TOOLS);
 
 /** Default circuit breaker config if not specified */
 const DEFAULT_CB_CONFIG: CircuitBreakerConfig = {
@@ -49,6 +44,9 @@ export class ActionGate {
         circuitBreakerState: this.store.getCircuitBreakerState().state,
       };
     }
+
+    // Try cooldown auto-recovery before evaluating constraints
+    this.tryCooldownRecovery();
 
     const cbState = this.store.getCircuitBreakerState().state;
 
@@ -202,6 +200,19 @@ export class ActionGate {
     if (input.name !== undefined) ctx.name = input.name;
     if (input.state !== undefined) ctx.state = input.state;
 
+    // Tool-specific context enrichment for non-entity tools
+    if (toolName === 'bps_load_blueprint') {
+      ctx.persist = input.persist !== false;
+      ctx.hasYaml = typeof input.yaml === 'string';
+    }
+    if (toolName === 'bps_register_agent') {
+      if (input.id !== undefined) ctx.agentId = input.id;
+      if (input.toolsProfile !== undefined) ctx.toolsProfile = input.toolsProfile;
+    }
+    if (toolName === 'bps_load_governance') {
+      ctx.inlineYaml = typeof input.yaml === 'string';
+    }
+
     return ctx;
   }
 
@@ -266,6 +277,58 @@ export class ActionGate {
 
     // Otherwise REQUIRE_APPROVAL
     return 'REQUIRE_APPROVAL';
+  }
+
+  /** Downgrade order for cooldown recovery */
+  private static readonly CB_DOWNGRADE: Record<string, CircuitBreakerState> = {
+    DISCONNECTED: 'RESTRICTED',
+    RESTRICTED: 'WARNING',
+    WARNING: 'NORMAL',
+  };
+
+  /** Track recent state transitions for oscillation detection */
+  private stateTransitionCount = 0;
+  private stateTransitionWindowStart = Date.now();
+
+  /**
+   * If cooldown is configured and enough time has passed since the last state change
+   * with no new violations in the window, auto-downgrade the circuit breaker one level.
+   */
+  private tryCooldownRecovery(): void {
+    const cooldownStr = this.cbConfig.cooldown;
+    if (!cooldownStr) return;
+
+    const { state, lastStateChange } = this.store.getCircuitBreakerState();
+    if (state === 'NORMAL') return;
+
+    const cooldownMs = parseWindowDuration(cooldownStr);
+    const elapsed = Date.now() - new Date(lastStateChange).getTime();
+    if (elapsed < cooldownMs) return;
+
+    // Check for new violations in the window since the last state change
+    const criticalCount = this.store.countViolationsSince('CRITICAL', lastStateChange);
+    const highCount = this.store.countViolationsSince('HIGH', lastStateChange);
+    if (criticalCount > 0 || highCount > 0) return;
+
+    // Oscillation detection: if >3 transitions in 1h, lock state
+    const now = Date.now();
+    if (now - this.stateTransitionWindowStart > 60 * 60 * 1000) {
+      this.stateTransitionCount = 0;
+      this.stateTransitionWindowStart = now;
+    }
+    this.stateTransitionCount++;
+    if (this.stateTransitionCount > 3) {
+      this.store.emit('governance:oscillation_detected', { state, transitionCount: this.stateTransitionCount });
+      return; // Lock — don't downgrade
+    }
+
+    const newState = ActionGate.CB_DOWNGRADE[state] ?? 'NORMAL';
+    this.store.updateCircuitBreaker(newState, {
+      critical: 0,
+      high: 0,
+      windowStart: new Date().toISOString(),
+    });
+    this.store.emit('governance:cooldown_recovery', { from: state, to: newState });
   }
 
   private updateCircuitBreaker(): CircuitBreakerState {

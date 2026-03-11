@@ -299,6 +299,68 @@ export class GovernanceStore extends EventEmitter {
     this.emit('governance:approval_decided', { id, status, approvedBy: approvedBy ?? null, decidedAt });
   }
 
+  // ——— Analytics ———
+
+  /** Get constraint effectiveness stats: per-constraint violation count + approval pass/reject rates */
+  getConstraintEffectiveness(): Array<{
+    constraintId: string;
+    label: string;
+    severity: string;
+    onViolation: string;
+    violationCount: number;
+    approvalCount: number;
+    approvedCount: number;
+    rejectedCount: number;
+    approvalRate: number | null;
+    suggestion: string | null;
+  }> {
+    const constraints = this.listConstraints();
+    if (constraints.length === 0) return [];
+
+    return constraints.map(c => {
+      // Count violations for this constraint
+      const violRow = this.db.prepare(
+        'SELECT COUNT(*) as count FROM bps_governance_violations WHERE constraint_id = ?',
+      ).get(c.id) as { count: number };
+
+      // Count approvals for this constraint (all statuses)
+      const allApprovals = this.db.prepare(
+        'SELECT status, COUNT(*) as count FROM bps_governance_approvals WHERE constraint_id = ? GROUP BY status',
+      ).all(c.id) as Array<{ status: string; count: number }>;
+
+      const approvalMap: Record<string, number> = {};
+      for (const row of allApprovals) approvalMap[row.status] = row.count;
+
+      const approvedCount = approvalMap['APPROVED'] ?? 0;
+      const rejectedCount = approvalMap['REJECTED'] ?? 0;
+      const totalDecided = approvedCount + rejectedCount;
+      const approvalRate = totalDecided >= 5 ? approvedCount / totalDecided : null;
+
+      // Generate suggestion
+      let suggestion: string | null = null;
+      if (totalDecided >= 20 && approvalRate !== null) {
+        if (approvalRate > 0.9) {
+          suggestion = 'This constraint may be too strict — 90%+ of requests are approved. Consider relaxing the condition.';
+        } else if (approvalRate < 0.2) {
+          suggestion = 'This constraint is effective — 80%+ of requests are rejected. Consider upgrading to BLOCK.';
+        }
+      }
+
+      return {
+        constraintId: c.id,
+        label: c.label,
+        severity: c.severity,
+        onViolation: c.onViolation,
+        violationCount: violRow.count,
+        approvalCount: totalDecided + (approvalMap['PENDING'] ?? 0),
+        approvedCount,
+        rejectedCount,
+        approvalRate,
+        suggestion,
+      };
+    });
+  }
+
   // ——— Row mappers ———
 
   private rowToConstraint(row: Record<string, unknown>): ConstraintDef {

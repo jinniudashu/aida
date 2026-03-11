@@ -66,6 +66,9 @@ export class ProcessTracker extends EventEmitter {
     previousId?: string;
     programEntrypoint?: string;
     name?: string;
+    priority?: number;
+    deadline?: string;
+    groupId?: string;
     metadata?: Record<string, unknown>;
   }): ProcessDef {
     const process = this.processStore.create({
@@ -78,6 +81,9 @@ export class ProcessTracker extends EventEmitter {
       previousId: params.previousId,
       programEntrypoint: params.programEntrypoint,
       name: params.name,
+      priority: params.priority,
+      deadline: params.deadline,
+      groupId: params.groupId,
     });
 
     // Save initial metadata as context snapshot

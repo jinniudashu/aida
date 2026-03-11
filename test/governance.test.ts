@@ -328,10 +328,13 @@ constraints:
     expect(result.errors).toHaveLength(0);
     expect(result.constraints).toHaveLength(1);
     expect(result.constraints[0].onViolation).toBe('BLOCK');
-    // Should default scope.tools to all write tools
+    // Should default scope.tools to all write tools (except bps_load_governance)
     expect(result.constraints[0].scope.tools).toContain('bps_update_entity');
     expect(result.constraints[0].scope.tools).toContain('bps_create_task');
-    expect(result.constraints[0].scope.tools.length).toBe(5);
+    expect(result.constraints[0].scope.tools).toContain('bps_load_blueprint');
+    expect(result.constraints[0].scope.tools).toContain('bps_register_agent');
+    expect(result.constraints[0].scope.tools).not.toContain('bps_load_governance');
+    expect(result.constraints[0].scope.tools.length).toBe(8);
   });
 });
 
@@ -511,6 +514,80 @@ describe('ActionGate', () => {
     expect(pending).toHaveLength(1);
     expect(pending[0].tool).toBe('bps_create_skill');
   });
+
+  // — P0-a: Governance bypass fix — new gated tools —
+
+  it('should gate bps_load_blueprint', () => {
+    store.loadConstraints([{
+      id: 'blueprint-approval', policyId: 'p', label: 'Blueprint approval',
+      scope: { tools: ['bps_load_blueprint'] },
+      condition: 'false', onViolation: 'REQUIRE_APPROVAL',
+      severity: 'HIGH', message: 'Blueprint loading needs approval',
+    }]);
+
+    const result = gate.check('bps_load_blueprint', { yaml: 'name: test' });
+    expect(result.verdict).toBe('REQUIRE_APPROVAL');
+  });
+
+  it('should gate bps_register_agent', () => {
+    store.loadConstraints([{
+      id: 'agent-approval', policyId: 'p', label: 'Agent registration approval',
+      scope: { tools: ['bps_register_agent'] },
+      condition: 'false', onViolation: 'REQUIRE_APPROVAL',
+      severity: 'HIGH', message: 'Agent registration needs approval',
+    }]);
+
+    const result = gate.check('bps_register_agent', { id: 'test-agent', name: 'Test' });
+    expect(result.verdict).toBe('REQUIRE_APPROVAL');
+  });
+
+  it('should gate bps_load_governance', () => {
+    store.loadConstraints([{
+      id: 'governance-reload-block', policyId: 'p', label: 'Block governance reload',
+      scope: { tools: ['bps_load_governance'] },
+      condition: 'false', onViolation: 'BLOCK',
+      severity: 'CRITICAL', message: 'Governance reload blocked',
+    }]);
+
+    const result = gate.check('bps_load_governance', { yaml: 'constraints: []' });
+    expect(result.verdict).toBe('BLOCK');
+  });
+
+  it('should expose toolsProfile in eval context for bps_register_agent', () => {
+    store.loadConstraints([{
+      id: 'no-full-profile', policyId: 'p', label: 'No full profile',
+      scope: { tools: ['bps_register_agent'] },
+      condition: 'toolsProfile != "full"',
+      onViolation: 'BLOCK', severity: 'LOW',
+      message: 'Full tool profile not allowed',
+    }]);
+
+    // Should BLOCK when toolsProfile is "full"
+    const blocked = gate.check('bps_register_agent', { id: 'a1', name: 'A', toolsProfile: 'full' });
+    expect(blocked.verdict).toBe('BLOCK');
+
+    // Should PASS when toolsProfile is "minimal"
+    const passed = gate.check('bps_register_agent', { id: 'a2', name: 'B', toolsProfile: 'minimal' });
+    expect(passed.verdict).toBe('PASS');
+  });
+
+  it('should expose persist and hasYaml in eval context for bps_load_blueprint', () => {
+    store.loadConstraints([{
+      id: 'no-persist', policyId: 'p', label: 'No persistent blueprints',
+      scope: { tools: ['bps_load_blueprint'] },
+      condition: 'persist == false',
+      onViolation: 'BLOCK', severity: 'HIGH',
+      message: 'Persistent blueprint loading blocked',
+    }]);
+
+    // Should BLOCK when persist is true (default)
+    const blocked = gate.check('bps_load_blueprint', { yaml: 'name: test' });
+    expect(blocked.verdict).toBe('BLOCK');
+
+    // Should PASS when persist is false
+    const passed = gate.check('bps_load_blueprint', { yaml: 'name: test', persist: false });
+    expect(passed.verdict).toBe('PASS');
+  });
 });
 
 // ——— Circuit Breaker ———
@@ -619,6 +696,63 @@ describe('CircuitBreaker', () => {
     // Write ops should work again (no constraints loaded)
     const result = gate.check('bps_update_entity', { entityType: 'x', entityId: '1', data: {} });
     expect(result.verdict).toBe('PASS');
+  });
+
+  // — P1-a: Cooldown auto-recovery —
+
+  it('should auto-recover after cooldown period with no new violations', () => {
+    // Use a very short cooldown for testing
+    const cbConfig: CircuitBreakerConfig = {
+      thresholds: [
+        { severity: 'HIGH', maxViolations: 1, window: '1h', action: 'WARNING' },
+      ],
+      cooldown: '1s', // 1 second cooldown
+    };
+    const gate2 = new ActionGate(store, cbConfig);
+
+    // Manually escalate to WARNING (without creating violations that would block recovery)
+    store.updateCircuitBreaker('WARNING', { critical: 0, high: 1, windowStart: new Date().toISOString() });
+    expect(store.getCircuitBreakerState().state).toBe('WARNING');
+
+    // Set lastStateChange to 2 seconds ago to exceed cooldown
+    const db2 = (store as any).db as import('node:sqlite').DatabaseSync;
+    const pastTime = new Date(Date.now() - 2000).toISOString();
+    db2.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${pastTime}' WHERE id = 'singleton'`);
+
+    // Next check should trigger cooldown recovery (no constraints → no violations → recovery)
+    const result = gate2.check('bps_update_entity', { entityType: 'x', entityId: '1', data: {} });
+    expect(result.circuitBreakerState).toBe('NORMAL');
+    expect(result.verdict).toBe('PASS');
+  });
+
+  it('should not auto-recover if new violations exist in window', () => {
+    const cbConfig: CircuitBreakerConfig = {
+      thresholds: [
+        { severity: 'HIGH', maxViolations: 1, window: '1h', action: 'WARNING' },
+      ],
+      cooldown: '1s',
+    };
+    const gate2 = new ActionGate(store, cbConfig);
+
+    store.loadConstraints([{
+      id: 'fail', policyId: 'p', label: 'Fail',
+      scope: { tools: ['bps_update_entity'] },
+      condition: 'false', onViolation: 'BLOCK', severity: 'HIGH', message: 'fail',
+    }]);
+
+    // Trigger violation → WARNING
+    gate2.check('bps_update_entity', { entityType: 'x', entityId: '1', data: {} });
+    expect(store.getCircuitBreakerState().state).toBe('WARNING');
+
+    // Set lastStateChange to the past but keep the constraint active
+    const db2 = (store as any).db as import('node:sqlite').DatabaseSync;
+    const pastTime = new Date(Date.now() - 2000).toISOString();
+    db2.exec(`UPDATE bps_governance_circuit_breaker SET last_state_change = '${pastTime}' WHERE id = 'singleton'`);
+
+    // Next check will record a new violation (constraint still active), so no recovery
+    const result = gate2.check('bps_update_entity', { entityType: 'x', entityId: '1', data: {} });
+    // Should still be WARNING or escalated, not NORMAL
+    expect(result.circuitBreakerState).not.toBe('NORMAL');
   });
 });
 
@@ -763,5 +897,175 @@ constraints:
     const result = await getTool.execute('call-1', { entityType: 'store', entityId: 's1' });
     // Should return "not found" error (not governance_blocked)
     expect((result as Record<string, unknown>).governance_blocked).toBeUndefined();
+  });
+
+  // — P0-a: Governance wrapper for newly gated tools —
+
+  it('should governance-wrap bps_load_blueprint', async () => {
+    const db = createMemoryDatabase();
+    const govStore = new GovernanceStore(db);
+    const actionGate = new ActionGate(govStore);
+
+    govStore.loadConstraints([{
+      id: 'block-blueprints', policyId: 'p', label: 'Block blueprints',
+      scope: { tools: ['bps_load_blueprint'] },
+      condition: 'false', onViolation: 'BLOCK', severity: 'HIGH',
+      message: 'Blueprint loading blocked by governance',
+    }]);
+
+    const { createBpsEngine } = await import('../src/index.js');
+    const engine = createBpsEngine({ db });
+    const { createBpsTools } = await import('../src/integration/tools.js');
+    const tools = createBpsTools({
+      tracker: engine.tracker,
+      blueprintStore: engine.blueprintStore,
+      processStore: engine.processStore,
+      dossierStore: engine.dossierStore,
+      governanceGate: actionGate,
+      governanceStore: govStore,
+    });
+
+    const loadBpTool = tools.find(t => t.name === 'bps_load_blueprint')!;
+    expect(loadBpTool).toBeDefined();
+
+    await expect(loadBpTool.execute('call-1', {
+      yaml: 'name: test\nservices:\n  - id: s1\n    label: Test\n    executor: agent',
+    })).rejects.toThrow('GOVERNANCE BLOCKED');
+  });
+
+  it('should governance-wrap bps_register_agent', async () => {
+    const db = createMemoryDatabase();
+    const govStore = new GovernanceStore(db);
+    const actionGate = new ActionGate(govStore);
+
+    govStore.loadConstraints([{
+      id: 'block-agents', policyId: 'p', label: 'Block agent registration',
+      scope: { tools: ['bps_register_agent'] },
+      condition: 'false', onViolation: 'BLOCK', severity: 'HIGH',
+      message: 'Agent registration blocked by governance',
+    }]);
+
+    const { createBpsEngine } = await import('../src/index.js');
+    const engine = createBpsEngine({ db });
+    const { createBpsTools } = await import('../src/integration/tools.js');
+    const tools = createBpsTools({
+      tracker: engine.tracker,
+      blueprintStore: engine.blueprintStore,
+      processStore: engine.processStore,
+      dossierStore: engine.dossierStore,
+      governanceGate: actionGate,
+      governanceStore: govStore,
+    });
+
+    const registerTool = tools.find(t => t.name === 'bps_register_agent')!;
+    expect(registerTool).toBeDefined();
+
+    await expect(registerTool.execute('call-1', {
+      id: 'test-agent', name: 'Test Agent',
+    })).rejects.toThrow('GOVERNANCE BLOCKED');
+  });
+
+  it('should governance-wrap bps_load_governance', async () => {
+    const db = createMemoryDatabase();
+    const govStore = new GovernanceStore(db);
+    const actionGate = new ActionGate(govStore);
+
+    govStore.loadConstraints([{
+      id: 'block-gov-reload', policyId: 'p', label: 'Block governance reload',
+      scope: { tools: ['bps_load_governance'] },
+      condition: 'false', onViolation: 'BLOCK', severity: 'CRITICAL',
+      message: 'Governance reload blocked',
+    }]);
+
+    const { createBpsEngine } = await import('../src/index.js');
+    const engine = createBpsEngine({ db });
+    const { createBpsTools } = await import('../src/integration/tools.js');
+    const tools = createBpsTools({
+      tracker: engine.tracker,
+      blueprintStore: engine.blueprintStore,
+      processStore: engine.processStore,
+      dossierStore: engine.dossierStore,
+      governanceGate: actionGate,
+      governanceStore: govStore,
+    });
+
+    const loadGovTool = tools.find(t => t.name === 'bps_load_governance')!;
+    expect(loadGovTool).toBeDefined();
+
+    await expect(loadGovTool.execute('call-1', {
+      yaml: 'constraints: []',
+    })).rejects.toThrow('GOVERNANCE BLOCKED');
+  });
+});
+
+// ——— P3: Constraint effectiveness analytics ———
+
+describe('ConstraintEffectiveness', () => {
+  it('should return per-constraint violation and approval stats', () => {
+    const db = createMemoryDatabase();
+    const store = new GovernanceStore(db);
+
+    store.loadConstraints([{
+      id: 'c-publish', policyId: 'p-1', label: 'Publish gate',
+      scope: { tools: ['bps_update_entity'] },
+      condition: 'publishReady == 0',
+      onViolation: 'REQUIRE_APPROVAL', severity: 'HIGH',
+      message: 'Requires approval',
+    }]);
+
+    // Record violations
+    for (let i = 0; i < 5; i++) {
+      store.recordViolation({
+        constraintId: 'c-publish', policyId: 'p-1', severity: 'HIGH',
+        tool: 'bps_update_entity', verdict: 'REQUIRE_APPROVAL',
+        condition: 'publishReady == 0', evalContext: {}, message: 'test',
+        circuitBreakerState: 'NORMAL',
+      });
+    }
+
+    // Create and decide approvals
+    for (let i = 0; i < 3; i++) {
+      const approval = store.createApproval({
+        constraintId: 'c-publish', tool: 'bps_update_entity',
+        toolInput: {}, message: 'test', expiresAt: '2099-01-01',
+      });
+      store.decideApproval(approval.id, i < 2 ? 'APPROVED' : 'REJECTED');
+    }
+
+    const stats = store.getConstraintEffectiveness();
+    expect(stats.length).toBe(1);
+    expect(stats[0].constraintId).toBe('c-publish');
+    expect(stats[0].violationCount).toBe(5);
+    expect(stats[0].approvedCount).toBe(2);
+    expect(stats[0].rejectedCount).toBe(1);
+    // Not enough samples (need 5 decided) for approval rate
+    expect(stats[0].approvalRate).toBeNull();
+    expect(stats[0].suggestion).toBeNull();
+  });
+
+  it('should suggest relaxing when approval rate > 90% with enough samples', () => {
+    const db = createMemoryDatabase();
+    const store = new GovernanceStore(db);
+
+    store.loadConstraints([{
+      id: 'c-strict', policyId: 'p', label: 'Too strict',
+      scope: { tools: ['bps_update_entity'] },
+      condition: 'x == 0',
+      onViolation: 'REQUIRE_APPROVAL', severity: 'HIGH',
+      message: 'test',
+    }]);
+
+    // 19 approved, 1 rejected → 95% approval rate
+    for (let i = 0; i < 20; i++) {
+      const a = store.createApproval({
+        constraintId: 'c-strict', tool: 'bps_update_entity',
+        toolInput: {}, message: 'test', expiresAt: '2099-01-01',
+      });
+      store.decideApproval(a.id, i < 19 ? 'APPROVED' : 'REJECTED');
+    }
+
+    const stats = store.getConstraintEffectiveness();
+    expect(stats[0].approvalRate).toBeCloseTo(0.95, 2);
+    expect(stats[0].suggestion).toContain('too strict');
   });
 });
