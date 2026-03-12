@@ -38,7 +38,7 @@ export interface AidaProjectResult {
   } | null;
 }
 
-/** 一键装载 AIDA 项目：创建引擎 + 加载系统知识 + 加载项目 + 加载治理层 */
+/** 一键装载 AIDA 项目：创建引擎 + 加载系统知识 + 加载项目 + 加载管理层 */
 export function loadAidaProject(options?: {
   aidaDir?: string;
   engineConfig?: BpsEngineConfig;
@@ -64,7 +64,7 @@ export function loadAidaProject(options?: {
     );
   }
 
-  // 尝试加载治理层
+  // 尝试加载管理层
   let management: AidaProjectResult['management'] = null;
   const managementYamlPath = path.join(aidaDir, 'management.yaml');
   const mgmtStore = new ManagementStore(db);

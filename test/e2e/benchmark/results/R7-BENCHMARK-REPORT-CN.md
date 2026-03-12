@@ -15,9 +15,9 @@ R7 是修复 R6 数据采集管线后的首轮**全数据采集**基准测试。
 
 | 排名 | 模型 | 加权总分 | E2E 测试 | BPS 调用 | 关键特征 |
 |------|------|----------|----------|----------|----------|
-| 1 | **GPT-5.4** | **8.55/10** | 46P/0F/2W | 48 | 最佳 E2E + 治理 RESTRICTED |
+| 1 | **GPT-5.4** | **8.55/10** | 46P/0F/2W | 48 | 最佳 E2E + 管理 RESTRICTED |
 | 2 | **Claude Opus 4.6** | **8.50/10** | 38P/1F/8W | 105 | 最多工具调用(164) + 53 实体 |
-| 3 | **Kimi K2.5** | **6.50/10** | 40P/0F/8W | 44 | 最多治理触发(23) |
+| 3 | **Kimi K2.5** | **6.50/10** | 40P/0F/8W | 44 | 最多管理触发(23) |
 | 4 | **Gemini 3.1 Pro** | **5.90/10** | 44P/1F/3W | 10 | 最多发布文件(15) |
 | 5 | **Qwen3.5-Plus** | **5.45/10** | 39P/1F/7W | 3 | 最清晰二层路由 + 3 Cron |
 | 6 | **GLM-5** | **1.30/10** | 35P/1F/11W | 2 | 无法恢复 Continue 提示 |
@@ -55,13 +55,13 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 | 业务理解 | 9 | 0.20 | 1.80 |
 | 工具调用 | 9 | 0.25 | 2.25 |
 | 二层路由 | 9 | 0.15 | 1.35 |
-| 治理闭环 | 8 | 0.15 | 1.20 |
+| 管理闭环 | 8 | 0.15 | 1.20 |
 | 自进化 | 7 | 0.15 | 1.05 |
 | 响应质量 | 9 | 0.10 | 0.90 |
 
 **亮点**:
 - **46P/0F/2W**: R7 最佳 E2E，零失败
-- **治理 RESTRICTED**: 5 violations → 熔断器进入 RESTRICTED 状态（唯一）
+- **管理 RESTRICTED**: 5 violations → 熔断器进入 RESTRICTED 状态（唯一）
 - 45 实体（38 新），含 15 geo-strategy + 15 geo-observation 覆盖全部门店×平台
 - Turn 1 输出 17KB 文本（最详细的业务分析）
 - 1 Blueprint + 1 Agent workspace (xiaoxian-network) + 1 Skill (geo-ops) + 2 Cron
@@ -81,7 +81,7 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 | 业务理解 | 9 | 0.20 | 1.80 |
 | 工具调用 | 10 | 0.25 | 2.50 |
 | 二层路由 | 9 | 0.15 | 1.35 |
-| 治理闭环 | 4 | 0.15 | 0.60 |
+| 管理闭环 | 4 | 0.15 | 0.60 |
 | 自进化 | 9 | 0.15 | 1.35 |
 | 响应质量 | 9 | 0.10 | 0.90 |
 
@@ -93,7 +93,7 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 - 15 draft 内容文件（对应 5 store × 3 platform）
 
 **不足**:
-- **0 治理触发**: 尽管创建了 governance.yaml（写了 3 次迭代），0 violations — 约束未匹配实体更新模式
+- **0 管理触发**: 尽管创建了 governance.yaml（写了 3 次迭代），0 violations — 约束未匹配实体更新模式
 - E2E 38P/1F/8W 偏低（因 WARN 较多）
 
 ---
@@ -107,18 +107,18 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 | 业务理解 | 7 | 0.20 | 1.40 |
 | 工具调用 | 7 | 0.25 | 1.75 |
 | 二层路由 | 6 | 0.15 | 0.90 |
-| 治理闭环 | 6 | 0.15 | 0.90 |
+| 管理闭环 | 6 | 0.15 | 0.90 |
 | 自进化 | 7 | 0.15 | 1.05 |
 | 响应质量 | 5 | 0.10 | 0.50 |
 
 **亮点**:
-- **23 violations**: 所有模型中最多治理触发，证明深度治理交互
+- **23 violations**: 所有模型中最多管理触发，证明深度管理交互
 - **7 种 BPS 工具**: 广泛使用（query_entities, load_governance, update_entity, governance_status, load_blueprint, list_services, create_task）
 - Turn 2 单回合 58 次工具调用（37 BPS），含 12 次 bps_load_governance 迭代
 - 1 new Skill (geo-operator) + 1 Agent workspace + 2 Cron + 多个 workspace 文件
 
 **不足**:
-- 治理配置不稳定: 12 次 bps_load_governance 调用但最终 0 constraints — governance 被反复重写
+- 管理配置不稳定: 12 次 bps_load_governance 调用但最终 0 constraints — governance 被反复重写
 - 0 内容产出（无 mock-publish 文件）
 - 仅 2 新实体（geo-config + geo-visibility）
 
@@ -133,13 +133,13 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 | 业务理解 | 7 | 0.20 | 1.40 |
 | 工具调用 | 5 | 0.25 | 1.25 |
 | 二层路由 | 5 | 0.15 | 0.75 |
-| 治理闭环 | 7 | 0.15 | 1.05 |
+| 管理闭环 | 7 | 0.15 | 1.05 |
 | 自进化 | 5 | 0.15 | 0.75 |
 | 响应质量 | 7 | 0.10 | 0.70 |
 
 **亮点**:
 - **15 mock-publish 发布文件**: 最多已发布内容（直接写入 mock-publish/）
-- **4 violations + WARNING 状态**: 治理触发有效
+- **4 violations + WARNING 状态**: 管理触发有效
 - 44P/1F/3W: 良好的 E2E 成绩
 - 1 Skill (geo-daily-ops) + 2 Cron + 4 geo-content 实体
 
@@ -147,7 +147,7 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 - **0 Blueprint**: 未创建蓝图
 - **0 Agent workspace**: 未创建独立 Agent
 - 仅 31 总工具调用（10 BPS），密度偏低
-- 内容通过文件 I/O 直接发布，绕过了治理层的审批流程
+- 内容通过文件 I/O 直接发布，绕过了管理层的审批流程
 
 ---
 
@@ -160,7 +160,7 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 | 业务理解 | 8 | 0.20 | 1.60 |
 | 工具调用 | 4 | 0.25 | 1.00 |
 | 二层路由 | 8 | 0.15 | 1.20 |
-| 治理闭环 | 1 | 0.15 | 0.15 |
+| 管理闭环 | 1 | 0.15 | 0.15 |
 | 自进化 | 6 | 0.15 | 0.90 |
 | 响应质量 | 6 | 0.10 | 0.60 |
 
@@ -188,7 +188,7 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 | 业务理解 | 2 | 0.20 | 0.40 |
 | 工具调用 | 1 | 0.25 | 0.25 |
 | 二层路由 | 1 | 0.15 | 0.15 |
-| 治理闭环 | 1 | 0.15 | 0.15 |
+| 管理闭环 | 1 | 0.15 | 0.15 |
 | 自进化 | 1 | 0.15 | 0.15 |
 | 响应质量 | 2 | 0.10 | 0.20 |
 
@@ -196,7 +196,7 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 - **从未收到业务提示**: 初始 Turn 超时，12 个 Turn 全部为 "Continue where you left off" 恢复提示
 - 正确诊断"无工作可继续"（"没有发现之前中断或失败的任务"），但无法主动执行
 - 仅 2 BPS 调用（bps_scan_work, bps_query_tasks），均为只读查询
-- 0 新实体、0 新 Skill、0 Blueprint、0 Agent、0 Cron、0 内容、0 治理触发
+- 0 新实体、0 新 Skill、0 Blueprint、0 Agent、0 Cron、0 内容、0 管理触发
 - **R4 对比**: R4 得分 4.15（部分工作完成），R7 降至 1.30 — GLM 对 "Continue" 提示缺乏恢复能力
 
 ---
@@ -206,8 +206,8 @@ Kimi/Qwen 等模型通过 `agent-create` Skill 在 `openclaw.json` 的 `agents.l
 ### 1. GPT-5.4 取代 Kimi K2.5 成为最佳 AIDA 运营模型
 
 R6 中 Kimi K2.5 以 8.70 排名第一，R7 中 GPT-5.4（8.55）超越 Kimi（6.50）。关键差异:
-- GPT 在全部 6 个有效 Turn 中均产出工具调用，且治理交互深入到 RESTRICTED 状态
-- Kimi 治理触发数量最高（23）但治理配置不稳定（最终 0 constraints），执行质量下降
+- GPT 在全部 6 个有效 Turn 中均产出工具调用，且管理交互深入到 RESTRICTED 状态
+- Kimi 管理触发数量最高（23）但管理配置不稳定（最终 0 constraints），执行质量下降
 
 ### 2. Claude Opus 4.6 是工具调用之王
 
@@ -220,11 +220,11 @@ R6 中 Kimi K2.5 以 8.70 排名第一，R7 中 GPT-5.4（8.55）超越 Kimi（6
 | Qwen3.5-Plus | 24 | 3 | 3 | 8 |
 | GLM-5 | 14 | 2 | 2 | 7 |
 
-Claude 的 164 次调用是第二名 Kimi 的 1.9 倍。单个 Turn 4 达 94 次调用（65 BPS）。但高调用量未转化为治理触发（0 violations），说明**工具调用量 ≠ 治理合规度**。
+Claude 的 164 次调用是第二名 Kimi 的 1.9 倍。单个 Turn 4 达 94 次调用（65 BPS）。但高调用量未转化为管理触发（0 violations），说明**工具调用量 ≠ 管理合规度**。
 
-### 3. 治理闭环是关键分化维度
+### 3. 管理闭环是关键分化维度
 
-| 模型 | Violations | 熔断器状态 | Constraints | 治理闭环 |
+| 模型 | Violations | 熔断器状态 | Constraints | 管理闭环 |
 |------|------------|-----------|-------------|----------|
 | **Kimi K2.5** | **23** | NORMAL (恢复) | 0 (不稳定) | 部分 |
 | GPT-5.4 | 5 | **RESTRICTED** | 3 | ✅ 有效 |
@@ -253,9 +253,9 @@ GLM-5 在 R4（4.15）和 R7（1.30）中均表现最差。R7 中初始提示超
 
 | 模型 | R6 分数 | R7 分数 | 变化 | 备注 |
 |------|---------|---------|------|------|
-| GPT-5.4 | 7.85 | **8.55** | +0.70 | 治理 RESTRICTED，稳定提升 |
+| GPT-5.4 | 7.85 | **8.55** | +0.70 | 管理 RESTRICTED，稳定提升 |
 | Claude Opus | 7.55 | **8.50** | +0.95 | 工具量爆发（164 次） |
-| Kimi K2.5 | **8.70** | 6.50 | −2.20 | 治理配置不稳定 |
+| Kimi K2.5 | **8.70** | 6.50 | −2.20 | 管理配置不稳定 |
 | Gemini 3.1 Pro | 8.30 | 5.90 | −2.40 | 工具密度下降 |
 | Qwen3.5+ | 7.55 | 5.45 | −2.10 | Config 自毁 |
 | GLM-5 | 1.10 | 1.30 | +0.20 | 依然最差 |
@@ -284,9 +284,9 @@ R7 是首轮 **100% 数据采集完整** 的基准测试。
 基于 R7 完整数据评估:
 
 ```
-Primary:  openrouter/openai/gpt-5.4           (8.55, 最佳 E2E + 治理 RESTRICTED)
+Primary:  openrouter/openai/gpt-5.4           (8.55, 最佳 E2E + 管理 RESTRICTED)
 Fallback: openrouter/anthropic/claude-opus-4.6 (8.50, 最强工具调用 + 最多实体)
-Alt:      moonshot/kimi-k2.5                   (6.50, 治理触发最活跃)
+Alt:      moonshot/kimi-k2.5                   (6.50, 管理触发最活跃)
 ```
 
 ---
@@ -298,10 +298,10 @@ Alt:      moonshot/kimi-k2.5                   (6.50, 治理触发最活跃)
 | P0 | `agent-create` 写入非法 tools.profile | Qwen R7 损失 2.30 分 | Skill 内添加值白名单校验 |
 | P1 | GLM-5 "Continue" 恢复能力 | 连续两轮最差 | 考虑在 AGENTS.md 添加 retry 行为指导 |
 | P1 | governance.yaml 被模型反复重写 | Kimi 23 violations 但 0 constraints | 考虑只读种子 + 增量约束 |
-| P2 | 治理绕过（文件 I/O 直接发布） | Gemini 15 文件绕过审批 | 强化 mock-publish 路径拦截 |
+| P2 | 管理绕过（文件 I/O 直接发布） | Gemini 15 文件绕过审批 | 强化 mock-publish 路径拦截 |
 
 ---
 
 *报告生成: 2026-03-11, R7 基准测试*
-*评分方法: scoring-rubric.md 6 维度加权 (业务理解 0.20, 工具调用 0.25, 二层路由 0.15, 治理闭环 0.15, 自进化 0.15, 响应质量 0.10)*
+*评分方法: scoring-rubric.md 6 维度加权 (业务理解 0.20, 工具调用 0.25, 二层路由 0.15, 管理闭环 0.15, 自进化 0.15, 响应质量 0.10)*
 *数据完整性: 6/6 模型 metrics + behavior + session JSONL 全部采集成功*

@@ -352,14 +352,14 @@ report = f'''# {metrics["modelName"]} 业务场景效能评测报告
 
 评分: {layer}/10
 
-- 使用 Blueprint 与治理触发情况评估是否区分 Governance 与 Operations。
+- 使用 Blueprint 与管理触发情况评估是否区分 Governance 与 Operations。
 - `Blueprints={blueprints}`, `Violations={violations}`。
 
-### 4. 治理合规 (15%)
+### 4. 管理合规 (15%)
 
 评分: {governance}/10
 
-- 重点看是否真正触发治理拦截而非口头描述审批。
+- 重点看是否真正触发管理拦截而非口头描述审批。
 - `Violations={violations}`, `Approvals={approvals}`。
 
 ### 5. 自我进化 (10%)

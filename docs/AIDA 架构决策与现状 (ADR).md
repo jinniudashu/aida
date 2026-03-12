@@ -15,7 +15,7 @@
 三个子问题：
 1. **业务程序是隐性的** — 流程逻辑散落在人脑、文档、习惯中，AI 无法理解
 2. **AI 需要持久化和可观测性** — 跨会话任务追踪、版本化业务数据、人类可见的运营状态
-3. **人类控制权需要结构化保障** — AI 越自主，越需要可观察/可干预/可审计的治理机制
+3. **人类控制权需要结构化保障** — AI 越自主，越需要可观察/可干预/可审计的管理机制
 
 ### 1.2 三层架构
 
@@ -63,10 +63,10 @@
 │    dashboard-query-service.ts                        │
 │       │                                              │
 │       ▼                                              │
-│  governance/ (4)           integration/ (5)          │
-│    governance-store.ts       event-bridge.ts         │
+│  management/ (4)           integration/ (5)          │
+│    management-store.ts       event-bridge.ts         │
 │    action-gate.ts            tools.ts (14 tools)     │
-│    governance-loader.ts      plugin.ts               │
+│    management-loader.ts      plugin.ts               │
 │    types.ts                  openclaw-types.ts       │
 │                              index.ts                │
 │  knowledge/ (3)            mcp/ (1)                  │
@@ -89,7 +89,7 @@
 
 ┌─ dashboard/ (bps-engine 子目录) ─────────────────────┐
 │  Vue 3 + Hono + SSE                                  │
-│  13 页面 + 33 API + 双层告警 + ATDD + 治理可视化       │
+│  13 页面 + 33 API + 双层告警 + ATDD + 管理可视化       │
 │  共享同一 DatabaseSync 实例（零 DB 并发问题）           │
 └──────────────────────────────────────────────────────┘
 ```
@@ -190,18 +190,18 @@
 - **Impact**: Dashboard Kanban 从 7 列变 5 列，全部 10 个测试文件 + server 端适配。
 - **Status**: ✅ 已落地。
 
-### ADR-13: Blueprint 重定位为治理宪法（2026-03-05）
+### ADR-13: Blueprint 重定位为管理宪法（2026-03-05）
 
-- **Context**: E2E 测试证明 Aida 完全绕过 Blueprint/Task/Rule 基础设施，仅用 Entity + Skill 完成运营。Blueprint-as-workflow 的价值被 Agent 自主能力吞噬。但用户指出：Agent 越强大，越需要刚性治理框架——"不是告诉 Agent 做什么，而是确保 Agent 不能做什么"。
-- **Decision**: Blueprint 从"流程编排器"重定位为"治理宪法"。新增 Agent Governance Specification (AGS)：
-  - `governance.yaml`：约束规则（Constraint）定义，存放于 `~/.aida/governance.yaml`
+- **Context**: E2E 测试证明 Aida 完全绕过 Blueprint/Task/Rule 基础设施，仅用 Entity + Skill 完成运营。Blueprint-as-workflow 的价值被 Agent 自主能力吞噬。但用户指出：Agent 越强大，越需要刚性管理框架——"不是告诉 Agent 做什么，而是确保 Agent 不能做什么"。
+- **Decision**: Blueprint 从"流程编排器"重定位为"管理宪法"。新增 Agent Management Specification (AMS)：
+  - `management.yaml`：约束规则（Constraint）定义，存放于 `~/.aida/management.yaml`
   - Action Gate：前置拦截器，在写操作工具执行前检查所有适用约束
   - Circuit Breaker：熔断器状态机（NORMAL → WARNING → RESTRICTED → DISCONNECTED）
   - 所有约束使用 expr-eval 确定性求值，不涉及 LLM 判断
-- **Rationale**: 运营自主权（Agent 决定做什么）和治理约束（系统阻止 Agent 不能做什么）是互补关系。Agent 能力越强，治理层越重要。
-- **Impact**: 新增 governance.yaml 文件、GovernanceStore、ActionGate 模块，扩展 loadAidaProject()
-- **详细设计**: 见 `docs/Agent 治理层规范 (AGS) v0.1.md`
-- **Status**: ✅ Phase E1 已落地（GovernanceStore + ActionGate + governance-loader + 31 tests）
+- **Rationale**: 运营自主权（Agent 决定做什么）和管理约束（系统阻止 Agent 不能做什么）是互补关系。Agent 能力越强，管理层越重要。
+- **Impact**: 新增 management.yaml 文件、ManagementStore、ActionGate 模块，扩展 loadAidaProject()
+- **详细设计**: 见 `docs/Agent 管理层规范 (AGS) v0.1.md`
+- **Status**: ✅ Phase E1 已落地（ManagementStore + ActionGate + management-loader + 31 tests）
 
 ---
 
@@ -214,17 +214,17 @@
 | `schema/` | 8 | `src/schema/*.ts` | ✅ 完成 | TypeBox 类型定义，5-state 任务模型 |
 | `engine/` | 2 | `ProcessTracker` | ✅ 完成 | 任务追踪器 + 5-state 状态机（审计日志、事件发射） |
 | `store/` | 6 | `createDatabase()` | ✅ 完成 | SQLite 持久化、蓝图/进程/Dossier/统计/Dashboard 查询 |
-| `governance/` | 4 | `ActionGate` | ✅ 完成 | 治理层：约束加载 + 前置拦截 + 熔断器 + 审批 |
+| `management/` | 4 | `ActionGate` | ✅ 完成 | 管理层：约束加载 + 前置拦截 + 熔断器 + 审批 |
 | `knowledge/` | 3 | `KnowledgeStore` | ✅ 完成 | 知识存储 + 系统知识 |
-| `loader/` | 4 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml + governance.yaml 解析、Blueprint 编译器 |
+| `loader/` | 4 | `loadAidaProject()` | ✅ 完成 | ~/.aida/ 装载、project.yaml + management.yaml 解析、Blueprint 编译器 |
 | `integration/` | 5 | `registerBpsPlugin()` | ✅ 完成 | OpenClaw 桥接：EventBridge + Tools + Plugin |
 | `system/` | 1 | `project-init.ts` | ✅ 完成 | 项目初始化步骤定义 |
 
 ### 3.2 OpenClaw 插件
 
-**14 tools**（通过 `registerBpsPlugin()` 注册，其中 5 个写操作工具受治理层拦截）:
+**14 tools**（通过 `registerBpsPlugin()` 注册，其中 5 个写操作工具受管理层拦截）:
 
-| # | Tool | 说明 | 治理层拦截 |
+| # | Tool | 说明 | 管理层拦截 |
 |---|------|------|-----------|
 | 1 | `bps_list_services` | 列出所有服务（任务目录） | 否（只读） |
 | 2 | `bps_create_task` | 创建任务追踪记录 | **是** |
@@ -239,7 +239,7 @@
 | 11 | `bps_scan_work` | 工作全景扫描 | 否（只读） |
 | 12 | `bps_create_skill` | 动态 Skill 创建 | **是** |
 | 13 | `bps_load_blueprint` | 提交 YAML → 编译 → 加载 → 持久化 | 否（设计时） |
-| 14 | `bps_governance_status` | 治理状态查询 | 否（只读） |
+| 14 | `bps_management_status` | 管理状态查询 | 否（只读） |
 
 ### 3.3 Agent 架构
 
@@ -256,7 +256,7 @@
 
 | 页面 | 路由 | 核心功能 |
 |------|------|---------|
-| 总览（三问题） | `/` | 现状（实体/任务/错误+治理状态）/ 目标（Action Plan 进度条）/ 下一步（任务队列+待审批+违规） |
+| 总览（三问题） | `/` | 现状（实体/任务/错误+管理状态）/ 目标（Action Plan 进度条）/ 下一步（任务队列+待审批+违规） |
 | 流程列表 | `/processes` | 流程表格（筛选/分页） + 新建流程 |
 | 流程详情 | `/processes/:id` | 元数据 + 上下文快照 + 状态转换 + 流程树双视图（ECharts + Tree） |
 | 看板 | `/kanban` | 5 列状态看板 + 拖拽转换（含校验） |
@@ -268,7 +268,7 @@
 | Agent 日志 | `/agent-log` | 任务审计全景（action/state/reason 过滤） |
 | 业务目标 | `/business-goals` | Action Plan 卡片（items + periodicItems + 进度条） |
 | 审批队列 | `/approvals` | 审批列表 + approve/reject 决策（HITL 闭环） |
-| 治理面板 | `/governance` | 熔断器状态 + 约束清单 + 治理审批（Approve/Reject + 自动执行）+ 违规历史 |
+| 管理面板 | `/management` | 熔断器状态 + 约束清单 + 管理审批（Approve/Reject + 自动执行）+ 违规历史 |
 
 技术栈：Vue 3 + Naive UI + ECharts + Hono + SSE，112 tests。
 
@@ -280,7 +280,7 @@
 |---------|------|----------|
 | `integration.test.ts` | 37 | OpenClaw 集成：EventBridge/Tools/Plugin |
 | `dossier.test.ts` | 37 | Dossier CRUD、版本化、生命周期、搜索、smart merge |
-| `governance.test.ts` | 31 | 治理层：约束加载/PASS/BLOCK/审批/熔断器/工具包装 |
+| `management.test.ts` | 31 | 管理层：约束加载/PASS/BLOCK/审批/熔断器/工具包装 |
 | `scenario-e2e.test.ts` | 29 | 端到端场景验证 |
 | `dashboard.test.ts` | 25 | DashboardQueryService |
 | `engine.test.ts` | 19 | ProcessTracker + 5-state 状态机 |
@@ -303,7 +303,7 @@
 | `api-entities.test.ts` | — | 实体 CRUD |
 | `api-agent-log.test.ts` | — | Agent 日志 API |
 | `api-business-goals.test.ts` | — | 业务目标 API |
-| `api-governance.test.ts` | 5 | 治理状态 + 违规查询 |
+| `api-management.test.ts` | 5 | 管理状态 + 违规查询 |
 | `api-trial-run.test.ts` | 7 | ATDD 试运行 |
 | `api-sse.test.ts` | 5 | SSE 实时推送 |
 | `api-timeseries.test.ts` | 5 | 时间序列统计 |
@@ -333,7 +333,7 @@
 | `docs/标准业务建模过程 (SBMP) v0.2 草案.md` | v0.2 | 5 步建模方法论（已提取为 Aida Skill） |
 | `docs/业务项目装载协议 (BPLP) v0.2.md` | v0.2 | project.yaml schema、loadAidaProject API |
 | `archive/业务知识管理 (BKM) v0.1.md` | v0.1 | 知识分级（已简化实现，历史文档） |
-| `docs/Agent 治理层规范 (AGS) v0.1.md` | v0.1 | 治理约束 schema + Action Gate + 熔断器 + 审批流程 |
+| `docs/Agent 管理层规范 (AGS) v0.1.md` | v0.1 | 管理约束 schema + Action Gate + 熔断器 + 审批流程 |
 | `archive/AIDA项目全面回顾 (2026-03-04).md` | 修订版 | 根本原则偏差分析 + 完整资产评估 |
 | `archive/BPS引擎价值反思与架构瘦身建议 (2026-03-03).md` | — | 引擎瘦身决策的完整分析 |
 | `archive/AIDA阶段性战略回顾 (2026-03-02).md` | — | 核心判断回顾 |
@@ -364,9 +364,9 @@
 | B | 引擎效率增强（03-05） | bps_scan_work (#11) + bps_next_steps 增强 + reason 审计字段 |
 | C | Dashboard 三页扩展（03-05） | Agent Log / Business Goals / Approvals + 23 tests |
 | D1 | 动态 Skill 生成（03-05） | bps_create_skill (#12) + skill-create Skill |
-| E1 | Agent 治理层（03-05） | GovernanceStore + ActionGate + 熔断器 + governance.yaml（ADR-13） |
-| E2 | Dashboard 三问题 + 治理可视化（03-05） | Overview 三面板 + GovernancePage + governance API + 11 tests |
-| — | 治理 SSE 修复 + OpenClaw 集成加固（03-06） | GovernanceStore EventEmitter + 专用 SSE 事件 + OpenClaw 研究报告 v2 + install-aida.sh 安全基线/Fallback/Hooks/Compaction/LoopDetection/Pruning + AGENTS.md 加固 |
+| E1 | Agent 管理层（03-05） | ManagementStore + ActionGate + 熔断器 + management.yaml（ADR-13） |
+| E2 | Dashboard 三问题 + 管理可视化（03-05） | Overview 三面板 + ManagementPage + management API + 11 tests |
+| — | 管理 SSE 修复 + OpenClaw 集成加固（03-06） | ManagementStore EventEmitter + 专用 SSE 事件 + OpenClaw 研究报告 v2 + install-aida.sh 安全基线/Fallback/Hooks/Compaction/LoopDetection/Pruning + AGENTS.md 加固 |
 | — | Dashboard 合并入 bps-engine（03-06） | bps-dashboard 吸收为 `dashboard/` 子目录 → 单进程零 DB 并发 + EventEmitter 原生 + 统一测试（367 tests） |
 | — | 仓库扁平化（03-07） | bps-engine → aida 根目录，packages/ 层消除，单一 package.json（无 workspaces），src/ + dashboard/ 平行于根目录 |
 
@@ -376,11 +376,11 @@
 
 | 事项 | 说明 | 状态 |
 |------|------|------|
-| ~~治理层端到端验证~~ | Phase E2 验证通过：BLOCK/REQUIRE_APPROVAL/PASS 全路径 | ✅ 完成 |
-| ~~Governance 独立页~~ | GovernancePage 4 面板 + 7 API（Phase E2） | ✅ 完成 |
+| ~~管理层端到端验证~~ | Phase E2 验证通过：BLOCK/REQUIRE_APPROVAL/PASS 全路径 | ✅ 完成 |
+| ~~Management 独立页~~ | ManagementPage 4 面板 + 7 API（Phase E2） | ✅ 完成 |
 | ~~Blueprint YAML 兼容性~~ | blueprint-modeling Skill 新增完整 YAML schema + yaml-loader 诊断 warnings | ✅ 修复 |
 | ~~引擎瘦身文档残留~~ | README/skeleton/BKM/dashboard-spec 中 ProcessManager 等旧引用已清理 | ✅ 清理 |
 | 蓝图热加载 | 运行时新增/修改蓝图需重启 gateway（P2 from E2E） | 中 |
 | 多业务场景验证 | BPS 通用性验证需更多场景（目前：晨光咖啡 + GEO KTV） | 中 |
 | Cron 调度验证 | 三频模型中 Freq 3（Cron）未经真实运行时验证。AGENTS.md Boot step 4 已加入 cron 恢复检查 | 低 |
-| 文件 I/O 治理绕过 | Agent 可通过 write/edit 工具直接操作文件绕过 governance 层。已加 AGENTS.md Red Line 3 + `tools.exec.security: allowlist`，但 OpenClaw fs 工具尚无路径级限制 | 中 |
+| 文件 I/O 管理绕过 | Agent 可通过 write/edit 工具直接操作文件绕过 management 层。已加 AGENTS.md Red Line 3 + `tools.exec.security: allowlist`，但 OpenClaw fs 工具尚无路径级限制 | 中 |

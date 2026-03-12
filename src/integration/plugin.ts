@@ -20,7 +20,7 @@ export interface BpsPluginResult {
  * registerBpsPlugin — 一键注册 BPS 引擎到 OpenClaw
  *
  * 1. 创建 BPS Engine
- * 2. 注册 13 个工具到 OpenClaw（含治理层）
+ * 2. 注册 13 个工具到 OpenClaw（含管理层）
  * 3. 建立事件桥接
  */
 export function registerBpsPlugin(

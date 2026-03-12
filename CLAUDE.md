@@ -257,41 +257,41 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **架构结论**：对于 Agent 驱动运营，Entity + Skill 可能已足够，Blueprint 层的独特价值仅在于机器可查询拓扑 + Dashboard 流程可视化
 - **LLM 配置**：install-aida.sh 默认模型已从 MiniMax M2.5 改为 google/gemini-3.1-pro-preview
 
-### Phase E1：Agent 治理层实现（2026-03-05）
-- 讨论纪要：`archive/Blueprint治理层讨论纪要 (2026-03-05).md`
-- 治理层设计文档：`docs/Agent 治理层规范 (AGS) v0.1.md`
-- **核心决策**：Blueprint 从"流程编排器"重定位为"治理宪法"——定义 Agent 不能做什么，而非应该做什么
-- **治理层实现**（`src/governance/`，4 文件）：
+### Phase E1：Agent 管理层实现（2026-03-05）
+- 讨论纪要：`archive/Blueprint管理层讨论纪要 (2026-03-05).md`
+- 管理层设计文档：`docs/Agent 管理层规范 (AGS) v0.1.md`
+- **核心决策**：Blueprint 从"流程编排器"重定位为"管理宪法"——定义 Agent 不能做什么，而非应该做什么
+- **管理层实现**（`src/governance/`，4 文件）：
   - `types.ts`：类型定义（Constraint/Verdict/CircuitBreakerState/ViolationRecord/ApprovalRequest）
   - `governance-store.ts`：SQLite 持久化（4 表：constraints/violations/circuit_breaker/approvals）
   - `action-gate.ts`：前置拦截器（scope 匹配 + expr-eval 求值 + verdict 判定 + 熔断器状态机）
   - `governance-loader.ts`：governance.yaml 解析 + 校验
 - **工具集成**：
-  - 5 个写操作工具自动包装治理检查（bps_update_entity/create_task/update_task/complete_task/create_skill）
+  - 5 个写操作工具自动包装管理检查（bps_update_entity/create_task/update_task/complete_task/create_skill）
   - 新增 `bps_governance_status` tool (#13)：查询熔断器状态 + 违规记录 + 待审批
 - **loadAidaProject() 扩展**：自动加载 `~/.aida/governance.yaml`，返回 `governance` 字段
-- **governance.yaml**：治理约束定义文件，存放于 `~/.aida/governance.yaml`
+- **governance.yaml**：管理约束定义文件，存放于 `~/.aida/governance.yaml`
 - **DossierStore 修复**：smartMerge 实现数组追加语义（P1 fix，3 新测试）
 - **测试**：31 新测试（GovernanceStore 6 + GovernanceLoader 5 + ActionGate 9 + CircuitBreaker 7 + ToolWrapper 3 + 1），bps-engine 总计 252 tests
 
-### Phase E2：Dashboard 三问题 + 治理全景（2026-03-05）
+### Phase E2：Dashboard 三问题 + 管理全景（2026-03-05）
 - **Overview 页重构**：三面板回答"现状/目标/下一步"
-  - Panel 1（现状）：实体/任务/错误计数 + 实体类型标签 + 治理熔断器状态 + 违规徽章
+  - Panel 1（现状）：实体/任务/错误计数 + 实体类型标签 + 管理熔断器状态 + 违规徽章
   - Panel 2（目标）：Action Plan 进度条 + 完成率 + 周期任务计数
   - Panel 3（下一步）：任务队列分状态 + 待审批 + 最近违规记录
-- **GovernancePage**（专用治理页面，4 面板）：
+- **GovernancePage**（专用管理页面，4 面板）：
   - Panel 1（熔断器）：状态标签 + 约束数 + 待审批数 + 重置按钮（带确认）
   - Panel 2（约束清单）：完整表格（ID/策略/严重级别/动作/条件/scope）
-  - Panel 3（治理审批）：待审批列表 + Approve/Reject 模态框（显示 tool input 详情）
+  - Panel 3（管理审批）：待审批列表 + Approve/Reject 模态框（显示 tool input 详情）
   - Panel 4（违规历史）：时间线（严重级别/约束/工具/实体/消息/verdict）
-- **治理 API**（bps-dashboard，7 个 endpoint）：
+- **管理 API**（bps-dashboard，7 个 endpoint）：
   - `GET /api/governance/status` — 熔断器状态 + 约束数 + 待审批数 + 最近违规
   - `GET /api/governance/violations` — 违规历史（支持 limit 参数）
   - `GET /api/governance/constraints` — 约束完整列表
-  - `GET /api/governance/approvals` — 治理层待审批列表
+  - `GET /api/governance/approvals` — 管理层待审批列表
   - `POST /api/governance/approvals/:id/decide` — 审批/拒绝
   - `POST /api/governance/circuit-breaker/reset` — 重置熔断器
-- **治理端到端验证**：
+- **管理端到端验证**：
   - 关键修复：governance wrapper 从返回 `{success:false}` 改为 throw Error（LLM 可靠识别工具失败）
   - Agent 测试通过：REQUIRE_APPROVAL → Agent 报告拦截 + 审批单号 + Dashboard 链接
   - BLOCK 测试通过：CRITICAL 违规 → Agent 报告直接拒绝 + 熔断器断开
@@ -300,21 +300,21 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - `replayToolCall()` 支持全部 5 个写操作工具（update_entity/create_task/update_task/complete_task/create_skill）
   - 前端审批后显示执行结果模态框（成功/失败）
   - 端到端验证通过：APPROVED → 实体写入 + 版本递增；REJECTED → 无执行
-- **测试**：Dashboard 112 tests（+11 治理测试），引擎 255 tests，合计 367
+- **测试**：Dashboard 112 tests（+11 管理测试），引擎 255 tests，合计 367
 
 ### OpenClaw 集成加固（2026-03-06）
 - 评估报告：`archive/AIDA-OpenClaw利用充分度评估 (2026-03-06).md`
 - 研究报告重写：`docs/OpenClaw框架技术研究报告.md` v1→v2（源码分析→官方文档，462→733 行）
 - **评估结论**：核心路径深（Plugin/Tool/Event/Workspace/Skills），外围配置浅（全部依赖默认值）
 - **已落地优化**（install-aida.sh 配置合并 + AGENTS.md）：
-  - P0 安全基线：`tools.exec.security: "allowlist"` + Red Line 禁止文件 I/O 绕过治理
+  - P0 安全基线：`tools.exec.security: "allowlist"` + Red Line 禁止文件 I/O 绕过管理
   - P0 模型 Fallback：`fallbacks: [claude-sonnet-4-6, gpt-4.1]`
   - P1 BOOT.md 激活：`hooks.internal.enabled: true`
   - P1 Compaction 记忆冲刷：`compaction.memoryFlush.enabled: true`
   - P1 Cron 恢复：Boot 步骤 4 验证/重注册 cron 任务
   - P2 语义搜索：AGENTS.md Memory 节加入 `memory_search` 指引
   - P2 循环检测 + 上下文修剪：`loopDetection` + `contextPruning` 配置
-- **治理 SSE 修复**（同日早期）：GovernanceStore 继承 EventEmitter，emit 4 个治理专用事件，Dashboard SSE 直接转发
+- **管理 SSE 修复**（同日早期）：GovernanceStore 继承 EventEmitter，emit 4 个管理专用事件，Dashboard SSE 直接转发
 
 ### 仓库扁平化（2026-03-07）
 - **两步合并**：bps-dashboard → bps-engine/dashboard/（2026-03-06），然后 bps-engine → aida 根目录（2026-03-07）
@@ -332,10 +332,10 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - 评估报告：`test/e2e/IdleX-GEO-E2E-v2-评估报告 (2026-03-07).md`
 - 测试方案：`test/e2e/idlex-geo-v2.md`，自动化脚本：`test/e2e/idlex-geo-v2.sh`
 - **业务目标**：一个 GEO 负责人 + Aida 完成闲氪全部 GEO 运营任务
-- **加权总分：87/100**（业务理解 95, 运营体系 90, 内容质量 90, 治理合规 70, 自进化 100, 可观测 50）
+- **加权总分：87/100**（业务理解 95, 运营体系 90, 内容质量 90, 管理合规 70, 自进化 100, 可观测 50）
 - **Self-Evolution 100%**：Skill 创建（geo-ops，prospective gap）+ Agent 创建（krypton-assistant，persona isolation）均一次通过
 - **业务覆盖 86%**：7 项 WORKING + 1 项 DESIGNED，日均管理工作量 ~15 分钟
-- **P0 待修复**：Dashboard Vite 构建路径（SPA 404）、内容发布绕过治理（需 Skill 级约束）
+- **P0 待修复**：Dashboard Vite 构建路径（SPA 404）、内容发布绕过管理（需 Skill 级约束）
 - **P1 待修复**：install-aida.sh 旧路径清理逻辑
 
 ### AIDA 项目全面评估（2026-03-07）
@@ -347,7 +347,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - Dashboard 质量：8.2（SSE 优秀，routes.ts 待拆分）
   - Agent 集成深度：8.5（Workspace 结构清晰，Blueprint 格式断裂待修复）
   - 测试与代码质量：8.5（测试/代码比 1.88:1，TDD 实践优秀）
-- **核心优势**：架构方向正确、测试覆盖充分、治理层完善
+- **核心优势**：架构方向正确、测试覆盖充分、管理层完善
 - **主要风险**：Blueprint 格式断裂、真实业务场景验证有限
 
 ### Phase F：Blueprint 编译器（2026-03-07）
@@ -362,7 +362,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **解决的问题**：Gap 7（Blueprint 格式不兼容）——LLM 出错面从 4 个交叉引用数组缩小到 services + flow 箭头
 - **测试**：22 新测试，总计 391 tests（369 + 22）
 - **BPS tools**：14 个（+bps_load_blueprint）
-- **二层路由机制**：强制 Aida 在设计时区分治理层（Blueprint）vs 运营层（Entity + Skill）
+- **二层路由机制**：强制 Aida 在设计时区分管理层（Blueprint）vs 运营层（Entity + Skill）
   - SOUL.md：新增 "Two-Layer Architecture (Critical)" 节，含决策规则（constraint → Governance, action → Operations, default → Operations）
   - AGENTS.md：新增 "Two-Layer Routing" 节，含信号→层→介质决策表
   - `action-plan` Skill：新增 Step 1 "Layer classification"，每个计划项必须标注 Governance 或 Operations
@@ -385,7 +385,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - 评估报告：`test/e2e/IdleX-GEO-E2E-v3-评估报告 (2026-03-07).md`
 - 测试方案：`test/e2e/idlex-geo-v3.md`，自动化脚本：`test/e2e/idlex-geo-v3.sh`
 - **v3 新增测试点**：USER.md/TOOLS.md 部署、Two-Layer 合并（SOUL→AGENTS）、Skill user-invocable、目标陈述式对话、干净 memory（无先验上下文）
-- **加权总分：60/100**（部署 100, 业务理解 95, Two-Layer 路由 85, 建模执行 25, 内容质量 90, 治理闭环 15, 自我进化 10）
+- **加权总分：60/100**（部署 100, 业务理解 95, Two-Layer 路由 85, 建模执行 25, 内容质量 90, 管理闭环 15, 自我进化 10）
 - **自动化测试**：34 PASS / 1 FAIL / 8 WARN / 35 TOTAL
 - **基础设施层 100% 验证通过**：14/14 安装检查 PASS，新增 USER.md/TOOLS.md 一次通过，Two-Layer 合并生效
 - **核心问题：「说而不做」**：Aida 自然语言输出质量极高（一模一策差异化精准），但实际工具调用率极低——描述了完美的建模方案但未调用 BPS 工具执行
@@ -401,7 +401,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - 61 次工具调用 0 错误（bps_update_entity ×5, bps_create_task ×7, write ×7 等）
   - geo-report 实体完整生命周期（started → Analyzed → Pending Approval → Published → Completed）
   - 一模一策差异化内容自动生成到 mock-publish/（doubao/qianwen/yuanbao 各 2.4KB）
-- **持续问题**：治理绕过（连续 3 次测试 — write 工具直接写文件，不经 bps_update_entity）
+- **持续问题**：管理绕过（连续 3 次测试 — write 工具直接写文件，不经 bps_update_entity）
 - **结论**：GPT-5.4 当前不适合作为 primary 模型；**Cron + 持久 Session 是 Aida 自治运营的核心路径**
 
 ### IdleX GEO E2E v3.2 清洁环境测试（2026-03-08）
@@ -420,33 +420,33 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - 一模一策差异化精准：doubao(情绪) / qianwen(结构) / yuanbao(务实)
   - Blueprint 编译器首次由 Agent 自主使用并通过验证
   - GPT-5.4 via OpenRouter（embedded 模式）工具调用能力和业务理解均显著优于 Gemini 3.1 Pro
-- **持续问题**：Gateway auth-profiles.json 缺失导致每轮降级 embedded 模式；治理绕过（第 4 次复现，Aida 自建文件级审批流替代）
+- **持续问题**：Gateway auth-profiles.json 缺失导致每轮降级 embedded 模式；管理绕过（第 4 次复现，Aida 自建文件级审批流替代）
 - **LLM 模型结论**：`openrouter/openai/gpt-5.4` 确认可用且效果最佳；注意 `openai/` 前缀路由到原生 OpenAI（不兼容），必须用 `openrouter/` 前缀
 
 ### 第三方专家评估（2026-03-09）
 - 评估报告：`archive/AIDA项目第三方专家评估报告 (2026-03-09).md`
-- **综合评分：8.4/10**（理论原创 9.5 / 架构完整 8.5 / 工程质量 8.0 / 治理能力 9.0 / 测试覆盖 8.8 / 实用成熟 7.5 / 可扩展性 8.0）
+- **综合评分：8.4/10**（理论原创 9.5 / 架构完整 8.5 / 工程质量 8.0 / 管理能力 9.0 / 测试覆盖 8.8 / 实用成熟 7.5 / 可扩展性 8.0）
 - **核心结论**：AIDA 是理论原创、架构完整、工程扎实的 AI-Native 组织运营基础设施平台
 - **双引擎对比**：erpsys（Django 参考）→ bps-engine（TypeScript 生产版）演进路径合理
-- **P0 建议**：Blueprint 编译器完善、文件 I/O 治理绕过修复、Gateway 热加载
-- **SWOT 分析**：优势（理论原创+治理领先+工程扎实），劣势（业务验证有限+模型依赖），机会（市场空白+学术价值），威胁（LLM 能力进化+大厂竞争）
+- **P0 建议**：Blueprint 编译器完善、文件 I/O 管理绕过修复、Gateway 热加载
+- **SWOT 分析**：优势（理论原创+管理领先+工程扎实），劣势（业务验证有限+模型依赖），机会（市场空白+学术价值），威胁（LLM 能力进化+大厂竞争）
 
 ### 六模型横评测试（2026-03-09~10，已完成）
 - 测试方案：IdleX GEO E2E v3（6 turns，39 自动化检查点）
 - 测试结果目录：`test/e2e/benchmark-results/`
 - **综合报告**：`test/e2e/benchmark-results/SIX-MODEL-COMPARISON.md`
 - **排名**：
-  1. 🥇 **Gemini 3.1 Pro** (9.15/10) — 44 PASS，唯一触发治理 (5 violations)
+  1. 🥇 **Gemini 3.1 Pro** (9.15/10) — 44 PASS，唯一触发管理 (5 violations)
   2. 🥈 Opus 4.6 (8.75/10) — 43 PASS，23 entities（最多）
   3. 🥉 Qwen3.5-Plus (8.55/10) — 41 PASS，性价比最高
   4. GLM-5 (7.25/10) — 40 PASS，15 skills（最多）
   5. Kimi K2.5 (7.30/10) — 40 PASS，1 FAIL，24 mock-publish（最多）
   6. GPT-5.4 (7.05/10) — 40 PASS，无 Agent/Blueprint
 - **关键发现**：
-  - Gemini 3.1 Pro 是唯一成功触发治理拦截的模型，证明 AIDA 治理层的实际价值
+  - Gemini 3.1 Pro 是唯一成功触发管理拦截的模型，证明 AIDA 管理层的实际价值
   - Opus 4.6 实体创建最多（23），架构最完整
   - GLM-5 Skills 创建最多（15），但缺少 Agent workspace
-  - GPT-5.4 缺少 Agent 和 Blueprint，治理层无载体
+  - GPT-5.4 缺少 Agent 和 Blueprint，管理层无载体
   - 推荐生产配置：`google/gemini-3.1-pro-preview`（主）+ `dashscope/qwen3.5-plus`（备）
 
 ### MAOr 预处理 E2E 测评（2026-03-10）
@@ -476,8 +476,8 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - 综合报告：`test/e2e/benchmark/results/R4-BENCHMARK-REPORT-CN.md`
 - **方法论改进**：固定评估者（Claude Opus 4.6）+ 干净环境 + 制品导向评分
 - **排名**：Kimi K2.5 (6.40) > Qwen3.5+ (5.85) > GPT-5.4 (4.75) > GLM-5 (4.15) > Claude (2.80) > Gemini (2.40)
-- **关键发现**：Kimi K2.5 唯一触发真实治理拦截；所有模型 0 cron；behavior.json 工具调用观测方法失效
-- **横向问题**：「说而不做」反模式普遍；治理绕过（文件 I/O）连续 4 轮复现
+- **关键发现**：Kimi K2.5 唯一触发真实管理拦截；所有模型 0 cron；behavior.json 工具调用观测方法失效
+- **横向问题**：「说而不做」反模式普遍；管理绕过（文件 I/O）连续 4 轮复现
 
 ### 多模型基准测试 R5 — 框架验证轮（2026-03-10）
 - 综合报告：`test/e2e/benchmark/results/R5-BENCHMARK-REPORT-CN.md`
@@ -488,24 +488,24 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **Qwen3.5-Plus 3 次独立运行方差分析**：
   - 运行 A (GPT标签): 84 calls, 18 published, 0 governance — 产出驱动型
   - 运行 B (Claude标签): 64 calls, 11 BPS types, 2 violations — 架构驱动型
-  - 运行 C (Qwen标签): 47P/0F/1W, 2 violations + 2 approved — **均衡型，首次完整治理闭环**
+  - 运行 C (Qwen标签): 47P/0F/1W, 2 violations + 2 approved — **均衡型，首次完整管理闭环**
 - **最佳成绩**：运行 C 加权评分 **7.75/10**（AIDA 基准测试历史最高），6 维度全 8 分
-  - **突破**：Cron 100% 创建成功（R4 全军覆没）、治理闭环首次端到端验证（trigger→approve→publish）
+  - **突破**：Cron 100% 创建成功（R4 全军覆没）、管理闭环首次端到端验证（trigger→approve→publish）
 
 ### 多模型基准测试 R6 — 首轮真正跨模型对比（2026-03-10）
 - 综合报告：`test/e2e/benchmark/results/R6-BENCHMARK-REPORT-CN.md`
 - **目标**：修复 R5 模型 overlay bug 后的首轮真正跨模型对比（6/6 模型完成，Gemini 重跑后成功）
 - **框架修复**：`BENCHMARK_MODE=1` 时跳过整个 Phase 0 body（R5 修复不完整：仅跳过 install-aida.sh，Phase 0 清理步骤仍摧毁 benchmark 环境）
 - **排名**：
-  1. **Kimi K2.5** (8.70/10) — 45P/0F/3W，零 FAIL + 完整治理闭环
-  2. **Gemini 3.1 Pro** (8.30/10) — 45P/1F/2W，最多治理触发(14)，完整闭环
+  1. **Kimi K2.5** (8.70/10) — 45P/0F/3W，零 FAIL + 完整管理闭环
+  2. **Gemini 3.1 Pro** (8.30/10) — 45P/1F/2W，最多管理触发(14)，完整闭环
   3. GPT-5.4 (7.85/10) — 44P/0F/3W，最多实体(47)，业务理解出色
   4. Claude Opus 4.6 (7.55/10) — 43P/1F/4W，最强响应质量，发布最多(15)
   4. Qwen3.5-Plus (7.55/10) — 42P/0F/5W，最多蓝图(2)，最强自进化
   6. GLM-5 (1.10/10) — 33P/1F/13W，陷入诊断循环
 - **关键发现**：
-  - 治理闭环是最大分化维度：Gemini(14 violations) + Kimi 完整 > Claude 大部分 > 其余未闭合
-  - 治理合规度 > 创建数量：GPT 创建最多实体(47)但 0 发布，Gemini 最少实体(3)但治理链最完整
+  - 管理闭环是最大分化维度：Gemini(14 violations) + Kimi 完整 > Claude 大部分 > 其余未闭合
+  - 管理合规度 > 创建数量：GPT 创建最多实体(47)但 0 发布，Gemini 最少实体(3)但管理链最完整
   - 前 5 名均达 7.5+/10 生产可用水平
 - **残留问题（R7）**：`collect-metrics.sh` SSH 崩溃 + "Argument list too long"
 - **推荐生产配置**：`moonshot/kimi-k2.5`（主）+ `google/gemini-3.1-pro-preview`（备）+ `dashscope/qwen3.5-plus`（替补）
@@ -515,15 +515,15 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **目标**：修复 R6 数据采集管线，首轮 6/6 模型 metrics + behavior + session JSONL 全部采集成功
 - **框架修复**：collect-metrics.sh 重写（移除 set -e, temp 文件替代 argv, JSONL 提前下载）+ agent config 污染修复（agents.list trim）
 - **排名**：
-  1. **GPT-5.4** (8.55/10) — 46P/0F/2W，最佳 E2E + 治理 RESTRICTED
+  1. **GPT-5.4** (8.55/10) — 46P/0F/2W，最佳 E2E + 管理 RESTRICTED
   2. **Claude Opus 4.6** (8.50/10) — 38P/1F/8W，164 工具调用（105 BPS）+ 53 实体
-  3. Kimi K2.5 (6.50/10) — 40P/0F/8W，23 violations（最多治理触发）
+  3. Kimi K2.5 (6.50/10) — 40P/0F/8W，23 violations（最多管理触发）
   4. Gemini 3.1 Pro (5.90/10) — 44P/1F/3W，15 发布文件（最多）
   5. Qwen3.5-Plus (5.45/10) — 39P/1F/7W，最清晰二层路由 + Config 自毁
   6. GLM-5 (1.30/10) — 35P/1F/11W，从未收到业务提示
 - **关键发现**：
   - GPT-5.4 取代 Kimi 成为最佳：唯一触发 RESTRICTED 熔断器 + 零 FAIL
-  - Claude 工具调用量是第二名的 1.9 倍，但 0 治理触发 — 工具量 ≠ 治理合规
+  - Claude 工具调用量是第二名的 1.9 倍，但 0 管理触发 — 工具量 ≠ 管理合规
   - agent-create 的 tools.profile 非法值是致命陷阱（Qwen R5→R7 损失 2.30 分）
   - R6→R7 评分基准变化：R7 首次基于完整数据，分数变化含评分精度提升因素
 - **推荐生产配置**：`openrouter/openai/gpt-5.4`（主）+ `openrouter/anthropic/claude-opus-4.6`（备）+ `moonshot/kimi-k2.5`（替补）
@@ -531,13 +531,13 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 ### 三框架差距分析 P0 实施（2026-03-11）
 - 差距分析报告：`archive/AIDA差距分析-三框架视角 (2026-03-11).md`
 - **分析框架**：操作系统理论 × 控制论 × 有限理性，三框架交叉验证
-- **P0-a 治理绕过封堵**（已完成）：
+- **P0-a 管理绕过封堵**（已完成）：
   - `src/governance/constants.ts` 新建 — `GATED_WRITE_TOOLS` 单一来源（8 个写操作工具）
-  - `bps_load_blueprint`、`bps_register_agent`、`bps_load_governance` 纳入 ActionGate 治理
+  - `bps_load_blueprint`、`bps_register_agent`、`bps_load_governance` 纳入 ActionGate 管理
   - `buildEvalContext` 新增工具专用上下文字段（toolsProfile、persist、hasYaml、inlineYaml）
   - `DEFAULT_SCOPE_WRITE_TOOLS`（7 个，排除 `bps_load_governance`）用于 flat-format 约束默认 scope
   - Dashboard `replayToolCall` 新增 3 个 case
-  - 治理覆盖：5/16 → 8/16 工具（8 读 + 8 写全部受治理管控）
+  - 管理覆盖：5/16 → 8/16 工具（8 读 + 8 写全部受管理管控）
 - **P0-b 调度器基础修复**（已完成）：
   - ProcessDef 新增 `deadline` 字段，`bps_processes` 表新增 `deadline` 列
   - `bps_create_task` 暴露 `priority`（int）+ `deadline`（ISO 8601）参数
@@ -547,7 +547,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - outcome 存入 context snapshot `_outcome` 字段
   - `bps_scan_work` 新增 `outcomeDistribution` 摘要（success/partial/failed 计数）
 - **测试**：+20 新测试（13 P0-a + 4 P0-b + 3 P0-c），总计 419 tests
-- **BPS tools**：16 个（14 base + 2 conditional），8 个受治理管控
+- **BPS tools**：16 个（14 base + 2 conditional），8 个受管理管控
 
 ### 三框架差距分析 P1 实施（2026-03-11）
 - **P1-a 熔断器自动恢复**（已完成）：
@@ -581,7 +581,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - `bps_get_entity` 返回 `relatedEntities` 摘要（类型 + ID + updatedAt + version）
   - **不做级联更新** — 变更传播由 Agent 决定
 - **测试**：+5 新测试（3 P2-a + 2 P2-b），总计 434 tests
-- **BPS tools**：17 个（15 base + 2 conditional），9 个受治理管控
+- **BPS tools**：17 个（15 base + 2 conditional），9 个受管理管控
 
 ### 三框架差距分析 P3 实施（2026-03-11）
 - **P3 审批模式学习**（已完成）：
@@ -605,13 +605,13 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 
 ### 结构能力 E2E 测试 R2（2026-03-11）
 - R2 报告：`test/e2e/structural-capability/R2-REPORT.md`
-- **目标**：验证 Agent 工具调用 + 治理拦截（full 模式，含 Phase 4 Agent turns）
+- **目标**：验证 Agent 工具调用 + 管理拦截（full 模式，含 Phase 4 Agent turns）
 - **结果**：70 PASS / 0 FAIL / 2 WARN / 72 TOTAL — ALL CHECKS PASSED（70 秒）
 - **模型**：moonshot/kimi-k2.5，3 个 Agent turns
 - **Agent 表现**：
   - Turn 1：`bps_scan_work` + `bps_query_entities` → 工作全景 + 实体清单
-  - Turn 2：`bps_get_entity` + `bps_governance_status` → 实体关系 + 治理效能分析
-  - Turn 3：`bps_update_entity` → 治理 REQUIRE_APPROVAL 拦截成功，输出审批 ID + Dashboard 引导
+  - Turn 2：`bps_get_entity` + `bps_governance_status` → 实体关系 + 管理效能分析
+  - Turn 3：`bps_update_entity` → 管理 REQUIRE_APPROVAL 拦截成功，输出审批 ID + Dashboard 引导
 - **2 WARN**：S3.08（Dashboard 审批 API 无 PENDING 数据）、V4.2（中文"总结"未匹配英文 summary 关键词）
 - **结论**：Kimi K2.5 可有效消费 P0-P3 全部新增结构能力
 
@@ -630,7 +630,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **2 FAIL 原因**：S3.06（Dashboard 延迟未看到全部种子实体），V5.2（Aida 重载管理约束从 3→2 个）— 均为 Aida 主动行为与静态种子的冲突，非系统缺陷
 - **新发现**：Governance 约束条件语法不兼容（expr-eval 变量访问 vs Aida 生成的条件），导致过度拦截但不影响管理闭环
 
-### 治理约束语法修复（2026-03-11，R3 #2 修复）
+### 管理约束语法修复（2026-03-11，R3 #2 修复）
 - **问题**：`evaluateConstraint()` 对所有 expr-eval 错误 fail-closed（`passed: false`），包括 "undefined variable" 错误 — 导致不含目标字段的操作被误报为违规
 - **根因链**：Aida 生成约束（如 `publishReady == true`）无 `scope.dataFields` → 所有 `bps_update_entity` 调用均触发该约束 → 操作上下文无 `publishReady` 变量 → expr-eval 抛 "undefined variable" → fail-closed → 过度拦截（含 `bps_register_agent`）→ Agent workspace 创建失败
 - **修复**：`src/governance/action-gate.ts` `evaluateConstraint()` 区分两类错误：
@@ -641,17 +641,17 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 
 ### 测试自主性优化（2026-03-11，R3 #1/#5 修复）
 - **#1 路径自主**：Turn 3 删除 mock-publish-tmp 路径指令，Phase 1 不再预创建目录，B4.12/V5.6 改为 session JSONL write tool 调用检测
-- **#5 两阶段发现**：TOOLS.md 删除 two-stage 完整流程预设，仅保留治理拦截行为说明
+- **#5 两阶段发现**：TOOLS.md 删除 two-stage 完整流程预设，仅保留管理拦截行为说明
 - 测试不再指定 Aida 的内容输出路径，也不再预置发布工作流——观察 Aida 是否自主发现
 
 ### 结构能力 E2E 测试 R4 — 修正效果验证（2026-03-11）
 - R4 报告：`test/e2e/structural-capability/R4-REPORT.md`
-- **目标**：验证 R3 修正（#2 治理语法 + #1 路径自主 + #5 两阶段发现）的效果
+- **目标**：验证 R3 修正（#2 管理语法 + #1 路径自主 + #5 两阶段发现）的效果
 - **结果**：92 PASS / 1 FAIL / 4 WARN / 97 TOTAL（847s, 14 分钟）
 - **修正效果**：
-  - #2 治理语法：violations 19→4（-79%），B4.17/B4.18/B4.19 从 WARN→PASS，HITL 闭环首次完整通过
+  - #2 管理语法：violations 19→4（-79%），B4.17/B4.18/B4.19 从 WARN→PASS，HITL 闭环首次完整通过
   - #1 路径自主：Aida 自主选择 `~/.aida/geo-content/`，JSONL 检测 6 次 write calls，V5.6 PASS
-  - #5 两阶段发现：Aida 从治理拦截自然推导出发布→审批→分发流程
+  - #5 两阶段发现：Aida 从管理拦截自然推导出发布→审批→分发流程
 - **1 FAIL**：V5.2 constraints=2（Aida 自建覆盖种子 3），建议阈值改为 ≥2
 - **遗留**：Turn 6 `unexpected_state` 仍阻止 Agent workspace 创建（OpenClaw 框架问题）
 

@@ -830,7 +830,7 @@ bps-engine 通过 `openclaw plugins install --link` 注册为 OpenClaw 插件：
 | BPS SysCall | sessions_spawn / sessions_send / steer | Agent 操作原语 |
 | BPS Rule（非确定性） | LLM 评估 | 自然语言规则路由给模型 |
 | BPS Role (Agent) | Agent 实例 | 计算节点 |
-| Governance Gate | Exec Approval + Tool Policy + Sandbox | 治理拦截 |
+| Management Gate | Exec Approval + Tool Policy + Sandbox | 管理拦截 |
 | 三频模型 | Heartbeat + Cron + Event | 完美对应 |
 
 ### 14.2 Workspace 文件语义（AIDA 约定）

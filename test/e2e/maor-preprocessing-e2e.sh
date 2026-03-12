@@ -269,7 +269,7 @@ if [ "$START_PHASE" -le 5 ]; then
 
   aida_say 4a '现在建立合规体系：
 1. 创建全部 8 个知情同意书模板实体（IC-01 至 IC-08，见 compliance.md 同意书覆盖范围表），每个包含编号、项目类型、适应症、禁忌、风险
-2. 建立治理约束（management.yaml），至少包含：知情同意必签、肉毒素剂量上限（2月200U）、光子间隔（≥3周）、折扣不叠加、禁忌症阻断、三星钻石限额、麻药面积上限
+2. 建立管理约束（management.yaml），至少包含：知情同意必签、肉毒素剂量上限（2月200U）、光子间隔（≥3周）、折扣不叠加、禁忌症阻断、三星钻石限额、麻药面积上限
 3. 写完 management.yaml 后，请立即使用 bps_load_management 工具将其加载到运行时'
 
   check "V5.1 Aida produced response" "test -s $LOG_DIR/turn-4a.log"
