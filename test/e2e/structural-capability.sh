@@ -1254,18 +1254,7 @@ if [ "$START_PHASE" -le 3 ]; then
     try{JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('yes')}catch{console.log('no')}" 2>/dev/null || echo 'no')
   check "S3.07 Circuit breaker reset returns valid JSON" "test '$RESET_OK' = 'yes'"
 
-  # S3.08: Approvals decide endpoint
-  FIRST_APPROVAL_ID=$(api_get "/api/management/approvals" 2>/dev/null | node -e "
-    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
-    const p=d.find(a=>a.status==='PENDING');
-    console.log(p?p.id:'')}catch{console.log('')}" 2>/dev/null)
-  if [ -n "$FIRST_APPROVAL_ID" ]; then
-    DECIDE_OK=$(api_post "/api/management/approvals/$FIRST_APPROVAL_ID/decide" '{"decision":"REJECTED","reason":"structural test"}' 2>/dev/null | node -e "
-      try{JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('yes')}catch{console.log('no')}" 2>/dev/null || echo 'no')
-    check "S3.08 Approvals decide endpoint works" "test '$DECIDE_OK' = 'yes'"
-  else
-    soft "S3.08 Approvals decide endpoint (no pending approvals to test)" "false"
-  fi
+  # S3.08: moved to Phase 5 (approvals only exist after Phase 4 agent turns)
 
   # S3.09: Dashboard pages accessible
   for page in "/" "/business-goals" "/management"; do
@@ -1410,6 +1399,11 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   soft "B4.19 Approvals processed ($APPROVED_COUNT approved)" "test $APPROVED_COUNT -ge 1"
   log "  Approved $APPROVED_COUNT of $PENDING_COUNT pending approvals."
 
+  # Reset circuit breaker so Turn 6 can create resources
+  log "  Resetting circuit breaker for Turn 6..."
+  api_post "/api/management/circuit-breaker/reset" '{}' >/dev/null 2>&1
+  sleep 2
+
   # ── Turn 6: Skill/Agent Creation ────────────────────────
   log "Turn 6: Skill and Agent creation..."
   aida_say 6 "GEO运营里有不少重复性工作模式。请帮我做两件事：
@@ -1500,6 +1494,13 @@ if [ "$ENGINE_ONLY" = false ]; then
   soft "V5.6 Aida produced content artifacts (write tool calls=$TOTAL_WRITES)" "test ${TOTAL_WRITES:-0} -ge 1"
 
   soft "V5.7 Management was exercised (violations=$FINAL_VIOLATIONS)" "test $FINAL_VIOLATIONS -ge 1"
+
+  # S3.08 (moved from Phase 3): approvals only exist after Phase 4 agent turns
+  DECIDED_APPROVALS=$(api_get "/api/management/approvals" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    const decided=d.filter(a=>a.status==='APPROVED'||a.status==='REJECTED').length;
+    console.log(decided)}catch{console.log(0)}" 2>/dev/null || echo 0)
+  soft "S3.08 Approval decide works (decided=$DECIDED_APPROVALS)" "test ${DECIDED_APPROVALS:-0} -ge 1"
 
   AGENT_SKILLS=$((FINAL_SKILLS - ${BASELINE_SKILLS:-0}))
   soft "V5.8 Agent created Skills >= 1 (got $AGENT_SKILLS)" "test ${AGENT_SKILLS:-0} -ge 1"
