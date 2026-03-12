@@ -706,6 +706,34 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **调试修复 5 项**：E1.03/04 outcome 存储路径、EX.04 violations 表 schema、E11.07 ConstraintDef 必需字段、EX.06 priority 排序
 - **与 structural-capability 对比**：128 vs 97 检查，69 vs 39 引擎检查，新增维度健康度报告
 
+### AEF Capability E2E 测试 R2（2026-03-12）
+- R2 报告：`test/e2e/aef-capability/R2-REPORT.md`
+- **目标**：修复 R1 的 4 WARN（B4.18/B4.19/S3.08 审批闭环 + B4.06 实体创建）
+- **结果**：**122 PASS / 0 FAIL / 6 WARN / 128 TOTAL**
+- **根因分析**：Phase 2 引擎测试为 S3.03 种植 CRITICAL 违规 → CB API reset 只重置 state 不清 violations → `updateCircuitBreaker()` 重计 1h 窗口 → CB 持续 DISCONNECTED → Turn 4 始终 BLOCK（非 REQUIRE_APPROVAL）
+- **修复**：Phase 4 启动前 + Turn 4 前两点管理状态重置（清 violations + CB 列归零 + API reset）
+- **HITL 审批闭环首次完整通过**：Turn 3 触发违规 → Turn 4 清理后 REQUIRE_APPROVAL → Step 5 程序化审批 → Turn 6 CB 重置后恢复
+- **R1→R2 改善**：3 WARN→PASS（B4.06/B4.18/B4.19），2 新 WARN（LLM 行为差异）
+- **R3 改进方向**：V5.7 改为 JSONL 管理消息检测；S3.08 移至 Step 5 立即验证；B4.15 JSONL fallback
+
+### AEF Capability E2E 测试 R3-R5（2026-03-12）
+- R3 报告：`test/e2e/aef-capability/R3-REPORT.md`
+- **R3 结果**：**123 PASS / 0 FAIL / 5 WARN / 128 TOTAL**（最佳轮次）
+  - V5.7 JSONL 检测：WARN→PASS（JSONL msgs=24, DB violations=0）
+  - B4.15 JSONL fallback：WARN→PASS（violations=3 in DB）
+  - S3.08 根因发现：`/api/management/approvals` 只返回 PENDING（设计如此），已改为直接查 SQLite
+  - 框架 WARN 从 4→3→1 收敛，剩余 4 WARN 全部为 LLM 行为（Turn 2/3 截断）
+- **R4 结果**：114P/0F/14W — Qwen3.5-plus LLM 方差导致 Turn 4/6 截断（2 行），HITL 路径未触发
+- **R5 结果**：116P/0F/12W — kimi/kimi-for-coding 在 embedded 模式下返回 403（`only available for Coding Agents`），不适合此测试
+- **R3-R5 关键改动**：
+  - V5.7 改用 session JSONL grep 检测管理消息（不受 DB 清理影响）
+  - B4.15 增加 JSONL fallback（DB violations=0 时检测 JSONL）
+  - S3.08 直接查 SQLite `bps_management_approvals` 表
+  - Turn 6 CB 重置增加 DB 清理（防止 1h 窗口 re-trip）
+  - V0.7 模型检查接受两种基线（qwen3.5-plus 或 kimi-for-coding）
+  - 报告模板改用动态 `$ACTUAL_MODEL`
+- **结论**：dashscope/qwen3.5-plus 仍为最佳基线模型；框架问题基本收敛（1 WARN），LLM 方差是主要不确定性
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
