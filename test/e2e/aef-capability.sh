@@ -71,10 +71,27 @@ jfield()   { node -e "try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'
 
 aida_say() {
   local turn="$1"; shift; local msg="$1"
-  log "Turn $turn: sending to Aida..."
+  local max_retries=2
+  local min_lines=5
+  local attempt=0
   local out="$LOG_DIR/turn-$turn.log"
-  timeout "$AGENT_TIMEOUT" openclaw agent --agent main --message "$msg" > "$out" 2>&1 || true
-  echo -e "${CYAN}--- Aida response (turn $turn, first 20 lines) ---${NC}"
+
+  while [ $attempt -le $max_retries ]; do
+    attempt=$((attempt + 1))
+    if [ $attempt -gt 1 ]; then
+      log "Turn $turn: response too short (<$min_lines lines), retry $((attempt-1))/$max_retries..."
+    else
+      log "Turn $turn: sending to Aida..."
+    fi
+    timeout "$AGENT_TIMEOUT" openclaw agent --agent main --message "$msg" > "$out" 2>&1 || true
+    local lines
+    lines=$(wc -l < "$out" 2>/dev/null || echo 0)
+    if [ "$lines" -ge $min_lines ] || [ $attempt -gt $max_retries ]; then
+      break
+    fi
+  done
+
+  echo -e "${CYAN}--- Aida response (turn $turn, attempt $attempt, first 20 lines) ---${NC}"
   head -20 "$out"
   echo -e "${CYAN}--- (full log: $out, $(wc -l < "$out") lines total) ---${NC}\n"
 }
@@ -1559,6 +1576,129 @@ resetManagement();
     `brief=${briefStr.length}B, full=${fullStr.length}B`);
 }
 
+// ─── AEF Σ10 COADAPT — Human-Agent Cooperative Adaptation ───
+
+// E10.01: REQUIRE_APPROVAL creates structured approval record with approvalId + constraintId
+{
+  mgmtStore.loadConstraints(govResult.constraints);
+  resetManagement();
+  const g10 = new ActionGate(mgmtStore);
+  const r10 = g10.check('bps_update_entity', {
+    entityType: 'content', entityId: 'e10-doc',
+    data: { publishReady: true },
+  });
+  let approvalId = '';
+  if (r10.verdict === 'REQUIRE_APPROVAL') {
+    approvalId = g10.createApprovalRequest('bps_update_entity', {
+      entityType: 'content', entityId: 'e10-doc',
+      data: { publishReady: true },
+    }, r10);
+  }
+  const pending = mgmtStore.getPendingApprovals();
+  const match = pending.find((a: any) => a.id === approvalId);
+  assert('E10.01', 'REQUIRE_APPROVAL produces structured approval (approvalId + constraintId)',
+    !!approvalId && !!match && match.constraintId === 'c-publish-approval',
+    `approvalId=${approvalId}, constraintId=${match?.constraintId}`);
+}
+
+// E10.02: Approved replay executes successfully (entity version increments)
+{
+  mgmtStore.loadConstraints(govResult.constraints);
+  resetManagement();
+  const dossierStore = engine.dossierStore;
+  dossierStore.upsert({ entityType: 'content', entityId: 'e10-replay', data: { title: 'draft', publishReady: false }, version: 1 });
+  const v1 = dossierStore.get('content', 'e10-replay');
+
+  const g10b = new ActionGate(mgmtStore);
+  const r10b = g10b.check('bps_update_entity', {
+    entityType: 'content', entityId: 'e10-replay',
+    data: { publishReady: true },
+  });
+  const aid = g10b.createApprovalRequest('bps_update_entity', {
+    entityType: 'content', entityId: 'e10-replay',
+    data: { publishReady: true },
+  }, r10b);
+  // Approve and replay: apply the update
+  mgmtStore.decideApproval(aid, 'APPROVED', 'e2e-test');
+  dossierStore.upsert({
+    entityType: 'content', entityId: 'e10-replay',
+    data: { publishReady: true },
+    version: (v1?.version ?? 1) + 1,
+  });
+  const v2 = dossierStore.get('content', 'e10-replay');
+  assert('E10.02', 'Approved replay increments entity version',
+    v2 && v2.version > (v1?.version ?? 0) && v2.data?.publishReady === true,
+    `v1=${v1?.version}, v2=${v2?.version}, publishReady=${v2?.data?.publishReady}`);
+}
+
+// E10.03: Rejected replay does NOT execute (entity unchanged)
+{
+  mgmtStore.loadConstraints(govResult.constraints);
+  resetManagement();
+  const dossierStore = engine.dossierStore;
+  dossierStore.upsert({ entityType: 'content', entityId: 'e10-reject', data: { title: 'keep', publishReady: false }, version: 1 });
+  const vBefore = dossierStore.get('content', 'e10-reject');
+
+  const g10c = new ActionGate(mgmtStore);
+  const r10c = g10c.check('bps_update_entity', {
+    entityType: 'content', entityId: 'e10-reject',
+    data: { publishReady: true },
+  });
+  const rejId = g10c.createApprovalRequest('bps_update_entity', {
+    entityType: 'content', entityId: 'e10-reject',
+    data: { publishReady: true },
+  }, r10c);
+  // Reject — should NOT replay
+  mgmtStore.decideApproval(rejId, 'REJECTED', 'e2e-test');
+  // Intentionally do NOT apply the update
+  const vAfter = dossierStore.get('content', 'e10-reject');
+  assert('E10.03', 'Rejected approval leaves entity unchanged',
+    vAfter && vAfter.version === (vBefore?.version ?? 0) && vAfter.data?.publishReady === false,
+    `vBefore=${vBefore?.version}, vAfter=${vAfter?.version}, publishReady=${vAfter?.data?.publishReady}`);
+}
+
+// E10.04: Approval decisions feed back to constraintEffectiveness
+{
+  mgmtStore.loadConstraints(govResult.constraints);
+  resetManagement();
+  const g10d = new ActionGate(mgmtStore, {
+    thresholds: [
+      { severity: 'CRITICAL', maxViolations: 999, window: '1h', action: 'DISCONNECTED' },
+      { severity: 'HIGH', maxViolations: 999, window: '1h', action: 'WARNING' },
+    ],
+  });
+  // Generate 3 violations + 3 approval requests, then decide them
+  for (let i = 0; i < 3; i++) {
+    const r = g10d.check('bps_update_entity', {
+      entityType: 'content', entityId: 'e10-eff-' + i,
+      data: { publishReady: true },
+    });
+    const aId = g10d.createApprovalRequest('bps_update_entity', {
+      entityType: 'content', entityId: 'e10-eff-' + i,
+      data: { publishReady: true },
+    }, r);
+    mgmtStore.decideApproval(aId, i < 2 ? 'APPROVED' : 'REJECTED', 'e2e-test');
+  }
+  const eff = mgmtStore.getConstraintEffectiveness();
+  const pubEff = eff.find((e: any) => e.constraintId === 'c-publish-approval');
+  assert('E10.04', 'Decisions feed back to constraintEffectiveness',
+    !!pubEff && pubEff.approvedCount === 2 && pubEff.rejectedCount === 1 && pubEff.violationCount >= 3,
+    `approved=${pubEff?.approvedCount}, rejected=${pubEff?.rejectedCount}, violations=${pubEff?.violationCount}`);
+}
+
+// E10.05: management_status exposes effectiveness to Agent
+{
+  // Reuse state from E10.04 (effectiveness data still in DB)
+  const statusTool = tools.find(t => t.name === 'bps_management_status')!;
+  const status = await statusTool.execute('status', {}) as any;
+  const hasEff = Array.isArray(status.constraintEffectiveness) && status.constraintEffectiveness.length > 0;
+  const hasFields = hasEff && status.constraintEffectiveness[0].constraintId &&
+    status.constraintEffectiveness[0].violationCount !== undefined;
+  assert('E10.05', 'management_status exposes constraintEffectiveness to Agent',
+    hasEff && hasFields,
+    `count=${status.constraintEffectiveness?.length}, fields=${hasFields}`);
+}
+
 // ═════════════════════════════════════════════
 // Summary + AEF Dimension Health
 // ═════════════════════════════════════════════
@@ -1590,6 +1730,8 @@ const SIGMA_MAP: Record<string, string> = {
   'E9.01':'Σ9','E9.02':'Σ9','E9.03':'Σ9',
   // AEF ΣX Cross
   'EX.01':'ΣX','EX.02':'ΣX','EX.03':'ΣX','EX.04':'ΣX','EX.05':'ΣX','EX.06':'ΣX',
+  // AEF Σ10 COADAPT
+  'E10.01':'Σ10','E10.02':'Σ10','E10.03':'Σ10','E10.04':'Σ10','E10.05':'Σ10',
   // AEF Σ11 MATCH
   'E11.01':'Σ11','E11.02':'Σ11','E11.03':'Σ11','E11.04':'Σ11','E11.05':'Σ11',
   'E11.06':'Σ11','E11.07':'Σ11','E11.08':'Σ11','E11.09':'Σ11','E11.10':'Σ11',
@@ -1597,7 +1739,7 @@ const SIGMA_MAP: Record<string, string> = {
 
 const DIM_NAMES: Record<string, string> = {
   'Σ1':'PROC','Σ2':'ENTITY','Σ3':'CONSTRAINT','Σ4':'CIRCUIT','Σ5':'LEARNING',
-  'Σ6':'CONTEXT','Σ7':'SCHED','Σ8':'TOOL','Σ9':'HIER','ΣX':'CROSS','Σ11':'MATCH',
+  'Σ6':'CONTEXT','Σ7':'SCHED','Σ8':'TOOL','Σ9':'HIER','Σ10':'COADAPT','ΣX':'CROSS','Σ11':'MATCH',
 };
 
 const dimStats: Record<string, { pass: number; total: number }> = {};
