@@ -1763,7 +1763,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
     const db=new DatabaseSync('$AIDA_HOME/data/bps.db');
     db.exec('DELETE FROM bps_management_violations');
     db.exec('DELETE FROM bps_management_approvals');
-    db.exec(\"UPDATE bps_management_circuit_breaker SET state='NORMAL', critical_count=0, high_count=0\");
+    db.exec(\"UPDATE bps_management_circuit_breaker SET state='NORMAL', violation_count_critical=0, violation_count_high=0\");
     db.close();
     console.log('[reset] Cleared violations + approvals + CB → NORMAL');
   " 2>/dev/null
@@ -1866,7 +1866,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
     const {DatabaseSync}=require('node:sqlite');
     const db=new DatabaseSync('$AIDA_HOME/data/bps.db');
     db.exec('DELETE FROM bps_management_violations');
-    db.exec(\"UPDATE bps_management_circuit_breaker SET state='NORMAL', critical_count=0, high_count=0\");
+    db.exec(\"UPDATE bps_management_circuit_breaker SET state='NORMAL', violation_count_critical=0, violation_count_high=0\");
     db.close();
   " 2>/dev/null
   api_post "/api/management/circuit-breaker/reset" '{}' >/dev/null 2>&1
