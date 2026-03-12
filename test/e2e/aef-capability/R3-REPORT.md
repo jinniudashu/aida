@@ -113,8 +113,9 @@ R2 → R3 改善：审批数 1→6，闭环更完整。
 | R2 | 122 | 0 | 6 | 3 | 3 |
 | R3 | 123 | 0 | 5 | 1 | 4 |
 | R4 | 114 | 0 | 14 | 1 | 13 |
+| R5 | 116 | 0 | 12 | 1 | 11 |
 
-框架 WARN 从 4→3→1→1，框架自身问题已收敛。R4 回退至 14 WARN 完全由 LLM 响应截断导致（Turn 4/6 仅 2 行，HITL 审批路径未触发）。
+框架 WARN 从 4→3→1→1→1，框架自身问题已收敛。R4/R5 回退均由 LLM 问题导致。
 
 ## R4 追记（S3.08 SQLite 修复验证）
 
@@ -126,7 +127,42 @@ R4 部署了 S3.08 SQLite 直接查询修复（绕过只返回 PENDING 的 REST 
 
 **R4 暴露的 LLM 方差问题**：同一模型（Qwen3.5-plus）连续运行，Turn 2/4/6 产出质量波动剧烈（R3: 102/36/85 行 vs R4: 102/2/2 行）。
 
+## R5 追记（kimi/kimi-for-coding 基线测试）
+
+R5 切换到 kimi/kimi-for-coding 作为基线模型（116P/0F/12W）。
+
+**关键发现**：kimi/kimi-for-coding 在 embedded 模式下返回 403 错误：
+```
+403 Kimi For Coding is currently only available for Coding Agents
+such as Kimi CLI, Claude Code, Roo Code, Kilo Code, etc.
+```
+
+当 OpenClaw Gateway 超时（60s health check 失败）回退到 embedded 模式时，kimi 拒绝请求。这导致 Turn 4 HITL 路径再次无法触发。
+
+**R5 Agent 行为**：
+- Turn 1: 84 行（完整状态汇报）
+- Turn 2: 31 行（创建 2 个实体 + 管理约束触发 CB DISCONNECTED）
+- Turn 3: 27 行（CB DISCONNECTED 阻止写操作，请求人工恢复）
+- Turn 4: 96 行（gateway→embedded fallback, kimi 403, 但 JSONL 有 24 条管理消息）
+- Turn 6: 90 行（Skill + Agent 描述完整，但 0 个实际创建 — 工具调用未执行）
+- Turn 7: 173 行（完整日报）
+- Turn 8: 211 行（管理审计报告）
+
+**结论**：kimi/kimi-for-coding 不适合此测试（embedded 模式 403）。dashscope/qwen3.5-plus 已恢复为基线模型。
+
+## R1→R5 综合结论
+
+| 维度 | 结论 |
+|------|------|
+| 框架稳定性 | 框架 WARN 4→1，S3.08（API 只返回 PENDING）是唯一残留框架问题 |
+| 最佳成绩 | **R3: 123P/0F/5W**（qwen3.5-plus，1127s） |
+| V5.7 修复 | JSONL 检测在 R3/R4/R5 三轮持续有效 |
+| B4.15 修复 | JSONL fallback 在 R3 PASS（violations=3），R4/R5 PASS（JSONL fallback） |
+| S3.08 修复 | SQLite 直接查询已部署，但因 LLM 方差未产生审批记录，无法验证 |
+| LLM 方差 | Qwen3.5-plus 同一模型连续运行，Turn 响应长度波动 2→102 行，是主要不确定性来源 |
+| 模型选择 | dashscope/qwen3.5-plus（primary），kimi/kimi-for-coding 仅作 fallback（embedded 403） |
+
 ## 下一步
 
-- **R5**：锁定 kimi/kimi-for-coding 为基线模型，验证 S3.08 SQLite 修复 + LLM 稳定性
 - **长期**：Σ10 ADAPT 维度检查点设计
+- **模型稳定性**：考虑增加 Turn 重试机制（响应 <5 行时自动重发）
