@@ -1605,9 +1605,10 @@ resetManagement();
 {
   mgmtStore.loadConstraints(govResult.constraints);
   resetManagement();
-  const dossierStore = engine.dossierStore;
-  dossierStore.upsert({ entityType: 'content', entityId: 'e10-replay', data: { title: 'draft', publishReady: false }, version: 1 });
-  const v1 = dossierStore.get('content', 'e10-replay');
+  const ds = engine.dossierStore;
+  const d = ds.getOrCreate('content', 'e10-replay');
+  ds.commit(d.id, { title: 'draft', publishReady: false });
+  const before = ds.get('content', 'e10-replay')!;
 
   const g10b = new ActionGate(mgmtStore);
   const r10b = g10b.check('bps_update_entity', {
@@ -1620,24 +1621,21 @@ resetManagement();
   }, r10b);
   // Approve and replay: apply the update
   mgmtStore.decideApproval(aid, 'APPROVED', 'e2e-test');
-  dossierStore.upsert({
-    entityType: 'content', entityId: 'e10-replay',
-    data: { publishReady: true },
-    version: (v1?.version ?? 1) + 1,
-  });
-  const v2 = dossierStore.get('content', 'e10-replay');
+  ds.commit(d.id, { publishReady: true });
+  const after = ds.get('content', 'e10-replay')!;
   assert('E10.02', 'Approved replay increments entity version',
-    v2 && v2.version > (v1?.version ?? 0) && v2.data?.publishReady === true,
-    `v1=${v1?.version}, v2=${v2?.version}, publishReady=${v2?.data?.publishReady}`);
+    after.dossier.currentVersion > before.dossier.currentVersion && after.data?.publishReady === true,
+    `v1=${before.dossier.currentVersion}, v2=${after.dossier.currentVersion}, publishReady=${after.data?.publishReady}`);
 }
 
 // E10.03: Rejected replay does NOT execute (entity unchanged)
 {
   mgmtStore.loadConstraints(govResult.constraints);
   resetManagement();
-  const dossierStore = engine.dossierStore;
-  dossierStore.upsert({ entityType: 'content', entityId: 'e10-reject', data: { title: 'keep', publishReady: false }, version: 1 });
-  const vBefore = dossierStore.get('content', 'e10-reject');
+  const ds = engine.dossierStore;
+  const d = ds.getOrCreate('content', 'e10-reject');
+  ds.commit(d.id, { title: 'keep', publishReady: false });
+  const before = ds.get('content', 'e10-reject')!;
 
   const g10c = new ActionGate(mgmtStore);
   const r10c = g10c.check('bps_update_entity', {
@@ -1651,10 +1649,10 @@ resetManagement();
   // Reject — should NOT replay
   mgmtStore.decideApproval(rejId, 'REJECTED', 'e2e-test');
   // Intentionally do NOT apply the update
-  const vAfter = dossierStore.get('content', 'e10-reject');
+  const after = ds.get('content', 'e10-reject')!;
   assert('E10.03', 'Rejected approval leaves entity unchanged',
-    vAfter && vAfter.version === (vBefore?.version ?? 0) && vAfter.data?.publishReady === false,
-    `vBefore=${vBefore?.version}, vAfter=${vAfter?.version}, publishReady=${vAfter?.data?.publishReady}`);
+    after.dossier.currentVersion === before.dossier.currentVersion && after.data?.publishReady === false,
+    `vBefore=${before.dossier.currentVersion}, vAfter=${after.dossier.currentVersion}, publishReady=${after.data?.publishReady}`);
 }
 
 // E10.04: Approval decisions feed back to constraintEffectiveness
