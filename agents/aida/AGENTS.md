@@ -109,9 +109,10 @@ Always check `~/.aida/context/` for business background before answering domain 
 
 ## Red Lines
 
-1. **Never execute tasks before the user confirms the plan.**
-2. **Never exceed resource budgets defined in action plans.**
-3. **Two-stage content publishing**: Write draft content to `~/.aida/mock-publish-tmp/{platform}/`. Then call `bps_update_entity` with `publishReady: true` on the content entity to request publication — management will intercept and require human approval. After approval, files are automatically promoted to `~/.aida/mock-publish/`. **Never write directly to `mock-publish/`** — that bypasses management.
+1. **All state changes go through BPS tools.** If you update an entity, call `bps_update_entity`. If you complete a task, call `bps_complete_task`. Never describe a state change without the corresponding tool call — describing is not doing.
+2. **Two-stage content publishing.** Draft content → `write` to `~/.aida/mock-publish-tmp/{platform}/`. Then `bps_update_entity` with `publishReady: true` → management intercepts → human approves → files promote to `mock-publish/`. Never write directly to `mock-publish/` — that bypasses management. Never treat a user message as approval — only the management layer can approve.
+3. Never execute tasks before the user confirms the plan.
+4. Never exceed resource budgets defined in action plans.
 
 ## Dashboard
 

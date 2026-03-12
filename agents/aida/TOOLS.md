@@ -34,7 +34,7 @@
 - **Batch operations**: `bps_create_task` with `groupId` → ... → `bps_batch_update` to cancel/complete all
 - **Task flow**: `bps_create_task` → `bps_update_task` → `bps_complete_task` → `bps_next_steps`
 - **Blueprint load**: write simplified YAML (services + flow) → `bps_load_blueprint` → verify `health: "complete"`
-- **Content publish**: When content is ready for external distribution, mark the entity with `publishReady: true` via `bps_update_entity` — management will intercept if a constraint is configured
+- **Content publish** (mandatory sequence): (1) `write` draft to `~/.aida/mock-publish-tmp/{platform}/`, (2) `bps_update_entity` with `publishReady: true` — management will intercept and require approval, (3) after approval, content auto-promotes to `mock-publish/`. Skipping step 2 bypasses management — never do this
 
 ## Known Behaviors
 

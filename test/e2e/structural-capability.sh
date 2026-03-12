@@ -1564,7 +1564,10 @@ if [ "$ENGINE_ONLY" = false ]; then
       for(const l of lines){try{const e=JSON.parse(l);
       if(e.type==='message'&&e.message?.role==='assistant'&&Array.isArray(e.message.content)){
         for(const b of e.message.content){if(b.name==='write'){
-          const p=b.input?.path||b.input?.filePath||b.input?.file_path||'?';
+          let args=b.input||{};
+          if(!Object.keys(args).length&&b.arguments){
+            args=typeof b.arguments==='string'?JSON.parse(b.arguments):b.arguments;}
+          const p=args.path||args.filePath||args.file_path||'?';
           console.log('  '+p);}}}}catch{}}" 2>/dev/null | head -15
   fi
 fi
