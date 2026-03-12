@@ -1752,6 +1752,24 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   # Clean sessions for fresh agent context
   rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
 
+  # ── Reset management state before business scenario ────────
+  # Engine tests (Phase 2) leave CRITICAL violations in DB that cause
+  # updateCircuitBreaker() to immediately re-trip CB to DISCONNECTED
+  # on any new violation — even after S3.07 reset. Clear violations +
+  # reset CB + restart Dashboard so Phase 4 starts with clean state.
+  log "Resetting management state for Phase 4..."
+  node -e "
+    const {DatabaseSync}=require('node:sqlite');
+    const db=new DatabaseSync('$AIDA_HOME/data/bps.db');
+    db.exec('DELETE FROM bps_management_violations');
+    db.exec('DELETE FROM bps_management_approvals');
+    db.exec(\"UPDATE bps_management_circuit_breaker SET state='NORMAL', critical_count=0, high_count=0\");
+    db.close();
+    console.log('[reset] Cleared violations + approvals + CB → NORMAL');
+  " 2>/dev/null
+  # Also reset via Dashboard API so its in-memory state is consistent
+  api_post "/api/management/circuit-breaker/reset" '{}' >/dev/null 2>&1
+
   # Capture baseline metrics before business scenario
   BASELINE_ENTITIES=$(api_get "/api/entities" | jlen)
   BASELINE_VIOLATIONS=$(api_get "/api/management/violations" | jlen)
@@ -1840,6 +1858,20 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   soft "B4.13 Response mentions specific stores" "grep -qiE '声临其境|悠然茶室|棋乐无穷|store-cs' $LOG_DIR/turn-3.log"
 
   # ── Turn 4: Management Trigger — Content Publish ────────
+  # Reset CB + clear violations before Turn 4 so REQUIRE_APPROVAL is reachable.
+  # updateCircuitBreaker() re-counts violations within 1h window, so API reset
+  # alone is insufficient — old violations re-trip CB on next check.
+  log "Turn 4: Clearing violations + resetting CB for REQUIRE_APPROVAL test..."
+  node -e "
+    const {DatabaseSync}=require('node:sqlite');
+    const db=new DatabaseSync('$AIDA_HOME/data/bps.db');
+    db.exec('DELETE FROM bps_management_violations');
+    db.exec(\"UPDATE bps_management_circuit_breaker SET state='NORMAL', critical_count=0, high_count=0\");
+    db.close();
+  " 2>/dev/null
+  api_post "/api/management/circuit-breaker/reset" '{}' >/dev/null 2>&1
+  sleep 1
+
   log "Turn 4: Management trigger — content publish..."
   aida_say 4 "草稿内容我过目了，质量不错。请把今天生成的GEO内容全部标记为发布就绪（publishReady: true），准备对外分发。"
 
