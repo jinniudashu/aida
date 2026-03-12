@@ -1212,16 +1212,18 @@ console.log('\n--- Σ1 PROC: Process Lifecycle ---');
   assert('E1.02', 'OPEN → IN_PROGRESS', u?.state === 'IN_PROGRESS', `state=${u?.state}`);
 }
 
-// E1.03: Complete outcome=success
+// E1.03: Complete outcome=success (via tool — stores _outcome in snapshot)
 {
   const t = engine.tracker.createTask({
     serviceId: 'svc-probe', entityType: 'probe', entityId: 'e1-lifecycle-03',
   });
-  engine.tracker.completeTask(t.id, { _outcome: 'success' });
+  const completeTool = tools.find(t => t.name === 'bps_complete_task')!;
+  await completeTool.execute('e1-03', { taskId: t.id, outcome: 'success' });
   const c = engine.processStore.get(t.id);
-  assert('E1.03', 'Complete outcome=success → stored',
-    c?.state === 'COMPLETED' && c?.contextSnapshot?._outcome === 'success',
-    `state=${c?.state}, outcome=${c?.contextSnapshot?._outcome}`);
+  const snap = engine.processStore.getLatestSnapshot(t.id);
+  assert('E1.03', 'Complete outcome=success → stored in snapshot',
+    c?.state === 'COMPLETED' && snap?.contextData?._outcome === 'success',
+    `state=${c?.state}, outcome=${snap?.contextData?._outcome}`);
 }
 
 // E1.04: Complete outcome=partial
@@ -1229,11 +1231,13 @@ console.log('\n--- Σ1 PROC: Process Lifecycle ---');
   const t = engine.tracker.createTask({
     serviceId: 'svc-analyze', entityType: 'analysis', entityId: 'e1-lifecycle-04',
   });
-  engine.tracker.completeTask(t.id, { _outcome: 'partial' });
+  const completeTool = tools.find(t => t.name === 'bps_complete_task')!;
+  await completeTool.execute('e1-04', { taskId: t.id, outcome: 'partial' });
   const c = engine.processStore.get(t.id);
+  const snap = engine.processStore.getLatestSnapshot(t.id);
   assert('E1.04', 'Complete outcome=partial persisted',
-    c?.state === 'COMPLETED' && c?.contextSnapshot?._outcome === 'partial',
-    `outcome=${c?.contextSnapshot?._outcome}`);
+    c?.state === 'COMPLETED' && snap?.contextData?._outcome === 'partial',
+    `outcome=${snap?.contextData?._outcome}`);
 }
 
 // E1.05: IN_PROGRESS → FAILED
@@ -1404,7 +1408,7 @@ console.log('\n--- ΣX Cross: Cross-Dimension ---');
   }
   // Approve all pending
   const nowIso = new Date().toISOString();
-  db.exec(`UPDATE bps_management_approvals SET status = 'APPROVED', decided_by = 'test', decided_at = '${nowIso}' WHERE status = 'PENDING'`);
+  db.exec(`UPDATE bps_management_approvals SET status = 'APPROVED', approved_by = 'test', decided_at = '${nowIso}' WHERE status = 'PENDING'`);
 
   const eff = mgmtStore.getConstraintEffectiveness();
   const pubEff = eff.find(e => e.constraintId === 'c-publish-approval');
