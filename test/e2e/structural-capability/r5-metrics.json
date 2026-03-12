@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-12T00:14:24Z",
+  "entities": 17,
+  "violations": 5,
+  "constraints": 3,
+  "skills": 10,
+  "blueprints": 2,
+  "writeToolCalls": 3,
+  "agentWorkspaces": 0,
+  "testResults": {
+    "pass": 93,
+    "fail": 1,
+    "warn": 3,
+    "total": 97
+  }
+}
