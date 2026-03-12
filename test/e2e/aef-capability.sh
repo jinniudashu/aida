@@ -1918,12 +1918,14 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   soft "B4.19 Approvals processed ($APPROVED_COUNT approved)" "test $APPROVED_COUNT -ge 1"
   log "  Approved $APPROVED_COUNT of $PENDING_COUNT pending approvals."
 
-  # S3.08: verify decided approvals immediately after Step 5 (not in Phase 5 —
-  # by Phase 5, the approval status is already stale / may be overwritten)
-  DECIDED_APPROVALS=$(api_get "/api/management/approvals" | node -e "
-    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
-    const decided=d.filter(a=>a.status==='APPROVED'||a.status==='REJECTED').length;
-    console.log(decided)}catch{console.log(0)}" 2>/dev/null || echo 0)
+  # S3.08: verify decided approvals immediately after Step 5.
+  # Note: /api/management/approvals only returns PENDING (by design — it's a queue),
+  # so query SQLite directly for APPROVED/REJECTED records.
+  DECIDED_APPROVALS=$(node -e "
+    const {DatabaseSync}=require('node:sqlite');
+    const db=new DatabaseSync('$AIDA_HOME/data/bps.db');
+    const r=db.prepare(\"SELECT COUNT(*) as n FROM bps_management_approvals WHERE status IN ('APPROVED','REJECTED')\").get();
+    console.log(r.n);db.close();" 2>/dev/null || echo 0)
   soft "S3.08 Approval decide works (decided=$DECIDED_APPROVALS)" "test ${DECIDED_APPROVALS:-0} -ge 1"
 
   # Reset CB + clear Turn 4 violations so Turn 6 can create resources
