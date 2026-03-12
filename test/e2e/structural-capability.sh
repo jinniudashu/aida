@@ -107,11 +107,12 @@ if [ "$START_PHASE" -le 0 ]; then
     log "Running install-aida.sh..."
     bash deploy/install-aida.sh
 
-    # Lock model to kimi/kimi-for-coding — structural capability tests
+    # Lock model to dashscope/qwen3.5-plus — structural capability tests
     # use a fixed model to provide a stable baseline for iterating on
     # the test framework itself. Cross-model evaluation is handled by
     # the benchmark suite which reuses this test plan.
-    log "Locking model to kimi/kimi-for-coding..."
+    # R1-R5 ran on Qwen (unintentionally), R6 on Kimi; Qwen outperformed.
+    log "Locking model to dashscope/qwen3.5-plus..."
     OC_CONFIG="$OPENCLAW_HOME/openclaw.json"
     node -e '
       const fs = require("fs");
@@ -119,13 +120,13 @@ if [ "$START_PHASE" -le 0 ]; then
       if (!c.agents) c.agents = {};
       if (!c.agents.defaults) c.agents.defaults = {};
       c.agents.defaults.model = {
-        primary: "kimi/kimi-for-coding",
-        fallbacks: ["dashscope/qwen3.5-plus"]
+        primary: "dashscope/qwen3.5-plus",
+        fallbacks: ["kimi/kimi-for-coding"]
       };
       if (!c.agents.defaults.models) c.agents.defaults.models = {};
-      c.agents.defaults.models["kimi/kimi-for-coding"] = { alias: "Kimi for Coding" };
+      c.agents.defaults.models["dashscope/qwen3.5-plus"] = { alias: "Qwen3.5-Plus via DashScope" };
       fs.writeFileSync(process.argv[1], JSON.stringify(c, null, 2) + "\n");
-      console.log("[structural] model locked: kimi/kimi-for-coding");
+      console.log("[structural] model locked: dashscope/qwen3.5-plus");
     ' "$OC_CONFIG"
 
     log "Starting OpenClaw gateway..."
@@ -151,7 +152,7 @@ if [ "$START_PHASE" -le 0 ]; then
   check "V0.6 Skills >= 7 (found $SKILL_N)" "test $SKILL_N -ge 7"
 
   ACTUAL_MODEL=$(node -e "try{const c=JSON.parse(require('fs').readFileSync('$OPENCLAW_HOME/openclaw.json','utf8'));console.log(c.agents?.defaults?.model?.primary||'UNKNOWN')}catch{console.log('ERROR')}" 2>/dev/null)
-  check "V0.7 Model locked to kimi/kimi-for-coding (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = 'kimi/kimi-for-coding'"
+  check "V0.7 Model locked to dashscope/qwen3.5-plus (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = 'dashscope/qwen3.5-plus'"
 
   log "Phase 0 complete."
 fi
