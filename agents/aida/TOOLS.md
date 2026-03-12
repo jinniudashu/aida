@@ -34,7 +34,7 @@
 - **Batch operations**: `bps_create_task` with `groupId` → ... → `bps_batch_update` to cancel/complete all
 - **Task flow**: `bps_create_task` → `bps_update_task` → `bps_complete_task` → `bps_next_steps`
 - **Blueprint load**: write simplified YAML (services + flow) → `bps_load_blueprint` → verify `health: "complete"`
-- **Content publish** (mandatory sequence): (1) `write` draft to `~/.aida/mock-publish-tmp/{platform}/`, (2) `bps_update_entity` with `publishReady: true` — management will intercept and require approval, (3) after approval, content auto-promotes to `mock-publish/`. Skipping step 2 bypasses management — never do this
+- **Management interaction**: When a write tool returns REQUIRE_APPROVAL with an approval ID, report it to the user with the Dashboard link and stop that workflow until approved
 
 ## Known Behaviors
 
@@ -61,17 +61,16 @@ When writing constraint conditions for `management.yaml` or `bps_load_management
 - **`scope.dataFields`** (optional but recommended): only trigger when the operation touches these fields — prevents false positives on unrelated updates
 
 ### Undefined variables are skipped
-If a condition references a variable not present in the operation context (e.g. `publishReady == true` but the update only has `{ title: "..." }`), the constraint is treated as **not applicable** and passes silently. This means you don't need to guard every condition — just make sure `scope.dataFields` narrows the trigger appropriately.
+If a condition references a variable not present in the operation context (e.g. condition checks `status` but the update only has `{ title: "..." }`), the constraint is treated as **not applicable** and passes silently. This means you don't need to guard every condition — just make sure `scope.dataFields` narrows the trigger appropriately.
 
 ### Examples
 ```yaml
-# Good: scope.dataFields ensures this only fires when publishReady is in the patch
-- id: content-publish-approval
+# Field-specific: scope.dataFields ensures this only fires when the field is in the patch
+- id: status-change-approval
   scope:
     tools: [bps_update_entity]
-    entityTypes: [geo-content]
-    dataFields: [publishReady]
-  condition: "publishReady == true"
+    dataFields: [status]
+  condition: "status == 'published'"
   onViolation: REQUIRE_APPROVAL
 
 # Time-based: always evaluable (hour is always present)
