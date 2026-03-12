@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================
-# AEF Capability Test v0.2
+# AEF Capability Test v0.3
 # Supplements structural-capability.sh with AEF dimension gaps
-# Σ1 PROC (6) + Σ7 SCHED (5) + Σ9 HIER (3) + ΣX Cross (6) + Σ11 MATCH (4) = 24 checks
+# Σ1 PROC (6) + Σ7 SCHED (5) + Σ9 HIER (3) + ΣX Cross (6) + Σ11 MATCH (10) = 30 checks
 # Engine-only, in-memory DB, ~3 seconds
 # ============================================================
 set -euo pipefail
@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PROJECT_ROOT"
 
-echo "=== AEF Capability Test v0.2 ==="
+echo "=== AEF Capability Test v0.3 ==="
 echo "Project root: $PROJECT_ROOT"
 echo ""
 
@@ -260,45 +260,121 @@ check('EX.05', 'ΣX', 'Σ1→Σ7→Σ6: scan_work summary mentions task counts',
 check('EX.06', 'ΣX', 'Σ1→Σ5: outcomeDistribution.partial ≥ 1',
   scanResult.outcomeDistribution.partial >= 1);
 
-// ─── Σ11 MATCH: Capability Impedance (4 checks) ────────────
+// ─── Σ11 MATCH: Capability Impedance (10 checks) ───────────
+//
+// A. Structural prerequisites (4): infra HAS matching capabilities
+// B. Over-constraint resistance (3): infra does NOT blanket-block
+// C. Under-support detection (3): infra PROVIDES sufficient APIs
 
 console.log('\n--- Σ11 MATCH: Capability Impedance ---');
 
-// E11.01: Over-constraint detection — constraintEffectiveness with
-// suggestion="放宽/relax" indicates infrastructure may be over-constraining
-// (This is a structural capability: the system CAN detect over-constraint)
+// ─── A. Structural Prerequisites ────────────────────────────
+
+// E11.01: Over-constraint detection — effectiveness API produces suggestions
 const effAll = mgmtStore.getConstraintEffectiveness();
 const hasRelaxSuggestion = effAll.some(e => e.suggestion != null && e.suggestion.length > 0);
-check('E11.01', 'Σ11', 'Over-constraint detection: effectiveness API produces suggestions',
+check('E11.01', 'Σ11', 'A: effectiveness API produces relaxation suggestions',
   hasRelaxSuggestion);
 
-// E11.02: GATED_WRITE_TOOLS covers both entity and non-entity tools
-// (Under-support check: management should gate diverse tool types, not just entity ops)
+// E11.02: Management gates diverse tool types (not just entity ops)
 const hasEntityTool = GATED_WRITE_TOOLS.includes('bps_update_entity');
 const hasNonEntityTool = GATED_WRITE_TOOLS.includes('bps_load_blueprint') ||
   GATED_WRITE_TOOLS.includes('bps_register_agent');
-check('E11.02', 'Σ11', 'Management gates both entity and non-entity write tools',
+check('E11.02', 'Σ11', 'A: management gates entity + non-entity write tools',
   hasEntityTool && hasNonEntityTool);
 
-// E11.03: Constraint scope supports fine-grained filtering (dataFields)
-// (Prevents blanket over-constraint: constraints can target specific data fields)
+// E11.03: Fine-grained scope available (dataFields filtering)
 const hasDataFieldScope = constraints.some(c =>
   Array.isArray(c.scope?.dataFields) && c.scope.dataFields.length > 0);
-check('E11.03', 'Σ11', 'Fine-grained constraint scope: dataFields filtering available',
+check('E11.03', 'Σ11', 'A: fine-grained scope via dataFields available',
   hasDataFieldScope);
 
-// E11.04: bps_scan_work provides sufficient context for autonomous scheduling
-// (Under-support check: scan_work must expose enough data for model-driven prioritization)
+// E11.04: scan_work provides sufficient context for model-driven scheduling
 const hasSummary = typeof scanResult.summary === 'string' && scanResult.summary.length > 0;
 const hasOutcomeDist = scanResult.outcomeDistribution != null;
 const hasOverdueSection = scanResult.overdueTasks != null;
-check('E11.04', 'Σ11', 'scan_work exposes summary + outcomeDistribution + overdueTasks',
+check('E11.04', 'Σ11', 'A: scan_work exposes summary + outcomeDistribution + overdueTasks',
   hasSummary && hasOutcomeDist && hasOverdueSection);
+
+// ─── B. Over-constraint Resistance ──────────────────────────
+
+// Reset management state for clean Σ11 B/C tests
+engine.db.exec('DELETE FROM bps_management_violations');
+engine.db.exec('DELETE FROM bps_management_approvals');
+mgmtStore.resetCircuitBreaker();
+
+// E11.05: Narrow entityType scope does NOT block non-matching entity types
+// aef-hier-publish scopes to entityTypes=['content'] — a 'store' entity must PASS
+const narrowScopeResult = gate.check('bps_update_entity', {
+  entityType: 'store',    // constraint targets 'content', not 'store'
+  entityId: 'match-test',
+  data: { publishReady: true },
+});
+check('E11.05', 'Σ11', 'B: narrow entityType scope does NOT block non-matching types',
+  narrowScopeResult.verdict === 'PASS');
+
+// E11.06: Narrow dataFields scope does NOT block operations on other fields
+// aef-hier-publish scopes to dataFields=['publishReady'] — a 'name' update must PASS
+const fieldScopeResult = gate.check('bps_update_entity', {
+  entityType: 'content',
+  entityId: 'match-test-2',
+  data: { name: 'just a rename' },  // not publishReady → constraint should not apply
+});
+check('E11.06', 'Σ11', 'B: narrow dataFields scope does NOT block unrelated field updates',
+  fieldScopeResult.verdict === 'PASS');
+
+// E11.07: undefined variable → PASS (not fail-closed over-constraint)
+// Constraint referencing field not present in operation data should skip, not block
+// This uses the aef-hier-archive constraint (condition: lifecycle != "ARCHIVED")
+// on a tool call that has NO lifecycle field — should evaluate as not-applicable
+const undefinedVarResult = gate.check('bps_create_task', {
+  serviceId: 'test-service',
+  priority: 5,
+  // no lifecycle field at all → condition 'lifecycle != "ARCHIVED"' will hit undefined variable
+});
+check('E11.07', 'Σ11', 'B: undefined variable → PASS (constraint not applicable, not block)',
+  undefinedVarResult.verdict === 'PASS');
+
+// ─── C. Under-support Detection ─────────────────────────────
+
+// E11.08: Batch API exists — capable models can do multi-task ops in one call
+const batchTool = tools.find(t => t.name === 'bps_batch_update');
+check('E11.08', 'Σ11', 'C: bps_batch_update tool exists (batch API for capable models)',
+  batchTool != null);
+
+// E11.09: BLOCK error message includes structured info for model reasoning
+// Model needs: constraintId, severity, message to learn from rejection
+const blockResult = gate.check('bps_update_entity', {
+  entityType: 'content',
+  entityId: 'err-info-test',
+  data: { lifecycle: 'ARCHIVED' },  // triggers aef-hier-archive → BLOCK
+});
+const blockCheck = blockResult.checks.find(c => !c.passed);
+check('E11.09', 'Σ11', 'C: BLOCK result includes constraintId + severity + message',
+  blockCheck != null &&
+  typeof blockCheck.constraintId === 'string' && blockCheck.constraintId.length > 0 &&
+  typeof blockCheck.severity === 'string' &&
+  typeof blockCheck.message === 'string' && blockCheck.message.length > 0);
+
+// E11.10: brief query mode returns less data than full mode
+// (Model efficiency: capable models can request brief first, drill down only if needed)
+const updateEntity = tools.find(t => t.name === 'bps_update_entity');
+await updateEntity.execute('test', {
+  entityType: 'test-item', entityId: 'brief-test',
+  data: { name: 'test entity', description: 'long description for brief mode testing', category: 'demo', status: 'active' },
+});
+const queryEntities = tools.find(t => t.name === 'bps_query_entities');
+const fullResult11 = await queryEntities.execute('test', { entityType: 'test-item' });
+const briefResult11 = await queryEntities.execute('test', { entityType: 'test-item', brief: true });
+const fullJson = JSON.stringify(fullResult11);
+const briefJson = JSON.stringify(briefResult11);
+check('E11.10', 'Σ11', 'C: brief query mode returns smaller payload than full mode',
+  briefJson.length < fullJson.length);
 
 // ─── Report ─────────────────────────────────────────────────
 
 console.log(`\n${'='.repeat(50)}`);
-console.log(`AEF Capability Test v0.2`);
+console.log(`AEF Capability Test v0.3`);
 console.log(`PASS: ${pass} | FAIL: ${fail} | TOTAL: ${pass + fail}`);
 console.log(`${'='.repeat(50)}`);
 
