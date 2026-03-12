@@ -1,4 +1,4 @@
-# AEF Capability Test — 十维结构能力补充验证
+# AEF Capability Test — 十一维结构能力补充验证
 
 > 基于 `docs/AIDA评估理论框架 (AEF) v0.1.md` 差距分析设计
 > 补充 `structural-capability-test`（已收敛，保留不变）
@@ -7,10 +7,10 @@
 
 | 项目 | structural-capability | aef-capability |
 |------|----------------------|----------------|
-| 目标 | D1-D9 工程特性验证 + 业务场景 | AEF Σ1/Σ7/Σ9/ΣX 差距补充 |
+| 目标 | D1-D9 工程特性验证 + 业务场景 | AEF Σ1/Σ7/Σ9/ΣX/Σ11 差距补充 |
 | 模式 | 远程服务器 + Agent turns | 本地引擎 in-memory，无 Agent |
 | 时间 | 15-20 分钟 | ~3 秒 |
-| 检查 | 80+ checks | 20 checks |
+| 检查 | 80+ checks | 24 checks |
 | 关系 | 收敛基线（只读） | 补充覆盖（叠加） |
 
 ## 覆盖差距（为什么需要这个测试）
@@ -21,8 +21,9 @@
 | Σ7 SCHED | sortByUrgency (1) | overdueTasks + deadline + 排序 (5) | **盲区** |
 | Σ9 HIER | grep-based B4 | 程序化约束层级校验 (3) | 方法不足 |
 | ΣX Cross | 0 | 跨维度链路验证 (6) | **盲区** |
+| Σ11 MATCH | 0 | 能力匹配度结构检查 (4) | **盲区** |
 
-## 20 个检查点
+## 24 个检查点
 
 ### Σ1 PROC — 过程生命周期 (6)
 
@@ -64,6 +65,15 @@
 | EX.05 | Σ1→Σ7→Σ6 | 任务数据 → scan_work summary 包含计数 |
 | EX.06 | Σ1→Σ5 | outcome=partial → outcomeDistribution.partial ≥ 1 |
 
+### Σ11 MATCH — 能力匹配度 (4)
+
+| ID | 方向 | 描述 | 验证内容 |
+|----|------|------|---------|
+| E11.01 | Over-constraint | effectiveness API 产生建议 | 系统能检测过度制约并输出放宽建议 |
+| E11.02 | Under-support | 管理覆盖多种工具类型 | GATED_WRITE_TOOLS 含实体+非实体工具 |
+| E11.03 | Over-constraint | 细粒度 scope 可用 | 约束支持 dataFields 精确过滤（非blanket） |
+| E11.04 | Under-support | scan_work 信息充分 | 暴露 summary + outcomeDistribution + overdueTasks |
+
 ## 执行
 
 ```bash
@@ -85,15 +95,16 @@ ssh root@server "cd /opt/aida && bash test/e2e/aef-capability.sh"
 [FAIL] E7.03 (Σ7) Overdue task appears in overdueTasks
 ...
 ==================================================
-AEF Capability Test v0.1
-PASS: 19 | FAIL: 1 | TOTAL: 20
+AEF Capability Test v0.2
+PASS: 23 | FAIL: 1 | TOTAL: 24
 ==================================================
 ```
 
 ## 与 AEF 框架的关系
 
-本测试的检查点直接映射到 `docs/AIDA评估理论框架 (AEF) v0.1.md` 的十维模型：
+本测试的检查点直接映射到 `docs/AIDA评估理论框架 (AEF) v0.1.md` 的十一维模型：
 
-- 每个检查点标注 AEF 维度（Σ1/Σ7/Σ9/ΣX）
+- 每个检查点标注 AEF 维度（Σ1/Σ7/Σ9/ΣX/Σ11）
 - 失败检查可直接查阅 AEF 文档的对应维度"病征模式"表
 - 跨维度链路（ΣX）验证 AEF 附录 B 的维度间依赖关系
+- Σ11 MATCH 检查基础设施对模型能力的匹配度（过度制约 + 支持不足）

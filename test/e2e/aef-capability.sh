@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================
-# AEF Capability Test v0.1
+# AEF Capability Test v0.2
 # Supplements structural-capability.sh with AEF dimension gaps
-# Σ1 PROC (6) + Σ7 SCHED (5) + Σ9 HIER (3) + ΣX Cross (6) = 20 checks
+# Σ1 PROC (6) + Σ7 SCHED (5) + Σ9 HIER (3) + ΣX Cross (6) + Σ11 MATCH (4) = 24 checks
 # Engine-only, in-memory DB, ~3 seconds
 # ============================================================
 set -euo pipefail
@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PROJECT_ROOT"
 
-echo "=== AEF Capability Test v0.1 ==="
+echo "=== AEF Capability Test v0.2 ==="
 echo "Project root: $PROJECT_ROOT"
 echo ""
 
@@ -260,10 +260,45 @@ check('EX.05', 'ΣX', 'Σ1→Σ7→Σ6: scan_work summary mentions task counts',
 check('EX.06', 'ΣX', 'Σ1→Σ5: outcomeDistribution.partial ≥ 1',
   scanResult.outcomeDistribution.partial >= 1);
 
+// ─── Σ11 MATCH: Capability Impedance (4 checks) ────────────
+
+console.log('\n--- Σ11 MATCH: Capability Impedance ---');
+
+// E11.01: Over-constraint detection — constraintEffectiveness with
+// suggestion="放宽/relax" indicates infrastructure may be over-constraining
+// (This is a structural capability: the system CAN detect over-constraint)
+const effAll = mgmtStore.getConstraintEffectiveness();
+const hasRelaxSuggestion = effAll.some(e => e.suggestion != null && e.suggestion.length > 0);
+check('E11.01', 'Σ11', 'Over-constraint detection: effectiveness API produces suggestions',
+  hasRelaxSuggestion);
+
+// E11.02: GATED_WRITE_TOOLS covers both entity and non-entity tools
+// (Under-support check: management should gate diverse tool types, not just entity ops)
+const hasEntityTool = GATED_WRITE_TOOLS.includes('bps_update_entity');
+const hasNonEntityTool = GATED_WRITE_TOOLS.includes('bps_load_blueprint') ||
+  GATED_WRITE_TOOLS.includes('bps_register_agent');
+check('E11.02', 'Σ11', 'Management gates both entity and non-entity write tools',
+  hasEntityTool && hasNonEntityTool);
+
+// E11.03: Constraint scope supports fine-grained filtering (dataFields)
+// (Prevents blanket over-constraint: constraints can target specific data fields)
+const hasDataFieldScope = constraints.some(c =>
+  Array.isArray(c.scope?.dataFields) && c.scope.dataFields.length > 0);
+check('E11.03', 'Σ11', 'Fine-grained constraint scope: dataFields filtering available',
+  hasDataFieldScope);
+
+// E11.04: bps_scan_work provides sufficient context for autonomous scheduling
+// (Under-support check: scan_work must expose enough data for model-driven prioritization)
+const hasSummary = typeof scanResult.summary === 'string' && scanResult.summary.length > 0;
+const hasOutcomeDist = scanResult.outcomeDistribution != null;
+const hasOverdueSection = scanResult.overdueTasks != null;
+check('E11.04', 'Σ11', 'scan_work exposes summary + outcomeDistribution + overdueTasks',
+  hasSummary && hasOutcomeDist && hasOverdueSection);
+
 // ─── Report ─────────────────────────────────────────────────
 
 console.log(`\n${'='.repeat(50)}`);
-console.log(`AEF Capability Test v0.1`);
+console.log(`AEF Capability Test v0.2`);
 console.log(`PASS: ${pass} | FAIL: ${fail} | TOTAL: ${pass + fail}`);
 console.log(`${'='.repeat(50)}`);
 
