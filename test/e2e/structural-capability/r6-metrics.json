@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-03-12T01:44:09Z",
+  "model": "kimi/kimi-for-coding",
+  "entities": 14,
+  "violations": 3,
+  "constraints": 2,
+  "skills": 10,
+  "blueprints": 2,
+  "writeToolCalls": 4,
+  "agentWorkspaces": 1,
+  "testResults": {
+    "pass": 93,
+    "fail": 0,
+    "warn": 5,
+    "total": 98
+  }
+}
