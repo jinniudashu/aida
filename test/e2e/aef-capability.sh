@@ -1394,21 +1394,16 @@ console.log('\n--- ΣX Cross: Cross-Dimension ---');
 // EX.04: Σ5 High approval rate → suggestion
 {
   resetManagement();
-  const gateX4 = new ActionGate(mgmtStore, {
-    thresholds: [
-      { severity: 'CRITICAL', maxViolations: 999, window: '1h', action: 'DISCONNECTED' },
-      { severity: 'HIGH', maxViolations: 999, window: '1h', action: 'WARNING' },
-    ],
-  });
-  for (let i = 0; i < 22; i++) {
-    gateX4.check('bps_update_entity', {
-      entityType: 'content', entityId: `ex04-${i}`,
-      data: { publishReady: true },
-    });
-  }
-  // Approve all pending
+  // Gate.check creates violations but NOT approval records (only tool wrapper does).
+  // Seed both directly for effectiveness analytics test.
   const nowIso = new Date().toISOString();
-  db.exec(`UPDATE bps_management_approvals SET status = 'APPROVED', approved_by = 'test', decided_at = '${nowIso}' WHERE status = 'PENDING'`);
+  const expiresAt = new Date(Date.now() + 86400000).toISOString();
+  for (let i = 0; i < 22; i++) {
+    db.exec(`INSERT INTO bps_management_violations (id, constraint_id, tool_name, entity_type, entity_id, severity, message, created_at)
+      VALUES ('ex04-v${i}', 'c-publish-approval', 'bps_update_entity', 'content', 'ex04-${i}', 'HIGH', 'test', '${nowIso}')`);
+    db.exec(`INSERT INTO bps_management_approvals (id, constraint_id, tool, tool_input, entity_type, entity_id, message, status, approved_by, decided_at, created_at, expires_at)
+      VALUES ('ex04-a${i}', 'c-publish-approval', 'bps_update_entity', '{}', 'content', 'ex04-${i}', 'test', 'APPROVED', 'test', '${nowIso}', '${nowIso}', '${expiresAt}')`);
+  }
 
   const eff = mgmtStore.getConstraintEffectiveness();
   const pubEff = eff.find(e => e.constraintId === 'c-publish-approval');
@@ -1428,6 +1423,13 @@ console.log('\n--- ΣX Cross: Cross-Dimension ---');
 
 // EX.06: Σ1→Σ5 outcome=partial → distribution
 {
+  // Create a fresh partial-outcome task to ensure it's in recentlyCompleted (limit:10)
+  const t = engine.tracker.createTask({
+    serviceId: 'svc-probe', entityType: 'probe', entityId: 'ex06-partial',
+  });
+  const cTool = tools.find(t => t.name === 'bps_complete_task')!;
+  await cTool.execute('ex06-complete', { taskId: t.id, outcome: 'partial' });
+
   const scanTool = tools.find(t => t.name === 'bps_scan_work')!;
   const result = await scanTool.execute('ex06', {}) as any;
   assert('EX.06', 'Σ1→Σ5: outcomeDistribution.partial >= 1',
@@ -1495,13 +1497,13 @@ resetManagement();
 
 {
   // Add constraint without dataFields → applies to all content updates
-  const extra = {
-    id: 'c-test-undefined-var', label: 'Test undefined variable',
+  const extra: any = {
+    id: 'c-test-undefined-var', policyId: 'p-test', label: 'Test undefined variable',
     severity: 'HIGH', onViolation: 'REQUIRE_APPROVAL',
-    condition: 'publishReady != true',
+    condition: 'publishReady != true', message: 'Test: undefined variable handling',
     scope: { tools: ['bps_update_entity'], entityTypes: ['content'] },
   };
-  mgmtStore.loadConstraints([...govResult.constraints, extra as any]);
+  mgmtStore.loadConstraints([...govResult.constraints, extra]);
   resetManagement();
 
   const g7 = new ActionGate(mgmtStore);
