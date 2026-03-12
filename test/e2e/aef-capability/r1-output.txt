@@ -1,0 +1,52 @@
+=== AEF Capability Test v0.3 ===
+Project root: /c/Users/MOREFINE/Documents/aida
+
+(node:16036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+--- Σ1 PROC: Process Lifecycle ---
+[PASS] E1.01 (Σ1) Create task → state=OPEN
+[PASS] E1.02 (Σ1) OPEN → IN_PROGRESS transition
+[PASS] E1.03 (Σ1) Complete outcome=success stored in snapshot
+[PASS] E1.04 (Σ1) Complete outcome=partial stored in snapshot
+[PASS] E1.05 (Σ1) IN_PROGRESS → FAILED via failTask()
+[PASS] E1.06 (Σ1) IN_PROGRESS → BLOCKED transition
+
+--- Σ7 SCHED: Scheduling Efficiency ---
+[PASS] E7.01 (Σ7) Task with past deadline created
+[PASS] E7.02 (Σ7) scan_work overdueTasks.total ≥ 1
+[PASS] E7.03 (Σ7) Overdue task ID appears in overdueTasks.items
+[PASS] E7.04 (Σ7) Future-deadline task NOT in overdueTasks
+[PASS] E7.05 (Σ7) Deadline ASC sort: overdue (priority=3) before future (priority=10)
+
+--- Σ9 HIER: Hierarchical Coherence ---
+[PASS] E9.01 (Σ9) All constraints have scope.tools[]
+[PASS] E9.02 (Σ9) scope.tools ⊆ GATED_WRITE_TOOLS
+[PASS] E9.03 (Σ9) At least one constraint scopes by entityType
+
+--- ΣX: Cross-dimensional Chains ---
+[PASS] EX.01 (ΣX) Σ3→Σ4: CRITICAL violation → CB DISCONNECTED
+[PASS] EX.02 (ΣX) Σ4→Σ3: CB reset → write PASS
+[PASS] EX.03 (ΣX) Σ3→Σ5: 3 violations → effectiveness.violationCount ≥ 3
+[PASS] EX.04 (ΣX) Σ5: 92% approval rate (≥20 samples) → suggestion generated
+[PASS] EX.05 (ΣX) Σ1→Σ7→Σ6: scan_work summary mentions task counts
+[PASS] EX.06 (ΣX) Σ1→Σ5: outcomeDistribution.partial ≥ 1
+
+--- Σ11 MATCH: Capability Impedance ---
+[PASS] E11.01 (Σ11) A: effectiveness API produces relaxation suggestions
+[PASS] E11.02 (Σ11) A: management gates entity + non-entity write tools
+[PASS] E11.03 (Σ11) A: fine-grained scope via dataFields available
+[PASS] E11.04 (Σ11) A: scan_work exposes summary + outcomeDistribution + overdueTasks
+[PASS] E11.05 (Σ11) B: narrow entityType scope does NOT block non-matching types
+[PASS] E11.06 (Σ11) B: narrow dataFields scope does NOT block unrelated field updates
+[PASS] E11.07 (Σ11) B: undefined variable → PASS (constraint not applicable, not block)
+[PASS] E11.08 (Σ11) C: bps_batch_update tool exists (batch API for capable models)
+[PASS] E11.09 (Σ11) C: BLOCK result includes constraintId + severity + message
+[PASS] E11.10 (Σ11) C: brief query mode returns smaller payload than full mode
+
+==================================================
+AEF Capability Test v0.3
+PASS: 30 | FAIL: 0 | TOTAL: 30
+==================================================
+
+All AEF checks passed.

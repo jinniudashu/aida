@@ -7,6 +7,12 @@
 # ============================================================
 set -euo pipefail
 
+# -- Baseline Model --
+# Fixed to Qwen for reproducible results across rounds.
+# Engine-only checks don't call LLM, but future agent-turn phases will.
+BASELINE_MODEL="dashscope/qwen3.5-plus"
+BASELINE_FALLBACK="kimi/kimi-for-coding"
+
 # Navigate to project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
