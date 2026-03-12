@@ -675,6 +675,18 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - E2E 脚本、Agent workspace（TOOLS.md）同步更新
 - **测试**：437 tests 全部通过，TypeScript 编译无错误
 
+### AIDA 评估理论框架 (AEF) v0.1（2026-03-12）
+- 框架文档：`docs/AIDA评估理论框架 (AEF) v0.1.md`
+- 认知理论关联分析：`archive/AIDA与认知理论的双维度关联分析 (2026-03-12).md`
+- **四元理论基座**：OS 理论（正确性）+ 控制论（调节有效性）+ 有限理性（Agent 可用性）+ 认知导航-重映射（适应性）
+- **十一维能力结构**：Σ1 PROC, Σ2 ENTITY, Σ3 GATE, Σ4 STAB, Σ5 FDBK, Σ6 INFO, Σ7 SCHED, Σ8 EVOL, Σ9 HIER, Σ10 COADAPT, Σ11 MATCH
+- **Σ11 MATCH（能力匹配度）**：评估基础设施对模型能力的阻抗匹配——过度制约（Over-constraint）vs 支持不足（Under-support）
+  - 核心理论：Ashby 必要多样性逆定理——模型能力超越控制器假设时，控制器变瓶颈
+  - 能力演进图谱新增 Stage 4.5（能力匹配自适应）：信任分级、约束自衰减、工具自适应粒度
+- **AEF 补充测试**：`test/e2e/aef-capability.sh`，24 检查点全部通过
+  - Σ1 PROC (6) + Σ7 SCHED (5) + Σ9 HIER (3) + ΣX Cross (6) + Σ11 MATCH (4)
+  - Engine-only in-memory 模式，~3 秒执行
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
