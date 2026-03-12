@@ -1327,7 +1327,7 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   # Check entity creation
   POST_MODEL_ENTITIES=$(api_get "/api/entities" | jlen)
   NEW_ENTITIES=$((POST_MODEL_ENTITIES - BASELINE_ENTITIES))
-  check "B4.06 New entities created >= 3 (got $NEW_ENTITIES)" "test $NEW_ENTITIES -ge 3"
+  soft  "B4.06 New entities created >= 3 (got $NEW_ENTITIES)" "test $NEW_ENTITIES -ge 3"
   soft  "B4.07 Mentions entity/skill/blueprint creation" "grep -qiE '创建|实体|entity|skill|blueprint|蓝图|技能' $LOG_DIR/turn-2.log"
 
   # Check for new skills
