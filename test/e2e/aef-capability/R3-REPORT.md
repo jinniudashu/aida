@@ -112,11 +112,21 @@ R2 → R3 改善：审批数 1→6，闭环更完整。
 | R1 | 124 | 0 | 4 | 4 | 0 |
 | R2 | 122 | 0 | 6 | 3 | 3 |
 | R3 | 123 | 0 | 5 | 1 | 4 |
+| R4 | 114 | 0 | 14 | 1 | 13 |
 
-框架 WARN 从 4→3→1，框架自身问题基本收敛。剩余 WARN 全部为 LLM 响应截断/行为差异。
+框架 WARN 从 4→3→1→1，框架自身问题已收敛。R4 回退至 14 WARN 完全由 LLM 响应截断导致（Turn 4/6 仅 2 行，HITL 审批路径未触发）。
+
+## R4 追记（S3.08 SQLite 修复验证）
+
+R4 部署了 S3.08 SQLite 直接查询修复（绕过只返回 PENDING 的 REST API），但由于 Qwen3.5-plus 在 Turn 4 严重截断（2 行，未执行 `bps_update_entity` 工具调用），HITL 审批路径未触发，S3.08 修复无法验证。
+
+**R4 确认的框架改进**：
+- V5.7 JSONL 检测持续有效（JSONL=24, DB=0 → PASS）
+- B4.15 JSONL fallback 持续有效（JSONL=14, violations=0 → PASS）
+
+**R4 暴露的 LLM 方差问题**：同一模型（Qwen3.5-plus）连续运行，Turn 2/4/6 产出质量波动剧烈（R3: 102/36/85 行 vs R4: 102/2/2 行）。
 
 ## 下一步
 
-- **R4**：验证 S3.08 SQLite 直接查询修复（期望 124P/0F/4W）
+- **R5**：锁定 kimi/kimi-for-coding 为基线模型，验证 S3.08 SQLite 修复 + LLM 稳定性
 - **长期**：Σ10 ADAPT 维度检查点设计
-- **模型探索**：测试 kimi/kimi-for-coding 作为基线模型，看 Turn 2/3 截断是否改善
