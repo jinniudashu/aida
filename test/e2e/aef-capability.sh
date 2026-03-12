@@ -1434,9 +1434,10 @@ console.log('\n--- ΣX Cross: Cross-Dimension ---');
 
 // EX.06: Σ1→Σ5 outcome=partial → distribution
 {
-  // Create a fresh partial-outcome task to ensure it's in recentlyCompleted (limit:10)
+  // Create a fresh partial-outcome task with high priority to ensure it's in recentlyCompleted (limit:10, ORDER BY priority DESC)
   const t = engine.tracker.createTask({
     serviceId: 'svc-probe', entityType: 'probe', entityId: 'ex06-partial',
+    priority: 999,
   });
   const cTool = tools.find(t => t.name === 'bps_complete_task')!;
   await cTool.execute('ex06-complete', { taskId: t.id, outcome: 'partial' });
@@ -1627,6 +1628,20 @@ for (const [key, name] of Object.entries(DIM_NAMES)) {
   const status = s.pass === s.total ? 'HEALTHY' : health >= 0.8 ? 'DEGRADED' : 'UNHEALTHY';
   console.log(`  ${key.padEnd(4)} ${name.padEnd(12)} ${String(s.pass).padStart(2)}/${String(s.total).padStart(2)}  ${health.toFixed(2)}  ${status}`);
   dimHealthRows.push({ dimension: key, name, pass: s.pass, total: s.total, health, status });
+}
+
+// Seed a violation so Dashboard S3.03 can verify the violations API shape
+{
+  resetManagement();
+  const gate = new ActionGate(mgmtStore, {
+    thresholds: [
+      { severity: 'CRITICAL', maxViolations: 1, window: '1h', action: 'DISCONNECTED' },
+    ],
+  });
+  gate.check('bps_update_entity', {
+    entityType: 'content', entityId: 'dashboard-seed',
+    data: { lifecycle: 'ARCHIVED' },
+  });
 }
 
 // Write results
