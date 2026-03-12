@@ -1394,13 +1394,24 @@ console.log('\n--- ΣX Cross: Cross-Dimension ---');
 // EX.04: Σ5 High approval rate → suggestion
 {
   resetManagement();
-  // Gate.check creates violations but NOT approval records (only tool wrapper does).
-  // Seed both directly for effectiveness analytics test.
+  // Use gate.check() for violations (it handles the complex schema),
+  // then seed APPROVED approvals directly (gate doesn't create approvals).
+  const gateX4 = new ActionGate(mgmtStore, {
+    thresholds: [
+      { severity: 'CRITICAL', maxViolations: 999, window: '1h', action: 'DISCONNECTED' },
+      { severity: 'HIGH', maxViolations: 999, window: '1h', action: 'WARNING' },
+    ],
+  });
+  for (let i = 0; i < 22; i++) {
+    gateX4.check('bps_update_entity', {
+      entityType: 'content', entityId: `ex04-${i}`,
+      data: { publishReady: true },
+    });
+  }
+  // Seed 22 APPROVED approval records (gate creates violations but not approvals)
   const nowIso = new Date().toISOString();
   const expiresAt = new Date(Date.now() + 86400000).toISOString();
   for (let i = 0; i < 22; i++) {
-    db.exec(`INSERT INTO bps_management_violations (id, constraint_id, tool_name, entity_type, entity_id, severity, message, created_at)
-      VALUES ('ex04-v${i}', 'c-publish-approval', 'bps_update_entity', 'content', 'ex04-${i}', 'HIGH', 'test', '${nowIso}')`);
     db.exec(`INSERT INTO bps_management_approvals (id, constraint_id, tool, tool_input, entity_type, entity_id, message, status, approved_by, decided_at, created_at, expires_at)
       VALUES ('ex04-a${i}', 'c-publish-approval', 'bps_update_entity', '{}', 'content', 'ex04-${i}', 'test', 'APPROVED', 'test', '${nowIso}', '${nowIso}', '${expiresAt}')`);
   }
