@@ -114,8 +114,11 @@ R2 → R3 改善：审批数 1→6，闭环更完整。
 | R3 | 123 | 0 | 5 | 1 | 4 |
 | R4 | 114 | 0 | 14 | 1 | 13 |
 | R5 | 116 | 0 | 12 | 1 | 11 |
+| R6 | 129 | 1* | 3 | 0 | 3 |
 
-框架 WARN 从 4→3→1→1→1，框架自身问题已收敛。R4/R5 回退均由 LLM 问题导致。
+*R6 的 1 FAIL 是 V0.7 模型检查（临时覆盖为 MiniMax，非真实失败）。扣除后等效 130P/0F/3W。
+
+R6 新增 5 个 Σ10 COADAPT 检查点（E10.01-E10.05），总检查点 128→133。框架 WARN 4→3→1→0，框架问题全部解决。
 
 ## R4 追记（S3.08 SQLite 修复验证）
 
@@ -150,19 +153,69 @@ such as Kimi CLI, Claude Code, Roo Code, Kilo Code, etc.
 
 **结论**：kimi/kimi-for-coding 不适合此测试（embedded 模式 403）。dashscope/qwen3.5-plus 已恢复为基线模型。
 
-## R1→R5 综合结论
+## R6 追记（MiniMax M2.5 首测 + Σ10 COADAPT + Turn 重试）
+
+R6 引入三项改进：
+
+1. **Σ10 COADAPT 维度**（E10.01-E10.05，5 个引擎检查）：验证人机协同适应能力——审批记录结构化、通过/拒绝重放、决策反馈到约束效能、Agent 可查询效能。全部 PASS。
+2. **Turn 重试机制**：`aida_say()` 在响应 <5 行时自动重试（最多 3 次），应对 LLM 输出截断。R6 全部 Turn 首次尝试即 ≥34 行，未触发重试。
+3. **MiniMax M2.5**：首次使用 MiniMax Coding Plan 模型（`mm-coding/MiniMax-M2.5`，Anthropic API 兼容）。
+
+**R6 结果**：129P/1F/3W/133T（619s，~10.3 分钟）
+
+| 检查 | R5 | R6 | 变化 |
+|------|-----|-----|------|
+| V0.7 模型检查 | PASS (kimi) | FAIL (mm-coding) | 临时覆盖，非真实失败 |
+| B4.06 实体 ≥3 | WARN (2) | **PASS (9)** | MiniMax 产出丰富 |
+| B4.08 新 Skill | WARN (0) | WARN (0) | 复用已有 |
+| B4.09 新蓝图 | WARN (0) | WARN (0) | 复用已有 |
+| B4.15 管理触发 | PASS (JSONL) | **PASS (JSONL=15)** | 管理拦截有效 |
+| B4.17 审批 ID | WARN | WARN | 未提及具体 ID |
+| B4.18 待审批 | WARN (0) | **PASS (3)** | HITL 闭环成功 |
+| B4.19 审批处理 | WARN (0) | **PASS (3)** | 3 个审批全部通过 |
+| S3.08 审批决策 | WARN (0) | **PASS (3)** | SQLite 修复验证成功 |
+
+**R6 Agent 行为**：
+- Turn 1: 85 行（完整状态汇报 + 推进计划）
+- Turn 2: 82 行（**9 个新实体**，武汉门店千问/元宝补测）
+- Turn 3: 55 行（6 个运营实体 + 4 次 write 工具调用）
+- Turn 4: 34 行（管理拦截 + 15 条 JSONL 管理消息 + 3 个待审批）
+- Turn 6: 45 行（1 个 Skill + 1 个 Agent workspace 创建）
+- Turn 7: 87 行（完整日报）
+- Turn 8: 46 行（管理审计报告）
+
+**R6 关键成果**：
+- **S3.08 首次验证通过**：R4/R5 因 LLM 方差未触发审批路径，R6 MiniMax 成功触发 3 个审批 → SQLite 修复确认有效
+- **HITL 完整闭环**：管理拦截(15 JSONL) → 3 PENDING → 3 APPROVED → S3.08 decided=3
+- **框架 WARN 归零**：R1(4) → R2(3) → R3(1) → R6(0)，框架问题全部解决
+- **MiniMax M2.5 质量稳定**：所有 Turn ≥34 行，无截断，重试机制未触发
+- **12 维度全部 HEALTHY**：含新增 Σ10 COADAPT 5/5
+
+**Agent 产出指标**：
+
+| 指标 | R3 | R6 |
+|------|-----|-----|
+| 新增实体 | 3 | **18** |
+| 新增 Skill | 2 | **1** |
+| 新增 Blueprint | 0 | 0 |
+| Agent workspace | 1 | **1** |
+| 内容文件 | 5 | **4** |
+| 管理审批 | 6 | **3** |
+| 管理约束 | 3 | **4** |
+| 实体类型 | 4 种 | **5 种** |
+| 总实体 | 38 | **65** |
+| 总 Skill | 17 | **18** |
+
+## R1→R6 综合结论
 
 | 维度 | 结论 |
 |------|------|
-| 框架稳定性 | 框架 WARN 4→1，S3.08（API 只返回 PENDING）是唯一残留框架问题 |
-| 最佳成绩 | **R3: 123P/0F/5W**（qwen3.5-plus，1127s） |
-| V5.7 修复 | JSONL 检测在 R3/R4/R5 三轮持续有效 |
-| B4.15 修复 | JSONL fallback 在 R3 PASS（violations=3），R4/R5 PASS（JSONL fallback） |
-| S3.08 修复 | SQLite 直接查询已部署，但因 LLM 方差未产生审批记录，无法验证 |
-| LLM 方差 | Qwen3.5-plus 同一模型连续运行，Turn 响应长度波动 2→102 行，是主要不确定性来源 |
-| 模型选择 | dashscope/qwen3.5-plus（primary），kimi/kimi-for-coding 仅作 fallback（embedded 403） |
-
-## 下一步
-
-- **长期**：Σ10 ADAPT 维度检查点设计
-- **模型稳定性**：考虑增加 Turn 重试机制（响应 <5 行时自动重发）
+| 框架稳定性 | 框架 WARN 4→3→1→0，**框架问题全部解决** |
+| 最佳成绩 | **R6: 130P*/0F/3W**（MiniMax M2.5，619s）— *扣除 V0.7 临时覆盖 |
+| Σ10 COADAPT | 5/5 PASS，协同适应维度验证完成 |
+| S3.08 修复 | R6 首次验证通过（decided=3），SQLite 直接查询确认有效 |
+| Turn 重试 | 已部署，R6 未触发（MiniMax 输出稳定） |
+| V5.7/B4.15 | JSONL 检测在 R3-R6 四轮持续有效 |
+| LLM 方差 | MiniMax M2.5 > Qwen3.5-plus（稳定性），Qwen3.5-plus 仍有截断风险 |
+| 模型选择 | MiniMax M2.5 为最佳 AEF 测试模型，dashscope/qwen3.5-plus 为默认基线 |
+| 检查点 | 128→133（+5 Σ10 COADAPT），12 维度全部 HEALTHY |
