@@ -1698,6 +1698,30 @@ resetManagement();
 }
 
 // ═════════════════════════════════════════════
+// Cleanup: remove test entities/tasks created by engine tests
+// (prevents DB bloat across repeated --skip-install runs)
+// ═════════════════════════════════════════════
+{
+  // Clean up test dossiers created by Phase 2
+  const testPrefixes = ['test-', 'e10-', 'e11-', 'ex0', 'e7-', 'svc-', 'grp-', 'rel-'];
+  const allDossiers = engine.dossierStore.query({});
+  let cleaned = 0;
+  for (const d of allDossiers) {
+    if (testPrefixes.some(p => d.entityId.startsWith(p))) {
+      db.exec(`DELETE FROM bps_dossier_versions WHERE dossier_id = '${d.id}'`);
+      db.exec(`DELETE FROM bps_dossiers WHERE id = '${d.id}'`);
+      cleaned++;
+    }
+  }
+  // Clean up test processes
+  db.exec(`DELETE FROM bps_processes WHERE entity_id LIKE 'test-%' OR entity_id LIKE 'e7-%' OR entity_id LIKE 'ex0%' OR entity_id LIKE 'grp-%' OR group_id LIKE 'grp-%'`);
+  // Reset management state
+  resetManagement();
+  mgmtStore.loadConstraints(govResult.constraints);
+  console.log(`[cleanup] Removed ${cleaned} test dossiers, reset management`);
+}
+
+// ═════════════════════════════════════════════
 // Summary + AEF Dimension Health
 // ═════════════════════════════════════════════
 
