@@ -107,6 +107,27 @@ if [ "$START_PHASE" -le 0 ]; then
     log "Running install-aida.sh..."
     bash deploy/install-aida.sh
 
+    # Lock model to kimi/kimi-for-coding — structural capability tests
+    # use a fixed model to provide a stable baseline for iterating on
+    # the test framework itself. Cross-model evaluation is handled by
+    # the benchmark suite which reuses this test plan.
+    log "Locking model to kimi/kimi-for-coding..."
+    OC_CONFIG="$OPENCLAW_HOME/openclaw.json"
+    node -e '
+      const fs = require("fs");
+      const c = JSON.parse(fs.readFileSync(process.argv[1], "utf-8"));
+      if (!c.agents) c.agents = {};
+      if (!c.agents.defaults) c.agents.defaults = {};
+      c.agents.defaults.model = {
+        primary: "kimi/kimi-for-coding",
+        fallbacks: ["dashscope/qwen3.5-plus"]
+      };
+      if (!c.agents.defaults.models) c.agents.defaults.models = {};
+      c.agents.defaults.models["kimi/kimi-for-coding"] = { alias: "Kimi for Coding" };
+      fs.writeFileSync(process.argv[1], JSON.stringify(c, null, 2) + "\n");
+      console.log("[structural] model locked: kimi/kimi-for-coding");
+    ' "$OC_CONFIG"
+
     log "Starting OpenClaw gateway..."
     openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero"
     for i in $(seq 1 12); do
@@ -128,6 +149,9 @@ if [ "$START_PHASE" -le 0 ]; then
 
   SKILL_N=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
   check "V0.6 Skills >= 7 (found $SKILL_N)" "test $SKILL_N -ge 7"
+
+  ACTUAL_MODEL=$(node -e "try{const c=JSON.parse(require('fs').readFileSync('$OPENCLAW_HOME/openclaw.json','utf8'));console.log(c.agents?.defaults?.model?.primary||'UNKNOWN')}catch{console.log('ERROR')}" 2>/dev/null)
+  check "V0.7 Model locked to kimi/kimi-for-coding (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = 'kimi/kimi-for-coding'"
 
   log "Phase 0 complete."
 fi
