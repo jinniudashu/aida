@@ -687,6 +687,25 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - Σ1 PROC (6) + Σ7 SCHED (5) + Σ9 HIER (3) + ΣX Cross (6) + Σ11 MATCH (4)
   - Engine-only in-memory 模式，~3 秒执行
 
+### AEF Capability E2E 测试 R1（2026-03-12）
+- 测试方案：`test/e2e/aef-capability-test.md`，脚本：`test/e2e/aef-capability.sh`
+- R1 报告：`test/e2e/aef-capability/R1-REPORT.md`
+- **定位**：structural-capability 的全面升级版 — 相同部署/业务场景/Agent turns，AEF Σ1-Σ11 十一维全覆盖
+- **结果**：**124 PASS / 0 FAIL / 4 WARN / 128 TOTAL** — ALL CHECKS PASSED
+- **模型**：dashscope/qwen3.5-plus（primary），kimi/kimi-for-coding（fallback）
+- **测试结构**：
+  - Phase 0: 安装验证 (7)
+  - Phase 1: 数据种子 (5)
+  - Phase 2: 引擎测试 D1-D8 + AEF Σ1-Σ11 (**69 checks** = 39 结构 + 30 AEF)
+  - Phase 3: Dashboard API (11)
+  - Phase 4: 业务场景 IdleX GEO (27, 8 Agent turns)
+  - Phase 5: 最终验证 (9)
+- **AEF 维度健康度**：Σ1-Σ11 全部 1.00 HEALTHY
+- **Agent 产出**：8 实体 + 4 Skill + 1 Blueprint + 1 Agent workspace + 3 内容文件 + 2 管理违规
+- **4 WARN**：全部因熔断器 DISCONNECTED 导致 REQUIRE_APPROVAL 路径不可达（管理行为正确，非缺陷）
+- **调试修复 5 项**：E1.03/04 outcome 存储路径、EX.04 violations 表 schema、E11.07 ConstraintDef 必需字段、EX.06 priority 排序
+- **与 structural-capability 对比**：128 vs 97 检查，69 vs 39 引擎检查，新增维度健康度报告
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
