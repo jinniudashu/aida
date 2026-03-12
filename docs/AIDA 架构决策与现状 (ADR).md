@@ -190,10 +190,10 @@
 - **Impact**: Dashboard Kanban 从 7 列变 5 列，全部 10 个测试文件 + server 端适配。
 - **Status**: ✅ 已落地。
 
-### ADR-13: Blueprint 重定位为管理宪法（2026-03-05）
+### ADR-13: Blueprint 重定位为管理规则（2026-03-05）
 
 - **Context**: E2E 测试证明 Aida 完全绕过 Blueprint/Task/Rule 基础设施，仅用 Entity + Skill 完成运营。Blueprint-as-workflow 的价值被 Agent 自主能力吞噬。但用户指出：Agent 越强大，越需要刚性管理框架——"不是告诉 Agent 做什么，而是确保 Agent 不能做什么"。
-- **Decision**: Blueprint 从"流程编排器"重定位为"管理宪法"。新增 Agent Management Specification (AMS)：
+- **Decision**: Blueprint 从"流程编排器"重定位为"管理规则"。新增 Agent Management Specification (AMS)：
   - `management.yaml`：约束规则（Constraint）定义，存放于 `~/.aida/management.yaml`
   - Action Gate：前置拦截器，在写操作工具执行前检查所有适用约束
   - Circuit Breaker：熔断器状态机（NORMAL → WARNING → RESTRICTED → DISCONNECTED）

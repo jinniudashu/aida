@@ -260,7 +260,7 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 ### Phase E1：Agent 管理层实现（2026-03-05）
 - 讨论纪要：`archive/Blueprint管理层讨论纪要 (2026-03-05).md`
 - 管理层设计文档：`docs/Agent 管理层规范 (AGS) v0.1.md`
-- **核心决策**：Blueprint 从"流程编排器"重定位为"管理宪法"——定义 Agent 不能做什么，而非应该做什么
+- **核心决策**：Blueprint 从"流程编排器"重定位为"管理规则"——定义 Agent 不能做什么，而非应该做什么
 - **管理层实现**（`src/governance/`，4 文件）：
   - `types.ts`：类型定义（Constraint/Verdict/CircuitBreakerState/ViolationRecord/ApprovalRequest）
   - `governance-store.ts`：SQLite 持久化（4 表：constraints/violations/circuit_breaker/approvals）
