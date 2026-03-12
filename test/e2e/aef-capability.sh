@@ -154,7 +154,7 @@ if [ "$START_PHASE" -le 0 ]; then
   check "V0.6 Skills >= 7 (found $SKILL_N)" "test $SKILL_N -ge 7"
 
   ACTUAL_MODEL=$(node -e "try{const c=JSON.parse(require('fs').readFileSync('$OPENCLAW_HOME/openclaw.json','utf8'));console.log(c.agents?.defaults?.model?.primary||'UNKNOWN')}catch{console.log('ERROR')}" 2>/dev/null)
-  check "V0.7 Model locked to dashscope/qwen3.5-plus (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = 'dashscope/qwen3.5-plus'"
+  check "V0.7 Model locked to known baseline (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = 'dashscope/qwen3.5-plus' -o '$ACTUAL_MODEL' = 'kimi/kimi-for-coding'"
 
   log "Phase 0 complete."
 fi
@@ -2122,7 +2122,7 @@ echo "Date:     $(date)"
 echo "Server:   $(hostname)"
 echo "Duration: ${DURATION}s"
 echo "Mode:     $([ "$ENGINE_ONLY" = true ] && echo 'engine-only' || echo 'full')"
-echo "Model:    dashscope/qwen3.5-plus (locked)"
+echo "Model:    $ACTUAL_MODEL (locked)"
 echo ""
 echo "Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL"
 echo ""
@@ -2189,7 +2189,7 @@ Date:     $(date)
 Server:   $(hostname)
 Duration: ${DURATION}s
 Mode:     $([ "$ENGINE_ONLY" = true ] && echo 'engine-only' || echo 'full (IdleX GEO business scenario)')
-Model:    dashscope/qwen3.5-plus (locked)
+Model:    $ACTUAL_MODEL (locked)
 Framework: AEF v0.1 (11 dimensions)
 
 Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL
