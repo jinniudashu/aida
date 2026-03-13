@@ -4,3 +4,4 @@ dist/
 .env
 .dev/
 .test-data/
+.DS_Store
