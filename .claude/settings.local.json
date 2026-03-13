@@ -4,7 +4,14 @@
       "Bash(mkdir:*)",
       "Bash(npx vitest:*)",
       "Bash(npm test:*)",
-      "Bash(ssh:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ]
   }
 }

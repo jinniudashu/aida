@@ -1,17 +1,17 @@
 # Benchmark Preflight Report
 
-Generated: 2026-03-09T21:22:42
+Generated: 2026-03-10T07:47:50
 
 ## Model Config Validation
 
-| Model | Provider | Provider OK | Model ID | Model OK |
-|-------|----------|-------------|----------|----------|
-| claude-opus-4.6 | openrouter | YES | anthropic/claude-opus-4.6 | YES |
-| gpt-5.4 | openrouter | YES | openai/gpt-5.4 | YES |
-| gemini-3.1-pro | google | YES | gemini-3.1-pro-preview | YES |
-| kimi-k2.5 | moonshot | YES | kimi-k2.5 | YES |
-| glm-5 | zhipu | YES | glm-5 | YES |
-| qwen3.5-plus | dashscope | YES | qwen3.5-plus | YES |
+| Model | Provider | Provider OK | Model ID | Model OK | API | API OK |
+|-------|----------|-------------|----------|----------|-----|--------|
+| claude-opus-4.6 | openrouter | YES | anthropic/claude-opus-4.6 | YES | openai-completions | YES |
+| gpt-5.4 | openrouter | YES | openai/gpt-5.4 | YES | openai-completions | YES |
+| gemini-3.1-pro | google | YES | gemini-3.1-pro-preview | YES | google-generative-ai | YES |
+| kimi-k2.5 | moonshot | YES | kimi-k2.5 | YES | openai-completions | YES |
+| glm-5 | zhipu | YES | glm-5 | YES | openai-completions | YES |
+| qwen3.5-plus | dashscope | YES | qwen3.5-plus | YES | openai-completions | YES |
 
 ## API Key Presence
 
@@ -31,3 +31,7 @@ Generated: 2026-03-09T21:22:42
 - openclaw_config: YES
 - install_script: YES
 - e2e_script: YES
+
+## Provider Readiness
+
+- Gemini provider registration: yes

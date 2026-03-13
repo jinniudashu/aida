@@ -35,7 +35,7 @@
       "modelId": "gemini-3.1-pro-preview",
       "apiConfig": {
         "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
-        "api": "google-generativeai"
+        "api": "google-generative-ai"
       },
       "contextWindow": 1000000,
       "maxTokens": 8192,

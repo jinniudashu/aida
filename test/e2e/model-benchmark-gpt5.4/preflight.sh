@@ -54,6 +54,9 @@ for item in config['models']:
         'configuredModelId': item['modelId'],
         'expectedModelId': target[mid],
         'modelOk': item['modelId'] == target[mid],
+        'configuredApi': item.get('apiConfig', {}).get('api', ''),
+        'expectedApi': 'google-generative-ai' if mid == 'gemini-3.1-pro' else item.get('apiConfig', {}).get('api', ''),
+        'apiOk': (item.get('apiConfig', {}).get('api', '') == 'google-generative-ai') if mid == 'gemini-3.1-pro' else True,
     })
 print(json.dumps(status, ensure_ascii=False, indent=2))
 PY
@@ -136,11 +139,11 @@ lines.append(f'Generated: {datetime.now().isoformat(timespec="seconds")}')
 lines.append('')
 lines.append('## Model Config Validation')
 lines.append('')
-lines.append('| Model | Provider | Provider OK | Model ID | Model OK |')
-lines.append('|-------|----------|-------------|----------|----------|')
+lines.append('| Model | Provider | Provider OK | Model ID | Model OK | API | API OK |')
+lines.append('|-------|----------|-------------|----------|----------|-----|--------|')
 for item in config_status:
     lines.append(
-        f"| {item['id']} | {item['configuredProvider']} | {'YES' if item['providerOk'] else 'NO'} | {item['configuredModelId']} | {'YES' if item['modelOk'] else 'NO'} |"
+        f"| {item['id']} | {item['configuredProvider']} | {'YES' if item['providerOk'] else 'NO'} | {item['configuredModelId']} | {'YES' if item['modelOk'] else 'NO'} | {item['configuredApi']} | {'YES' if item['apiOk'] else 'NO'} |"
     )
 lines.append('')
 lines.append('## API Key Presence')
@@ -157,6 +160,10 @@ lines.append('')
 lines.append(f'- SSH connectivity: {ssh_ok}')
 for key, value in remote_status.items():
     lines.append(f'- {key}: {"YES" if value else "NO"}')
+lines.append('')
+lines.append('## Provider Readiness')
+lines.append('')
+lines.append('- Gemini provider registration: pending runtime check')
 print('\n'.join(lines) + '\n', end='')
 PY
 
@@ -166,11 +173,33 @@ if [ "$SSH_OK" != "yes" ]; then
   die "SSH preflight failed"
 fi
 
+GEMINI_PROVIDER_OK="not-run"
+if ssh_base "bash -lc 'set -a; [ -f /root/aida/.dev/google-gemini-api.env ] && source /root/aida/.dev/google-gemini-api.env || true; set +a; python3 - <<\"PY\"
+from pathlib import Path
+text = Path(\"/root/.local/share/pnpm/global/5/.pnpm/@mariozechner+pi-ai@0.55.3_ws@8.19.0_zod@4.3.6/node_modules/@mariozechner/pi-ai/dist/providers/register-builtins.js\").read_text(encoding=\"utf-8\", errors=\"ignore\")
+print(\"google-generative-ai\" in text)
+PY'" | grep -q '^True$'; then
+  GEMINI_PROVIDER_OK="yes"
+else
+  GEMINI_PROVIDER_OK="no"
+fi
+
+REPORT_PATH="$REPORT" GEMINI_PROVIDER_OK="$GEMINI_PROVIDER_OK" python3 - <<'PY'
+from pathlib import Path
+import os
+path = Path(os.environ['REPORT_PATH'])
+text = path.read_text(encoding='utf-8')
+text = text.replace('Gemini provider registration: pending runtime check', f"Gemini provider registration: {os.environ['GEMINI_PROVIDER_OK']}")
+path.write_text(text, encoding='utf-8')
+PY
+
+cat "$REPORT"
+
 python3 - <<'PY'
 import json
 from pathlib import Path
 status = json.loads(Path('/Users/miles/Documents/JiangNing/aida/test/e2e/model-benchmark-gpt5.4/preflight-status.json').read_text(encoding='utf-8'))
-if not all(item['providerOk'] and item['modelOk'] for item in status):
+if not all(item['providerOk'] and item['modelOk'] and item['apiOk'] for item in status):
     raise SystemExit('Config validation failed')
 PY
 
@@ -182,5 +211,9 @@ missing = [item['id'] for item in api if not item['present']]
 if missing:
     raise SystemExit('Missing API keys for: ' + ', '.join(missing))
 PY
+
+if [ "$GEMINI_PROVIDER_OK" != "yes" ]; then
+  die "Gemini provider registration check failed"
+fi
 
 log "Preflight checks passed"

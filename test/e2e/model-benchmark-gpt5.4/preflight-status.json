@@ -6,7 +6,10 @@
     "providerOk": true,
     "configuredModelId": "anthropic/claude-opus-4.6",
     "expectedModelId": "anthropic/claude-opus-4.6",
-    "modelOk": true
+    "modelOk": true,
+    "configuredApi": "openai-completions",
+    "expectedApi": "openai-completions",
+    "apiOk": true
   },
   {
     "id": "gpt-5.4",
@@ -15,7 +18,10 @@
     "providerOk": true,
     "configuredModelId": "openai/gpt-5.4",
     "expectedModelId": "openai/gpt-5.4",
-    "modelOk": true
+    "modelOk": true,
+    "configuredApi": "openai-completions",
+    "expectedApi": "openai-completions",
+    "apiOk": true
   },
   {
     "id": "gemini-3.1-pro",
@@ -24,7 +30,10 @@
     "providerOk": true,
     "configuredModelId": "gemini-3.1-pro-preview",
     "expectedModelId": "gemini-3.1-pro-preview",
-    "modelOk": true
+    "modelOk": true,
+    "configuredApi": "google-generative-ai",
+    "expectedApi": "google-generative-ai",
+    "apiOk": true
   },
   {
     "id": "kimi-k2.5",
@@ -33,7 +42,10 @@
     "providerOk": true,
     "configuredModelId": "kimi-k2.5",
     "expectedModelId": "kimi-k2.5",
-    "modelOk": true
+    "modelOk": true,
+    "configuredApi": "openai-completions",
+    "expectedApi": "openai-completions",
+    "apiOk": true
   },
   {
     "id": "glm-5",
@@ -42,7 +54,10 @@
     "providerOk": true,
     "configuredModelId": "glm-5",
     "expectedModelId": "glm-5",
-    "modelOk": true
+    "modelOk": true,
+    "configuredApi": "openai-completions",
+    "expectedApi": "openai-completions",
+    "apiOk": true
   },
   {
     "id": "qwen3.5-plus",
@@ -51,6 +66,9 @@
     "providerOk": true,
     "configuredModelId": "qwen3.5-plus",
     "expectedModelId": "qwen3.5-plus",
-    "modelOk": true
+    "modelOk": true,
+    "configuredApi": "openai-completions",
+    "expectedApi": "openai-completions",
+    "apiOk": true
   }
 ]
