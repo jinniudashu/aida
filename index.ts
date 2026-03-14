@@ -8,6 +8,7 @@
 import { loadAidaProject } from "./src/loader/aida-project.js";
 import { createBpsTools } from "./src/integration/tools.js";
 import { BpsEventBridge } from "./src/integration/event-bridge.js";
+import { registerToolObserver } from "./src/integration/tool-observer.js";
 
 // Minimal OpenClaw plugin API surface used by this plugin.
 // The actual object is injected by OpenClaw at runtime.
@@ -62,6 +63,16 @@ export default function register(api: OpenClawPluginApi) {
       logger,
     );
     eventBridge.setup();
+  }
+
+  // 4. Register tool observation hook (defense-in-depth + observability)
+  const hookRegistered = registerToolObserver({
+    api: api as any,
+    tracker: engine.tracker,
+    logger,
+  });
+  if (hookRegistered) {
+    logger.info('[bps-engine] Tool observation hook registered');
   }
 
   logger.info(`[bps-engine] BPS Engine plugin registered with ${tools.length} tools.`);

@@ -157,6 +157,8 @@ app.get('/api/events', (c) => {
     relay('process:completed')
     relay('process:error')
     relay('dossier:committed')
+    relay('tool:native_call')
+    relay('tool:management_bypass')
 
     // Management events
     function relayGov(event: string) {

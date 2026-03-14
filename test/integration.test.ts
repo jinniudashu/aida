@@ -1517,3 +1517,182 @@ describe('Information Saturation Signal', () => {
     expect(result._readSignal.consecutiveReads).toBe(8);
   });
 });
+
+// ——————————————————————————————————
+// 7. Tool Observer (after_tool_call Hook)
+// ——————————————————————————————————
+
+import { registerToolObserver } from '../src/integration/tool-observer.js';
+
+describe('ToolObserver', () => {
+  let engine: BpsEngine;
+
+  beforeEach(() => {
+    engine = createBpsEngine();
+  });
+
+  function createMockApiWithHook() {
+    const hooks = new Map<string, Array<(payload: Record<string, unknown>) => void>>();
+    const api: OpenClawPluginApi = {
+      registerTool() {},
+      onEvent() {},
+      emitEvent() {},
+      onHook(hookName: string, handler: (p: Record<string, unknown>) => void) {
+        const list = hooks.get(hookName) ?? [];
+        list.push(handler);
+        hooks.set(hookName, list);
+      },
+    };
+    return { api, hooks };
+  }
+
+  it('should register successfully when onHook is available', () => {
+    const { api } = createMockApiWithHook();
+    const result = registerToolObserver({ api, tracker: engine.tracker });
+    expect(result).toBe(true);
+  });
+
+  it('should return false when no hook registration is available', () => {
+    const api: OpenClawPluginApi = {
+      registerTool() {},
+      onEvent() {},
+      emitEvent() {},
+    };
+    const result = registerToolObserver({ api, tracker: engine.tracker });
+    expect(result).toBe(false);
+  });
+
+  it('should emit tool:native_call for write tool', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const events: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:native_call', (payload: Record<string, unknown>) => {
+      events.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    handler({ tool: 'write', input: { file_path: '/tmp/test.txt' }, duration: 42 });
+
+    expect(events).toHaveLength(1);
+    expect(events[0].tool).toBe('write');
+    expect(events[0].path).toBe('/tmp/test.txt');
+    expect(events[0].duration).toBe(42);
+  });
+
+  it('should emit tool:native_call for edit tool', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const events: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:native_call', (payload: Record<string, unknown>) => {
+      events.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    handler({ tool: 'edit', input: { path: '/tmp/edit.txt' } });
+
+    expect(events).toHaveLength(1);
+    expect(events[0].tool).toBe('edit');
+  });
+
+  it('should NOT emit tool:native_call for BPS tools', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const events: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:native_call', (payload: Record<string, unknown>) => {
+      events.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    handler({ tool: 'bps_update_entity', input: { entityType: 'store', entityId: 's1' } });
+
+    expect(events).toHaveLength(0);
+  });
+
+  it('should emit tool:management_bypass when write targets AIDA data dir', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const bypasses: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:management_bypass', (payload: Record<string, unknown>) => {
+      bypasses.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    const aidaPath = path.join(os.homedir(), '.aida', 'data', 'something.json');
+    handler({ tool: 'write', input: { file_path: aidaPath } });
+
+    expect(bypasses).toHaveLength(1);
+    expect(bypasses[0].tool).toBe('write');
+    expect(bypasses[0].path).toBe(aidaPath);
+    expect(typeof bypasses[0].message).toBe('string');
+  });
+
+  it('should NOT emit management_bypass for writes outside AIDA dir', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const bypasses: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:management_bypass', (payload: Record<string, unknown>) => {
+      bypasses.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    handler({ tool: 'write', input: { file_path: '/tmp/safe.txt' } });
+
+    expect(bypasses).toHaveLength(0);
+  });
+
+  it('should detect exec commands writing to AIDA dir', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const bypasses: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:management_bypass', (payload: Record<string, unknown>) => {
+      bypasses.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    const aidaDir = path.join(os.homedir(), '.aida');
+    handler({ tool: 'exec', input: { command: `echo "data" > ${aidaDir}/test.txt` } });
+
+    expect(bypasses).toHaveLength(1);
+  });
+
+  it('should NOT flag exec commands that only read AIDA dir', () => {
+    const { api, hooks } = createMockApiWithHook();
+    registerToolObserver({ api, tracker: engine.tracker });
+
+    const bypasses: Array<Record<string, unknown>> = [];
+    engine.tracker.on('tool:management_bypass', (payload: Record<string, unknown>) => {
+      bypasses.push(payload);
+    });
+
+    const handler = hooks.get('after_tool_call')![0];
+    const aidaDir = path.join(os.homedir(), '.aida');
+    handler({ tool: 'exec', input: { command: `cat ${aidaDir}/project.yaml` } });
+
+    expect(bypasses).toHaveLength(0);
+  });
+
+  it('should fall back to api.on() if onHook is not available', () => {
+    const hooks = new Map<string, Array<(payload: Record<string, unknown>) => void>>();
+    const api: OpenClawPluginApi = {
+      registerTool() {},
+      onEvent() {},
+      emitEvent() {},
+    };
+    // Simulate OpenClaw versions that use .on() for hooks
+    (api as any).on = (name: string, handler: (p: Record<string, unknown>) => void) => {
+      const list = hooks.get(name) ?? [];
+      list.push(handler);
+      hooks.set(name, list);
+    };
+
+    const result = registerToolObserver({ api, tracker: engine.tracker });
+    expect(result).toBe(true);
+    expect(hooks.has('after_tool_call')).toBe(true);
+  });
+});

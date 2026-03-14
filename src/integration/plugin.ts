@@ -2,6 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { OpenClawPluginApi, OpenClawLogger } from './openclaw-types.js';
 import { createBpsTools } from './tools.js';
 import { BpsEventBridge } from './event-bridge.js';
+import { registerToolObserver } from './tool-observer.js';
 import { createBpsEngine, type BpsEngine } from '../index.js';
 
 export interface BpsPluginConfig {
@@ -57,6 +58,9 @@ export function registerBpsPlugin(
     logger,
   );
   eventBridge.setup();
+
+  // 4. Register tool observation hook (defense-in-depth + observability)
+  registerToolObserver({ api, tracker: engine.tracker, logger });
 
   logger?.info('BPS plugin registered', {
     toolCount: tools.length,

@@ -50,6 +50,14 @@ export interface OpenClawPluginApi {
   /** 发布事件到 Gateway */
   emitEvent(event: string, payload: Record<string, unknown>): void;
 
+  /**
+   * 注册生命周期 Hook（可选，OpenClaw 14 种 Hook）
+   *
+   * 常用 Hook：before_tool_call, after_tool_call, session_start,
+   * agent_end, before_compaction, gateway_start 等
+   */
+  onHook?(hookName: string, handler: OpenClawEventHandler): void;
+
   /** 获取 homeDir（用于 DB 存储路径） */
   homeDir?: string;
 
