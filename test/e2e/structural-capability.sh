@@ -31,6 +31,8 @@ SKIP_INSTALL=false
 ENGINE_ONLY=false
 START_PHASE=0
 PASS=0; FAIL=0; WARNS=0; TOTAL=0
+# Model override: SC_MODEL env var or default to qwen3.5-plus
+SC_MODEL="${SC_MODEL:-dashscope/qwen3.5-plus}"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -112,22 +114,23 @@ if [ "$START_PHASE" -le 0 ]; then
     # the test framework itself. Cross-model evaluation is handled by
     # the benchmark suite which reuses this test plan.
     # R1-R5 ran on Qwen (unintentionally), R6 on Kimi; Qwen outperformed.
-    log "Locking model to dashscope/qwen3.5-plus..."
+    log "Locking model to $SC_MODEL..."
     OC_CONFIG="$OPENCLAW_HOME/openclaw.json"
     node -e '
       const fs = require("fs");
+      const model = process.argv[2];
       const c = JSON.parse(fs.readFileSync(process.argv[1], "utf-8"));
       if (!c.agents) c.agents = {};
       if (!c.agents.defaults) c.agents.defaults = {};
       c.agents.defaults.model = {
-        primary: "dashscope/qwen3.5-plus",
-        fallbacks: ["kimi/kimi-for-coding"]
+        primary: model,
+        fallbacks: ["dashscope/qwen3.5-plus", "kimi/kimi-for-coding"]
       };
       if (!c.agents.defaults.models) c.agents.defaults.models = {};
-      c.agents.defaults.models["dashscope/qwen3.5-plus"] = { alias: "Qwen3.5-Plus via DashScope" };
+      c.agents.defaults.models[model] = { alias: model };
       fs.writeFileSync(process.argv[1], JSON.stringify(c, null, 2) + "\n");
-      console.log("[structural] model locked: dashscope/qwen3.5-plus");
-    ' "$OC_CONFIG"
+      console.log("[structural] model locked: " + model);
+    ' "$OC_CONFIG" "$SC_MODEL"
 
     log "Starting OpenClaw gateway..."
     openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero"
@@ -152,7 +155,7 @@ if [ "$START_PHASE" -le 0 ]; then
   check "V0.6 Skills >= 7 (found $SKILL_N)" "test $SKILL_N -ge 7"
 
   ACTUAL_MODEL=$(node -e "try{const c=JSON.parse(require('fs').readFileSync('$OPENCLAW_HOME/openclaw.json','utf8'));console.log(c.agents?.defaults?.model?.primary||'UNKNOWN')}catch{console.log('ERROR')}" 2>/dev/null)
-  check "V0.7 Model locked to dashscope/qwen3.5-plus (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = 'dashscope/qwen3.5-plus'"
+  check "V0.7 Model locked to $SC_MODEL (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = '$SC_MODEL'"
 
   log "Phase 0 complete."
 fi
@@ -1642,6 +1645,42 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
 
   # Clean sessions for fresh agent context
   rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+
+  # ── Model Verification (pre-flight) ─────────────────────
+  log "Model verification: sending probe to Aida..."
+  PROBE_OUT="$LOG_DIR/model-probe.log"
+  timeout 120 openclaw agent --agent main --message "请用一句话回复你的模型名称和版本号。" > "$PROBE_OUT" 2>&1 || true
+
+  if [ -s "$PROBE_OUT" ]; then
+    pass "B4.00a Model probe got response ($(wc -l < "$PROBE_OUT") lines)"
+    PROBE_CONTENT=$(cat "$PROBE_OUT")
+    log "  Model probe response: $(head -3 "$PROBE_OUT")"
+
+    # Check JSONL for actual model used
+    PROBE_JSONL=$(ls -t "$OPENCLAW_HOME/agents/main/sessions/"*.jsonl 2>/dev/null | head -1)
+    JSONL_MODEL=""
+    if [ -n "$PROBE_JSONL" ]; then
+      JSONL_MODEL=$(node -e "
+        const lines=require('fs').readFileSync('$PROBE_JSONL','utf8').trim().split('\n');
+        for(const l of lines){try{const e=JSON.parse(l);
+        if(e.type==='message'&&e.message?.role==='assistant'&&e.message?.model){
+          console.log(e.message.model);process.exit(0);}}catch{}}
+        console.log('UNKNOWN')" 2>/dev/null || echo "PARSE_ERROR")
+    fi
+    if [ -n "$JSONL_MODEL" ] && [ "$JSONL_MODEL" != "UNKNOWN" ] && [ "$JSONL_MODEL" != "PARSE_ERROR" ]; then
+      log "  JSONL actual model: $JSONL_MODEL"
+      check "B4.00b JSONL model matches config ($JSONL_MODEL)" "echo '$JSONL_MODEL' | grep -qi '$(echo $SC_MODEL | sed 's|.*/||')'"
+    else
+      soft "B4.00b JSONL model detection (got: $JSONL_MODEL)" "test '$JSONL_MODEL' != 'UNKNOWN'"
+    fi
+  else
+    fail "B4.00a Model probe got no response"
+    warn_ "B4.00b Model verification skipped (no probe response)"
+  fi
+
+  # Clean probe session for fresh business context
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+  sleep 2
 
   # Capture baseline metrics before business scenario
   BASELINE_ENTITIES=$(api_get "/api/entities" | jlen)
