@@ -94,12 +94,13 @@ describe('Plugin Registration', () => {
     const runtime = createMockRuntime();
     const { engine } = registerBpsPlugin(runtime.api);
 
-    expect(runtime.registeredTools).toHaveLength(15);
+    expect(runtime.registeredTools).toHaveLength(17);
     expect(runtime.registeredTools.map(t => t.name).sort()).toEqual([
       'bps_batch_update',
       'bps_complete_task',
       'bps_create_skill',
       'bps_create_task',
+      'bps_get_collaboration_response',
       'bps_get_entity',
       'bps_get_task',
       'bps_list_services',
@@ -108,6 +109,7 @@ describe('Plugin Registration', () => {
       'bps_query_entities',
       'bps_query_tasks',
       'bps_register_agent',
+      'bps_request_collaboration',
       'bps_scan_work',
       'bps_update_entity',
       'bps_update_task',

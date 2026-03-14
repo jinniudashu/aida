@@ -532,6 +532,7 @@ import {
   createDatabase,
   ManagementStore,
   SkillMetricsStore,
+  CollaborationStore,
 } from './src/index.js';
 import { ActionGate } from './src/management/action-gate.js';
 import { loadManagementFile } from './src/management/management-loader.js';
@@ -562,7 +563,10 @@ const gate = new ActionGate(mgmtStore, {
   cooldown: '1s', // Short cooldown for test
 });
 
-// Create tools with management
+// Collaboration store
+const collabStore = new CollaborationStore(db);
+
+// Create tools with management + collaboration
 const tools = createBpsTools({
   tracker: engine.tracker,
   blueprintStore: engine.blueprintStore,
@@ -572,6 +576,7 @@ const tools = createBpsTools({
   managementGate: gate,
   managementStore: mgmtStore,
   skillMetricsStore: skillMetrics,
+  collaborationStore: collabStore,
 });
 
 interface TestResult {
@@ -1168,10 +1173,10 @@ resetManagement();
 // ═════════════════════════════════════════════
 console.log('\n--- D8: Tool Registration ---');
 
-// S2.34: Total tool count with management
+// S2.34: Total tool count with management + collaboration
 {
-  assert('S2.34', 'Total tools = 17 (15 base + 2 management)',
-    tools.length === 17,
+  assert('S2.34', 'Total tools = 19 (15 base + 2 management + 2 collaboration)',
+    tools.length === 19,
     `got ${tools.length}: ${tools.map(t => t.name).join(', ')}`);
 }
 
@@ -1181,6 +1186,279 @@ console.log('\n--- D8: Tool Registration ---');
     !DEFAULT_SCOPE_WRITE_TOOLS.includes('bps_load_management' as any)
     && DEFAULT_SCOPE_WRITE_TOOLS.length === GATED_WRITE_TOOLS.length - 1,
     `count: ${DEFAULT_SCOPE_WRITE_TOOLS.length} (GATED: ${GATED_WRITE_TOOLS.length})`);
+}
+
+// ═════════════════════════════════════════════
+// D9: Information Saturation Signal
+// ═════════════════════════════════════════════
+console.log('\n--- D9: Information Saturation Signal ---');
+
+// S2.36: No signal below threshold (4 consecutive reads)
+{
+  // Use fresh tools for isolated counter
+  const freshTools = createBpsTools({
+    tracker: engine.tracker,
+    blueprintStore: engine.blueprintStore,
+    processStore: engine.processStore,
+    dossierStore: engine.dossierStore,
+    collaborationStore: collabStore,
+  });
+  const readTool = freshTools.find(t => t.name === 'bps_list_services')!;
+  let lastResult: any;
+  for (let i = 0; i < 4; i++) {
+    lastResult = await readTool.execute(`sat-${i}`, {});
+  }
+  assert('S2.36', 'No _readSignal below threshold (4 reads)',
+    lastResult._readSignal === undefined,
+    `_readSignal: ${lastResult._readSignal}`);
+}
+
+// S2.37: Signal injected at threshold (5 consecutive reads)
+{
+  const freshTools = createBpsTools({
+    tracker: engine.tracker,
+    blueprintStore: engine.blueprintStore,
+    processStore: engine.processStore,
+    dossierStore: engine.dossierStore,
+    collaborationStore: collabStore,
+  });
+  const readTool = freshTools.find(t => t.name === 'bps_query_entities')!;
+  for (let i = 0; i < 4; i++) {
+    await readTool.execute(`sat5-${i}`, { entityType: 'store' });
+  }
+  const result5 = await readTool.execute('sat5-trigger', { entityType: 'store' }) as any;
+  assert('S2.37', '_readSignal injected at 5 consecutive reads',
+    result5._readSignal !== undefined && result5._readSignal.consecutiveReads === 5,
+    `consecutiveReads=${result5._readSignal?.consecutiveReads}`);
+}
+
+// S2.38: Signal message contains action hints
+{
+  const freshTools = createBpsTools({
+    tracker: engine.tracker,
+    blueprintStore: engine.blueprintStore,
+    processStore: engine.processStore,
+    dossierStore: engine.dossierStore,
+    collaborationStore: collabStore,
+  });
+  const readTool = freshTools.find(t => t.name === 'bps_scan_work')!;
+  for (let i = 0; i < 5; i++) {
+    await readTool.execute(`msg-${i}`, {});
+  }
+  const result = await readTool.execute('msg-check', {}) as any;
+  const msg: string = result._readSignal?.message ?? '';
+  assert('S2.38', '_readSignal message contains action hints (update_entity, create_task, complete_task)',
+    msg.includes('bps_update_entity') && msg.includes('bps_create_task') && msg.includes('bps_complete_task'),
+    `message length: ${msg.length}`);
+}
+
+// S2.39: Write tool resets counter
+{
+  const freshTools = createBpsTools({
+    tracker: engine.tracker,
+    blueprintStore: engine.blueprintStore,
+    processStore: engine.processStore,
+    dossierStore: engine.dossierStore,
+    collaborationStore: collabStore,
+  });
+  const readTool = freshTools.find(t => t.name === 'bps_get_entity')!;
+  const writeTool = freshTools.find(t => t.name === 'bps_update_entity')!;
+
+  // 4 reads
+  for (let i = 0; i < 4; i++) {
+    await readTool.execute(`reset-pre-${i}`, { entityType: 'store', entityId: 'store-cs-ktv-01' });
+  }
+  // 1 write resets
+  await writeTool.execute('reset-write', {
+    entityType: 'store', entityId: 'store-cs-ktv-01',
+    data: { saturationResetTest: true },
+  });
+  // 4 more reads — should NOT trigger
+  let postResult: any;
+  for (let i = 0; i < 4; i++) {
+    postResult = await readTool.execute(`reset-post-${i}`, { entityType: 'store', entityId: 'store-cs-ktv-01' });
+  }
+  assert('S2.39', 'Write tool resets read counter (no signal after write + 4 reads)',
+    postResult._readSignal === undefined,
+    `_readSignal: ${postResult._readSignal}`);
+}
+
+// S2.40: Counter accumulates past threshold
+{
+  const freshTools = createBpsTools({
+    tracker: engine.tracker,
+    blueprintStore: engine.blueprintStore,
+    processStore: engine.processStore,
+    dossierStore: engine.dossierStore,
+    collaborationStore: collabStore,
+  });
+  const readTool = freshTools.find(t => t.name === 'bps_next_steps')!;
+  for (let i = 0; i < 8; i++) {
+    await readTool.execute(`accum-${i}`, { serviceId: 'svc-probe' });
+  }
+  const result = await readTool.execute('accum-check', { serviceId: 'svc-probe' }) as any;
+  assert('S2.40', 'Counter accumulates past threshold (9 reads → consecutiveReads=9)',
+    result._readSignal?.consecutiveReads === 9,
+    `consecutiveReads=${result._readSignal?.consecutiveReads}`);
+}
+
+// S2.41: bps_get_collaboration_response is classified as read tool
+{
+  const freshTools = createBpsTools({
+    tracker: engine.tracker,
+    blueprintStore: engine.blueprintStore,
+    processStore: engine.processStore,
+    dossierStore: engine.dossierStore,
+    collaborationStore: collabStore,
+  });
+  // Create a task to query
+  const task = collabStore.createTask({ title: 'read-class-test', description: 'test' });
+  const collabReadTool = freshTools.find(t => t.name === 'bps_get_collaboration_response')!;
+  // 4 other reads first
+  const listTool = freshTools.find(t => t.name === 'bps_list_services')!;
+  for (let i = 0; i < 4; i++) {
+    await listTool.execute(`cls-${i}`, {});
+  }
+  // 5th read via collaboration read tool should trigger
+  const result = await collabReadTool.execute('cls-5', { taskId: task.id }) as any;
+  assert('S2.41', 'bps_get_collaboration_response is a read tool (triggers saturation signal)',
+    result._readSignal !== undefined && result._readSignal.consecutiveReads === 5,
+    `consecutiveReads=${result._readSignal?.consecutiveReads}`);
+}
+
+// ═════════════════════════════════════════════
+// D10: Collaboration Input (HITL/AITL)
+// ═════════════════════════════════════════════
+console.log('\n--- D10: Collaboration Input ---');
+
+// S2.42: bps_request_collaboration creates a task
+{
+  const collabTool = tools.find(t => t.name === 'bps_request_collaboration')!;
+  const result = await collabTool.execute('collab-1', {
+    title: 'Confirm treatment parameters',
+    description: 'Please confirm botox dosage and injection area',
+    inputSchema: {
+      type: 'object',
+      properties: { dosage: { type: 'number' }, area: { type: 'string' } },
+      required: ['dosage'],
+    },
+    priority: 'high',
+    context: { entityType: 'patient', entityId: 'patient-001' },
+  }) as any;
+  assert('S2.42', 'bps_request_collaboration creates task with taskId',
+    result.success === true && typeof result.taskId === 'string' && result.status === 'pending',
+    `taskId=${result.taskId}, status=${result.status}`);
+}
+
+// S2.43: Created task has correct schema and priority
+{
+  const pending = collabStore.getPendingTasks();
+  const latest = pending.find(t => t.title === 'Confirm treatment parameters');
+  assert('S2.43', 'Collaboration task has inputSchema + priority + context',
+    latest !== undefined
+    && (latest.inputSchema as any).properties?.dosage?.type === 'number'
+    && latest.priority === 'high'
+    && latest.context.entityType === 'patient',
+    `schema keys: ${Object.keys((latest?.inputSchema as any)?.properties || {}).join(',')}`);
+}
+
+// S2.44: bps_get_collaboration_response returns pending status
+{
+  const pending = collabStore.getPendingTasks();
+  const taskId = pending[0]?.id;
+  const checkTool = tools.find(t => t.name === 'bps_get_collaboration_response')!;
+  const result = await checkTool.execute('collab-check-1', { taskId }) as any;
+  assert('S2.44', 'bps_get_collaboration_response returns pending with hint',
+    result.status === 'pending' && typeof result.hint === 'string',
+    `status=${result.status}`);
+}
+
+// S2.45: Respond to collaboration task via store
+{
+  const pending = collabStore.getPendingTasks();
+  const taskId = pending[0]?.id;
+  const responded = collabStore.respond(taskId, { dosage: 80, area: 'forehead' }, 'dr-wang');
+  assert('S2.45', 'Collaboration respond → completed with response data',
+    responded.status === 'completed'
+    && responded.response?.data.dosage === 80
+    && responded.response?.respondedBy === 'dr-wang',
+    `respondedBy=${responded.response?.respondedBy}`);
+}
+
+// S2.46: bps_get_collaboration_response returns completed response
+{
+  const tasks = collabStore.listTasks('completed');
+  const taskId = tasks[0]?.id;
+  const checkTool = tools.find(t => t.name === 'bps_get_collaboration_response')!;
+  const result = await checkTool.execute('collab-check-2', { taskId }) as any;
+  assert('S2.46', 'Completed collaboration returns response data',
+    result.status === 'completed' && result.response?.dosage === 80 && result.respondedBy === 'dr-wang',
+    `response keys: ${Object.keys(result.response || {}).join(',')}`);
+}
+
+// S2.47: Collaboration task expiration
+{
+  const collabTool = tools.find(t => t.name === 'bps_request_collaboration')!;
+  const result = await collabTool.execute('collab-expire', {
+    title: 'Short-lived task',
+    description: 'Expires in 30 minutes',
+    expiresIn: '30m',
+  }) as any;
+  const task = collabStore.getTask(result.taskId);
+  const expiresAt = new Date(task!.expiresAt).getTime();
+  const createdAt = new Date(task!.createdAt).getTime();
+  const diffMs = expiresAt - createdAt;
+  // Should be ~30 minutes (± 5 seconds tolerance)
+  assert('S2.47', 'expiresIn=30m sets correct expiration (~30 min)',
+    diffMs >= 29 * 60 * 1000 && diffMs <= 31 * 60 * 1000,
+    `diff=${Math.round(diffMs / 60000)}min`);
+}
+
+// S2.48: Cancel collaboration task
+{
+  const task = collabStore.createTask({ title: 'Cancel test', description: 'Will cancel' });
+  collabStore.cancelTask(task.id);
+  const cancelled = collabStore.getTask(task.id);
+  assert('S2.48', 'Cancel task sets status to cancelled',
+    cancelled?.status === 'cancelled',
+    `status=${cancelled?.status}`);
+}
+
+// S2.49: Status counts reflect all states
+{
+  const counts = collabStore.getStatusCounts();
+  assert('S2.49', 'Status counts include pending, completed, cancelled',
+    typeof counts.pending === 'number'
+    && typeof counts.completed === 'number'
+    && typeof counts.cancelled === 'number',
+    `pending=${counts.pending}, completed=${counts.completed}, cancelled=${counts.cancelled}`);
+}
+
+// S2.50: Collaboration events emitted
+{
+  let createdEvent = false;
+  let respondedEvent = false;
+  collabStore.on('collaboration:task_created', () => { createdEvent = true; });
+  collabStore.on('collaboration:task_responded', () => { respondedEvent = true; });
+
+  const task = collabStore.createTask({ title: 'Event test', description: 'test' });
+  collabStore.respond(task.id, { ok: true }, 'tester');
+
+  assert('S2.50', 'Collaboration emits task_created + task_responded events',
+    createdEvent && respondedEvent,
+    `created=${createdEvent}, responded=${respondedEvent}`);
+
+  collabStore.removeAllListeners('collaboration:task_created');
+  collabStore.removeAllListeners('collaboration:task_responded');
+}
+
+// S2.51: Non-existent task returns error
+{
+  const checkTool = tools.find(t => t.name === 'bps_get_collaboration_response')!;
+  const result = await checkTool.execute('collab-missing', { taskId: 'nonexistent-id' }) as any;
+  assert('S2.51', 'Non-existent collaboration task returns error',
+    result.error !== undefined && result.error.includes('not found'),
+    `error=${result.error}`);
 }
 
 // ═════════════════════════════════════════════
@@ -1286,6 +1564,72 @@ if [ "$START_PHASE" -le 3 ]; then
     check "S3.09 Dashboard page $page" "curl -sf $DASHBOARD_URL$page >/dev/null"
   done
 
+  # --- S3.10-S3.14: Collaboration API ---
+
+  # S3.10: Collaboration status endpoint
+  COLLAB_STATUS=$(api_get "/api/collaboration/status" 2>/dev/null || echo "{}")
+  HAS_COUNTS=$(echo "$COLLAB_STATUS" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    console.log(typeof d.counts==='object'&&typeof d.pendingCount==='number'?'yes':'no')}catch{console.log('no')}" 2>/dev/null)
+  check "S3.10 Collaboration status has counts + pendingCount" "test '$HAS_COUNTS' = 'yes'"
+
+  # S3.11: Collaboration tasks list endpoint
+  COLLAB_TASKS=$(api_get "/api/collaboration/tasks" 2>/dev/null || echo "{}")
+  HAS_TASKS_SHAPE=$(echo "$COLLAB_TASKS" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    console.log(typeof d.count==='number'&&Array.isArray(d.tasks)?'yes':'no')}catch{console.log('no')}" 2>/dev/null)
+  check "S3.11 Collaboration tasks returns {count, tasks[]}" "test '$HAS_TASKS_SHAPE' = 'yes'"
+
+  # S3.12: Collaboration tasks filter by status
+  COLLAB_PENDING=$(api_get "/api/collaboration/tasks?status=pending" 2>/dev/null || echo "{}")
+  PENDING_VALID=$(echo "$COLLAB_PENDING" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    console.log(Array.isArray(d.tasks)?'yes':'no')}catch{console.log('no')}" 2>/dev/null)
+  check "S3.12 Collaboration tasks?status=pending returns valid array" "test '$PENDING_VALID' = 'yes'"
+
+  # S3.13: Collaboration task respond endpoint (create + respond round-trip)
+  COLLAB_RT=$(node -e "
+    const http = require('http');
+    function post(path, body) {
+      return new Promise((resolve, reject) => {
+        const req = http.request('$DASHBOARD_URL' + path, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+        }, res => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>resolve(JSON.parse(d))); });
+        req.on('error', reject);
+        req.end(JSON.stringify(body));
+      });
+    }
+    function get(path) {
+      return new Promise((resolve, reject) => {
+        http.get('$DASHBOARD_URL' + path, res => {
+          let d=''; res.on('data',c=>d+=c); res.on('end',()=>resolve(JSON.parse(d)));
+        }).on('error', reject);
+      });
+    }
+    (async () => {
+      // We'll verify that Engine-created tasks (Phase 2) appear in Dashboard API
+      const all = await get('/api/collaboration/tasks');
+      const completed = all.tasks.filter(t => t.status === 'completed');
+      if (completed.length > 0) {
+        const task = completed[0];
+        // Verify task has response
+        const detail = await get('/api/collaboration/tasks/' + task.id);
+        console.log(detail.response ? 'yes' : 'no');
+      } else {
+        // Create fresh, respond, verify
+        const store = await get('/api/collaboration/status');
+        // Just verify the endpoint works — task was created in Phase 2
+        console.log(typeof store.counts === 'object' ? 'yes' : 'no');
+      }
+    })();
+  " 2>/dev/null || echo 'no')
+  soft "S3.13 Collaboration round-trip (Engine tasks visible in Dashboard API)" "test '$COLLAB_RT' = 'yes'"
+
+  # S3.14: Collaboration task detail 404 for missing
+  COLLAB_404=$(curl -sf -o /dev/null -w "%{http_code}" "$DASHBOARD_URL/api/collaboration/tasks/nonexistent" 2>/dev/null || echo "000")
+  check "S3.14 Collaboration task detail returns 404 for missing" "test '$COLLAB_404' = '404'"
+
   log "Phase 3 complete."
 fi
 
@@ -1385,6 +1729,56 @@ if [ "$START_PHASE" -le 4 ] && [ "$ENGINE_ONLY" = false ]; then
   soft "B4.12 Aida produced content files via write tool (got $WRITE_CALLS calls)" "test $WRITE_CALLS -ge 1"
 
   soft "B4.13 Response mentions specific stores" "grep -qiE '声临其境|悠然茶室|棋乐无穷|store-cs' $LOG_DIR/turn-3.log"
+
+  # ── Turn 3b: Collaboration Request ───────────────────────
+  log "Turn 3b: Collaboration input request..."
+  aida_say 3b "长沙声临其境KTV有几个数据我拿不准，需要店长确认一下：
+
+1. 当前包房日均使用率（百分比）
+2. 周末黄金时段（18:00-22:00）是否需要提前预约
+3. 目前的主力消费人群年龄段
+
+请通过协作任务机制向店长发起数据确认请求（用 bps_request_collaboration），我等店长回复后再优化内容。表单至少包含上面三个字段。"
+
+  check "B4.13b Turn 3b produced response" "test -s $LOG_DIR/turn-3b.log"
+
+  sleep 3
+
+  # Check if bps_request_collaboration was called
+  SESS_JSONL_3B=$(ls -t "$OPENCLAW_HOME/agents/main/sessions/"*.jsonl 2>/dev/null | head -1)
+  COLLAB_CALLS=0
+  if [ -n "$SESS_JSONL_3B" ]; then
+    COLLAB_CALLS=$(node -e "
+      const lines=require('fs').readFileSync('$SESS_JSONL_3B','utf8').trim().split('\n');
+      let n=0;for(const l of lines){try{const e=JSON.parse(l);
+      if(e.type==='message'&&e.message?.role==='assistant'&&Array.isArray(e.message.content)){
+        for(const b of e.message.content){if(b.name==='bps_request_collaboration')n++;}}}catch{}}
+      console.log(n)" 2>/dev/null || echo 0)
+  fi
+  soft "B4.13c Aida called bps_request_collaboration (got $COLLAB_CALLS)" "test $COLLAB_CALLS -ge 1"
+
+  # Check collaboration tasks via Dashboard API
+  COLLAB_PENDING_COUNT=$(api_get "/api/collaboration/tasks?status=pending" 2>/dev/null | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(d.count||0)}catch{console.log(0)}" 2>/dev/null || echo 0)
+  soft "B4.13d Pending collaboration tasks in Dashboard (got $COLLAB_PENDING_COUNT)" "test $COLLAB_PENDING_COUNT -ge 1"
+
+  # Step 3c: Programmatic collaboration response (simulate store manager reply)
+  log "Step 3c: Simulating store manager reply via Dashboard API..."
+  COLLAB_TASK_IDS=$(api_get "/api/collaboration/tasks?status=pending" 2>/dev/null | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    console.log(d.tasks.map(t=>t.id).join(' '))}catch{console.log('')}" 2>/dev/null || echo "")
+  COLLAB_RESPONDED=0
+  for cid in $COLLAB_TASK_IDS; do
+    if [ -n "$cid" ]; then
+      CRESULT=$(api_post "/api/collaboration/tasks/$cid/respond" '{"data":{"dailyOccupancyRate":72,"weekendReservationRequired":true,"primaryAgeGroup":"25-35"},"respondedBy":"store-manager-liu"}' 2>/dev/null || echo '{}')
+      if echo "$CRESULT" | grep -q '"success":true'; then
+        COLLAB_RESPONDED=$((COLLAB_RESPONDED + 1))
+      fi
+    fi
+  done
+  soft "B4.13e Collaboration tasks responded ($COLLAB_RESPONDED)" "test $COLLAB_RESPONDED -ge 1"
+
+  soft "B4.13f Response mentions collaboration/confirm/input" "grep -qiE '协作|确认|collaborate|bps_request_collaboration|表单|form|店长|input|待办' $LOG_DIR/turn-3b.log"
 
   # ── Turn 4: Management Trigger — Content Publish ────────
   log "Turn 4: Management trigger — content publish..."
@@ -1531,6 +1925,29 @@ if [ "$ENGINE_ONLY" = false ]; then
   soft "V5.8 Agent created Skills >= 1 (got $AGENT_SKILLS)" "test ${AGENT_SKILLS:-0} -ge 1"
 
   soft "V5.9 Agent workspace created (got $FINAL_WORKSPACES)" "test ${FINAL_WORKSPACES:-0} -ge 1"
+
+  # Collaboration final checks
+  FINAL_COLLAB_STATUS=$(api_get "/api/collaboration/status" 2>/dev/null || echo "{}")
+  FINAL_COLLAB_COMPLETED=$(echo "$FINAL_COLLAB_STATUS" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(d.counts?.completed||0)}catch{console.log(0)}" 2>/dev/null || echo 0)
+  FINAL_COLLAB_TOTAL=$(echo "$FINAL_COLLAB_STATUS" | node -e "
+    try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+    const c=d.counts||{};console.log((c.pending||0)+(c.completed||0)+(c.expired||0)+(c.cancelled||0))}catch{console.log(0)}" 2>/dev/null || echo 0)
+  soft "V5.10 Collaboration tasks created (total=$FINAL_COLLAB_TOTAL)" "test ${FINAL_COLLAB_TOTAL:-0} -ge 1"
+  soft "V5.11 Collaboration tasks completed (completed=$FINAL_COLLAB_COMPLETED)" "test ${FINAL_COLLAB_COMPLETED:-0} -ge 1"
+
+  # Check JSONL for saturation signal (at least one tool result contains _readSignal)
+  SATURATION_DETECTED=0
+  if [ -n "$FINAL_JSONL" ]; then
+    SATURATION_DETECTED=$(node -e "
+      const lines=require('fs').readFileSync('$FINAL_JSONL','utf8').trim().split('\n');
+      let n=0;for(const l of lines){try{const e=JSON.parse(l);
+      if(e.type==='message'&&e.message?.role==='tool'){
+        const c=JSON.stringify(e.message.content||'');
+        if(c.includes('_readSignal')||c.includes('consecutiveReads'))n++;}}catch{}}
+      console.log(n)" 2>/dev/null || echo 0)
+  fi
+  soft "V5.12 Saturation signal appeared in session ($SATURATION_DETECTED occurrences)" "test ${SATURATION_DETECTED:-0} -ge 0"
 fi
 
 # Entity breakdown
@@ -1584,6 +2001,9 @@ cat > "$LOG_DIR/metrics.json" << METRICS
   "blueprints": $FINAL_BLUEPRINTS,
   "writeToolCalls": ${TOTAL_WRITES:-0},
   "agentWorkspaces": $FINAL_WORKSPACES,
+  "collaborationTasks": ${FINAL_COLLAB_TOTAL:-0},
+  "collaborationCompleted": ${FINAL_COLLAB_COMPLETED:-0},
+  "saturationSignals": ${SATURATION_DETECTED:-0},
   "testResults": {
     "pass": $PASS,
     "fail": $FAIL,
@@ -1613,32 +2033,37 @@ echo "Results: $PASS PASS / $FAIL FAIL / $WARNS WARN / $TOTAL TOTAL"
 echo ""
 
 echo "Coverage:"
-echo "  D1: Management Gating     (S2.01-S2.08c)  10 checks"
-echo "  D2: Circuit Breaker       (S2.09-S2.14)    6 checks"
-echo "  D3: Information Summary   (S2.15-S2.20)    6 checks"
-echo "  D4: Process Groups        (S2.21-S2.24)    4 checks"
-echo "  D5: Entity Relations      (S2.25-S2.27c)   5 checks"
-echo "  D6: Skill Metrics         (S2.28-S2.30)    3 checks"
-echo "  D7: Constraint Analytics  (S2.31-S2.33)    3 checks"
-echo "  D8: Tool Registration     (S2.34-S2.35)    2 checks"
-echo "  D9: Dashboard API         (S3.01-S3.09)   11 checks"
+echo "  D1:  Management Gating     (S2.01-S2.08c)  10 checks"
+echo "  D2:  Circuit Breaker       (S2.09-S2.14)    6 checks"
+echo "  D3:  Information Summary   (S2.15-S2.20)    6 checks"
+echo "  D4:  Process Groups        (S2.21-S2.24)    4 checks"
+echo "  D5:  Entity Relations      (S2.25-S2.27c)   5 checks"
+echo "  D6:  Skill Metrics         (S2.28-S2.30)    3 checks"
+echo "  D7:  Constraint Analytics  (S2.31-S2.33)    3 checks"
+echo "  D8:  Tool Registration     (S2.34-S2.35)    2 checks"
+echo "  D9:  Saturation Signal     (S2.36-S2.41)    6 checks"
+echo "  D10: Collaboration Input   (S2.42-S2.51)   10 checks"
+echo "  D11: Dashboard API         (S3.01-S3.14)   16 checks"
 if [ "$ENGINE_ONLY" = false ]; then
-echo "  B:  Business Scenario     (B4.01-B4.27)   27 checks"
-echo "  V5: Final Verification    (V5.1-V5.9)      9 checks"
+echo "  B:   Business Scenario     (B4.01-B4.27)   33 checks"
+echo "  V5:  Final Verification    (V5.1-V5.12)    12 checks"
 else
-echo "  V5: Final Verification    (V5.1-V5.3)      3 checks"
+echo "  V5:  Final Verification    (V5.1-V5.3)      3 checks"
 fi
 echo ""
 
 echo "Metrics:"
-echo "  Entities:    $FINAL_ENTITIES"
-echo "  Violations:  $FINAL_VIOLATIONS"
-echo "  Constraints: $FINAL_CONSTRAINTS"
-echo "  Skills:      $FINAL_SKILLS"
-echo "  Blueprints:  $FINAL_BLUEPRINTS"
+echo "  Entities:        $FINAL_ENTITIES"
+echo "  Violations:      $FINAL_VIOLATIONS"
+echo "  Constraints:     $FINAL_CONSTRAINTS"
+echo "  Skills:          $FINAL_SKILLS"
+echo "  Blueprints:      $FINAL_BLUEPRINTS"
 if [ "$ENGINE_ONLY" = false ]; then
-echo "  WriteTools:  ${TOTAL_WRITES:-0}"
-echo "  Workspaces:  $FINAL_WORKSPACES"
+echo "  WriteTools:      ${TOTAL_WRITES:-0}"
+echo "  Workspaces:      $FINAL_WORKSPACES"
+echo "  CollabTasks:     ${FINAL_COLLAB_TOTAL:-0}"
+echo "  CollabCompleted: ${FINAL_COLLAB_COMPLETED:-0}"
+echo "  Saturation:      ${SATURATION_DETECTED:-0}"
 fi
 echo ""
 

@@ -41,6 +41,7 @@ export function registerBpsPlugin(
     processStore: engine.processStore,
     dossierStore: engine.dossierStore,
     skillMetricsStore: engine.skillMetricsStore,
+    collaborationStore: engine.collaborationStore,
     logger,
   });
 

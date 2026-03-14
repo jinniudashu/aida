@@ -4,7 +4,7 @@ import path from 'node:path'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { streamSSE } from 'hono/streaming'
-import { type BpsEngine, ManagementStore, loadBlueprintFromString, loadManagementFromString } from '../../src/index.js'
+import { type BpsEngine, ManagementStore, CollaborationStore, loadBlueprintFromString, loadManagementFromString } from '../../src/index.js'
 import { engine, managementStore as defaultManagementStore } from './engine.js'
 
 /**
@@ -127,9 +127,10 @@ function replayToolCall(
   }
 }
 
-export function createApp(engine: BpsEngine, opts?: { managementStore?: ManagementStore }): Hono {
+export function createApp(engine: BpsEngine, opts?: { managementStore?: ManagementStore; collaborationStore?: CollaborationStore }): Hono {
 
 const managementStore = opts?.managementStore ?? defaultManagementStore
+const collaborationStore = opts?.collaborationStore ?? engine.collaborationStore
 
 const app = new Hono()
 
@@ -171,10 +172,24 @@ app.get('/api/events', (c) => {
     relayGov('management:approval_decided')
     relayGov('management:circuit_breaker_changed')
 
+    // Collaboration events
+    function relayCollab(event: string) {
+      const fn = (payload: unknown) => {
+        stream.writeSSE({ event, data: JSON.stringify(payload) }).catch(() => {})
+      }
+      collaborationStore.on(event, fn)
+      listeners.push({ event, fn })
+    }
+
+    relayCollab('collaboration:task_created')
+    relayCollab('collaboration:task_responded')
+    relayCollab('collaboration:task_cancelled')
+
     stream.onAbort(() => {
       for (const { event, fn } of listeners) {
         tracker.removeListener(event, fn)
         managementStore.removeListener(event, fn)
+        collaborationStore.removeListener(event, fn)
       }
     })
 
@@ -1150,6 +1165,66 @@ app.post('/api/management/circuit-breaker/reset', async (c) => {
     return c.json({ error: String(err) }, 500)
   }
 })
+
+// --- Collaboration API ---
+
+app.get('/api/collaboration/tasks', (c) => {
+  try {
+    const status = c.req.query('status') as 'pending' | 'completed' | 'expired' | 'cancelled' | undefined
+    const tasks = collaborationStore.listTasks(status)
+    return c.json({ count: tasks.length, tasks })
+  } catch (err) {
+    return c.json({ error: String(err) }, 500)
+  }
+})
+
+app.get('/api/collaboration/tasks/:id', (c) => {
+  try {
+    const task = collaborationStore.getTask(c.req.param('id'))
+    if (!task) return c.json({ error: 'Task not found' }, 404)
+    return c.json(task)
+  } catch (err) {
+    return c.json({ error: String(err) }, 500)
+  }
+})
+
+app.post('/api/collaboration/tasks/:id/respond', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { data, respondedBy } = body as { data: Record<string, unknown>; respondedBy?: string }
+
+    if (!data || typeof data !== 'object') {
+      return c.json({ error: 'Missing "data" object in request body' }, 400)
+    }
+
+    const task = collaborationStore.respond(id, data, respondedBy ?? 'dashboard-user')
+    return c.json({ success: true, task })
+  } catch (err) {
+    return c.json({ error: String(err) }, 400)
+  }
+})
+
+app.post('/api/collaboration/tasks/:id/cancel', async (c) => {
+  try {
+    collaborationStore.cancelTask(c.req.param('id'))
+    return c.json({ success: true })
+  } catch (err) {
+    return c.json({ error: String(err) }, 400)
+  }
+})
+
+app.get('/api/collaboration/status', (c) => {
+  try {
+    const counts = collaborationStore.getStatusCounts()
+    const pending = collaborationStore.getPendingTasks()
+    return c.json({ counts, pendingCount: pending.length, pendingTasks: pending.slice(0, 10) })
+  } catch (err) {
+    return c.json({ error: String(err) }, 500)
+  }
+})
+
+// --- Entity create/update ---
 
 app.post('/api/entities/:entityType/:entityId', async (c) => {
   try {

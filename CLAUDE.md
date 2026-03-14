@@ -42,6 +42,7 @@ aida/
 │   ├── store/                ← SQLite 持久化（6 文件）
 │   ├── engine/               ← 任务追踪 + 状态机（2 文件）
 │   ├── management/           ← 管理层（5 文件）
+│   ├── collaboration/        ← 协作输入（2 文件）
 │   ├── knowledge/            ← BKM 知识管理（3 文件）
 │   ├── loader/               ← 项目装载（4 文件）
 │   ├── integration/          ← OpenClaw 桥接（5 文件）
@@ -236,8 +237,8 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **业务场景端到端验证**：`server/simulate.ts` 注入晨光咖啡三店标准化运营完整场景
   - 测试服务器 `http://47.236.109.62:3456` 全部页面数据可见
   - 三频操作全景 + HITL 审批闭环 + 动态 Skill 创建记录
-- **工具总览**：15 BPS tools + 3 MCP tools
-  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_governance_status, bps_load_governance
+- **工具总览**：17 BPS tools + 3 MCP tools
+  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_governance_status, bps_load_governance, bps_request_collaboration, bps_get_collaboration_response
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### 端到端能力验证 -- 基础设施级（2026-03-05）
@@ -733,6 +734,28 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
   - V0.7 模型检查接受两种基线（qwen3.5-plus 或 kimi-for-coding）
   - 报告模板改用动态 `$ACTUAL_MODEL`
 - **结论**：dashscope/qwen3.5-plus 仍为最佳基线模型；框架问题基本收敛（1 WARN），LLM 方差是主要不确定性
+
+### 协作输入机制（2026-03-14）
+- 评估报告：`archive/协作输入机制升级评估 (2026-03-13)-GLM-5.md`
+- 评审报告：`archive/AIDA能力价值双视角评审 (2026-03-14)-Claude Opus 4.6.md`
+- **核心决策**：协作输入（HITL/AITL）作为独立模块 `src/collaboration/`，与 Management 审批并行，不替换
+- **评审要点**：Management 审批（"是否允许"，有 replayToolCall 语义）≠ 协作输入（"需要信息"，Agent 消费响应）
+- **P0 实现**（form-only）：
+  - `src/collaboration/types.ts`：CollaborationTask 类型定义（status/priority/context/inputSchema/response）
+  - `src/collaboration/collaboration-store.ts`：SQLite 持久化（bps_collaboration_tasks 表）+ EventEmitter（3 事件）
+  - `bps_request_collaboration` tool (#18)：Agent 创建协作任务（title/description/inputSchema/priority/expiresIn）
+  - `bps_get_collaboration_response` tool (#19)：Agent 查询协作响应
+  - `BpsEngine` 扩展 `collaborationStore` 字段，OpenClaw 插件自动注入
+  - Dashboard API：5 个 endpoint（tasks list/detail/respond/cancel/status）
+  - Dashboard SSE：3 个实时事件（task_created/task_responded/task_cancelled）
+- **设计简化**（相对于 GLM-5 原提案）：
+  - 删除 `mixed` 类型 — 无具体场景
+  - 删除 `CollaboratorIdentity` 三态抽象 — MAOr 协作方均为人类，用简单 string respondedBy
+  - 不做 `wait: true` 忙轮询 — Agent 应异步检查
+  - form 覆盖全部场景（approval = boolean 字段的 form, choice = enum 字段的 form, text = string 字段的 form）
+- **MAOr 驱动的需求场景**：面诊参数填写（医生）、知情同意确认（护士/患者）、治疗用量记录（医生）、术后随访观察（护士）
+- **测试**：+28 新测试（17 engine + 11 Dashboard），总计 475 tests
+- **BPS tools**：19 个（15 base + 2 management + 2 collaboration）
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》

@@ -43,6 +43,7 @@ export default function register(api: OpenClawPluginApi) {
     processStore: engine.processStore,
     dossierStore: engine.dossierStore,
     skillMetricsStore: engine.skillMetricsStore,
+    collaborationStore: engine.collaborationStore,
     managementGate: management?.gate,
     managementStore: management?.store,
     logger,

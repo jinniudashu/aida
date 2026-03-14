@@ -44,6 +44,10 @@ export { loadManagementFile, loadManagementFromString, type ManagementLoadResult
 export { GATED_WRITE_TOOLS, DEFAULT_SCOPE_WRITE_TOOLS } from './management/constants.js';
 export * from './management/types.js';
 
+// ——— Collaboration ———
+export { CollaborationStore } from './collaboration/collaboration-store.js';
+export * from './collaboration/types.js';
+
 // ——— Integration (OpenClaw) ———
 export * from './integration/index.js';
 
@@ -61,6 +65,7 @@ import { ProcessTracker } from './engine/process-tracker.js';
 import type { DatabaseSync } from 'node:sqlite';
 import { KnowledgeStore } from './knowledge/knowledge-store.js';
 import { SkillMetricsStore } from './store/skill-metrics-store.js';
+import { CollaborationStore } from './collaboration/collaboration-store.js';
 
 export interface BpsEngineConfig {
   db?: DatabaseSync;
@@ -76,6 +81,7 @@ export interface BpsEngine {
   tracker: ProcessTracker;
   knowledgeStore: KnowledgeStore;
   skillMetricsStore: SkillMetricsStore;
+  collaborationStore: CollaborationStore;
 }
 
 /**
@@ -92,6 +98,8 @@ export function createBpsEngine(config: BpsEngineConfig = {}): BpsEngine {
   // Knowledge subsystem
   const knowledgeStore = new KnowledgeStore(dossierStore);
   const skillMetricsStore = new SkillMetricsStore(db);
+
+  const collaborationStore = new CollaborationStore(db);
 
   const tracker = new ProcessTracker({
     processStore,
@@ -112,5 +120,5 @@ export function createBpsEngine(config: BpsEngineConfig = {}): BpsEngine {
     statsStore.recordEvent('dossier.committed', { entityType: e.entityType });
   });
 
-  return { db, processStore, blueprintStore, dossierStore, statsStore, dashboardQuery, tracker, knowledgeStore, skillMetricsStore };
+  return { db, processStore, blueprintStore, dossierStore, statsStore, dashboardQuery, tracker, knowledgeStore, skillMetricsStore, collaborationStore };
 }

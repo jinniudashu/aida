@@ -15,6 +15,7 @@ import type { OpenClawAgentTool, OpenClawLogger } from './openclaw-types.js';
 import type { ActionGate } from '../management/action-gate.js';
 import type { ManagementStore } from '../management/management-store.js';
 import type { SkillMetricsStore } from '../store/skill-metrics-store.js';
+import type { CollaborationStore } from '../collaboration/collaboration-store.js';
 
 export interface BpsToolDeps {
   tracker: ProcessTracker;
@@ -26,6 +27,7 @@ export interface BpsToolDeps {
   managementGate?: ActionGate;
   managementStore?: ManagementStore;
   skillMetricsStore?: SkillMetricsStore;
+  collaborationStore?: CollaborationStore;
 }
 
 // ——— 1. bps_list_services ———
@@ -1146,12 +1148,124 @@ function createBatchUpdateTool(deps: BpsToolDeps): OpenClawAgentTool {
 import { GATED_WRITE_TOOLS } from '../management/constants.js';
 const WRITE_TOOLS = new Set<string>(GATED_WRITE_TOOLS);
 
+// ——— 18. bps_request_collaboration ———
+
+const RequestCollaborationInput = Type.Object({
+  title: Type.String({ description: 'Short title for the collaboration task' }),
+  description: Type.String({ description: 'What input is needed and why' }),
+  inputSchema: Type.Optional(Type.Record(Type.String(), Type.Unknown(), {
+    description: 'JSON Schema defining expected input structure. Example: { "type": "object", "properties": { "approved": { "type": "boolean" }, "budget": { "type": "number" } }, "required": ["approved"] }',
+  })),
+  context: Type.Optional(Type.Object({
+    entityType: Type.Optional(Type.String()),
+    entityId: Type.Optional(Type.String()),
+    processId: Type.Optional(Type.String()),
+    metadata: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+  })),
+  priority: Type.Optional(Type.Union([
+    Type.Literal('low'),
+    Type.Literal('normal'),
+    Type.Literal('high'),
+    Type.Literal('urgent'),
+  ], { description: 'Task priority. Default: normal' })),
+  expiresIn: Type.Optional(Type.String({
+    description: 'Expiration duration (e.g. "24h", "7d", "30m"). Default: 24h',
+  })),
+});
+
+function createRequestCollaborationTool(deps: BpsToolDeps): OpenClawAgentTool {
+  return {
+    name: 'bps_request_collaboration',
+    description: `Request input from an external collaborator (human or agent).
+
+Use when you need information before proceeding:
+- Structured data: treatment parameters, form fields, configuration
+- Decisions: approval with reason, priority selection
+- Clarification: disambiguate intent, confirm understanding
+- Guidance: strategy direction, feedback on a plan
+
+The task appears in Dashboard Inbox and can be responded to by any collaborator.
+Check response status with bps_get_collaboration_response.`,
+    parameters: RequestCollaborationInput,
+    async execute(_callId: string, input: unknown) {
+      const store = deps.collaborationStore;
+      if (!store) throw new Error('Collaboration store not configured');
+
+      const params = input as {
+        title: string;
+        description: string;
+        inputSchema?: Record<string, unknown>;
+        context?: { entityType?: string; entityId?: string; processId?: string; metadata?: Record<string, unknown> };
+        priority?: 'low' | 'normal' | 'high' | 'urgent';
+        expiresIn?: string;
+      };
+
+      const task = store.createTask({
+        title: params.title,
+        description: params.description,
+        inputSchema: params.inputSchema,
+        context: params.context,
+        priority: params.priority,
+        expiresIn: params.expiresIn,
+      });
+
+      return {
+        success: true,
+        taskId: task.id,
+        status: task.status,
+        expiresAt: task.expiresAt,
+        dashboardUrl: `/inbox`,
+        hint: `Task created. Check response with bps_get_collaboration_response(taskId="${task.id}")`,
+      };
+    },
+  };
+}
+
+// ——— 19. bps_get_collaboration_response ———
+
+const GetCollaborationResponseInput = Type.Object({
+  taskId: Type.String({ description: 'The task ID from bps_request_collaboration' }),
+});
+
+function createGetCollaborationResponseTool(deps: BpsToolDeps): OpenClawAgentTool {
+  return {
+    name: 'bps_get_collaboration_response',
+    description: 'Check if a collaborator has responded to a previously requested task.',
+    parameters: GetCollaborationResponseInput,
+    async execute(_callId: string, input: unknown) {
+      const store = deps.collaborationStore;
+      if (!store) throw new Error('Collaboration store not configured');
+
+      const { taskId } = input as { taskId: string };
+      const task = store.getTask(taskId);
+      if (!task) return { error: `Task not found: ${taskId}` };
+
+      if (task.status === 'pending') {
+        return {
+          taskId: task.id,
+          status: 'pending',
+          hint: 'No response yet. The collaborator can respond via Dashboard Inbox or API.',
+        };
+      }
+
+      return {
+        taskId: task.id,
+        status: task.status,
+        response: task.response?.data ?? null,
+        respondedBy: task.response?.respondedBy ?? null,
+        respondedAt: task.response?.respondedAt ?? null,
+      };
+    },
+  };
+}
+
 // ——— Read counter for saturation signal ———
 
 const READ_TOOL_NAMES = new Set([
   'bps_list_services', 'bps_get_task', 'bps_query_tasks',
   'bps_get_entity', 'bps_query_entities', 'bps_next_steps',
   'bps_scan_work', 'bps_management_status',
+  'bps_get_collaboration_response',
 ]);
 const CONSECUTIVE_READ_THRESHOLD = 5;
 
@@ -1218,6 +1332,12 @@ export function createBpsTools(deps: BpsToolDeps): OpenClawAgentTool[] {
   if (deps.managementStore) {
     tools.push(createManagementStatusTool(deps));
     tools.push(createLoadManagementTool(deps));
+  }
+
+  // Add collaboration tools if collaboration store is configured
+  if (deps.collaborationStore) {
+    tools.push(createRequestCollaborationTool(deps));
+    tools.push(createGetCollaborationResponseTool(deps));
   }
 
   // Wrap write-operation tools with management if gate is provided
