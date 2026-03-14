@@ -1350,3 +1350,168 @@ describe('ProcessStore.findBySessionKey', () => {
     expect(found).toBeNull();
   });
 });
+
+// ——————————————————————————————————
+// 6. Information Saturation Signal
+// ——————————————————————————————————
+
+describe('Information Saturation Signal', () => {
+  let engine: BpsEngine;
+  let tools: Map<string, OpenClawAgentTool>;
+
+  beforeEach(() => {
+    engine = createBpsEngine();
+    loadBlueprintFromString(TEST_BLUEPRINT, engine.blueprintStore);
+
+    const toolList = createBpsTools({
+      tracker: engine.tracker,
+      blueprintStore: engine.blueprintStore,
+      processStore: engine.processStore,
+      dossierStore: engine.dossierStore,
+    });
+    tools = new Map(toolList.map(t => [t.name, t]));
+  });
+
+  // A1: bps_query_entities _signal.completeness
+  it('bps_query_entities should return _signal with FULL completeness when all results fit', async () => {
+    engine.dossierStore.getOrCreate('store', 'store-001');
+    engine.dossierStore.commit(engine.dossierStore.getOrCreate('store', 'store-001').id, { name: 'A' });
+
+    const result = await tools.get('bps_query_entities')!.execute('test-call', {
+      entityType: 'store',
+    }) as any;
+
+    expect(result._signal).toBeDefined();
+    expect(result._signal.completeness).toBe('FULL');
+    expect(result._signal.hint).toContain('proceed to action');
+  });
+
+  it('bps_query_entities should return _signal with PARTIAL when results truncated', async () => {
+    // Create 3 entities but limit to 2
+    for (let i = 0; i < 3; i++) {
+      const d = engine.dossierStore.getOrCreate('store', `partial-${i}`);
+      engine.dossierStore.commit(d.id, { name: `Store ${i}` });
+    }
+
+    const result = await tools.get('bps_query_entities')!.execute('test-call', {
+      entityType: 'store',
+      limit: 2,
+    }) as any;
+
+    expect(result._signal.completeness).toBe('PARTIAL');
+    expect(result._signal.hint).toContain('2 of 3');
+  });
+
+  // A2: bps_scan_work _signal.readiness
+  it('bps_scan_work should return _signal with ACTION_NEEDED when tasks exist', async () => {
+    await tools.get('bps_create_task')!.execute('test-call', { serviceId: 'svc-geo-publish' });
+
+    const result = await tools.get('bps_scan_work')!.execute('test-call', {}) as any;
+
+    expect(result._signal).toBeDefined();
+    expect(result._signal.readiness).toBe('ACTION_NEEDED');
+    expect(result._signal.actionableItems).toBeGreaterThan(0);
+    expect(result._signal.hint).toContain('need action');
+  });
+
+  it('bps_scan_work should return _signal with ALL_CLEAR when no pending work', async () => {
+    const result = await tools.get('bps_scan_work')!.execute('test-call', {}) as any;
+
+    expect(result._signal.readiness).toBe('ALL_CLEAR');
+    expect(result._signal.actionableItems).toBe(0);
+  });
+
+  // B1: bps_scan_work suggestedActions
+  it('bps_scan_work should return suggestedActions for overdue tasks', async () => {
+    await tools.get('bps_create_task')!.execute('test-call', {
+      serviceId: 'svc-geo-publish',
+      deadline: '2020-01-01T00:00:00Z',
+    });
+
+    const result = await tools.get('bps_scan_work')!.execute('test-call', {}) as any;
+
+    expect(result.suggestedActions).toBeDefined();
+    expect(Array.isArray(result.suggestedActions)).toBe(true);
+    const overdueSuggestion = result.suggestedActions.find((a: any) => a.reason.includes('overdue'));
+    expect(overdueSuggestion).toBeDefined();
+    expect(overdueSuggestion.tool).toBe('bps_update_task');
+    expect(overdueSuggestion.params.taskId).toBeDefined();
+  });
+
+  it('bps_scan_work should return suggestedActions for failed tasks', async () => {
+    const created = await tools.get('bps_create_task')!.execute('test-call', {
+      serviceId: 'svc-geo-publish',
+    }) as any;
+    // Fail the task
+    engine.tracker.updateTask(created.taskId, { state: 'IN_PROGRESS' });
+    engine.tracker.failTask(created.taskId, 'test failure');
+
+    const result = await tools.get('bps_scan_work')!.execute('test-call', {}) as any;
+
+    const retrySuggestion = result.suggestedActions.find((a: any) => a.reason.includes('Retry'));
+    expect(retrySuggestion).toBeDefined();
+    expect(retrySuggestion.tool).toBe('bps_create_task');
+    expect(retrySuggestion.params.serviceId).toBe('svc-geo-publish');
+  });
+
+  // B2: bps_next_steps readyToExecute
+  it('bps_next_steps should return _signal with readySteps count', async () => {
+    const result = await tools.get('bps_next_steps')!.execute('test-call', {
+      serviceId: 'svc-onboard',
+    }) as any;
+
+    expect(result._signal).toBeDefined();
+    expect(typeof result._signal.readySteps).toBe('number');
+    expect(typeof result._signal.hint).toBe('string');
+  });
+
+  // A3: Consecutive read counter
+  it('should inject _readSignal after 5 consecutive read calls', async () => {
+    // Make 5 consecutive read calls
+    for (let i = 0; i < 4; i++) {
+      const result = await tools.get('bps_list_services')!.execute(`call-${i}`, {}) as any;
+      expect(result._readSignal).toBeUndefined();
+    }
+
+    // 5th consecutive read should trigger signal
+    const result5 = await tools.get('bps_list_services')!.execute('call-5', {}) as any;
+    expect(result5._readSignal).toBeDefined();
+    expect(result5._readSignal.consecutiveReads).toBe(5);
+    expect(result5._readSignal.message).toContain('consecutive read calls');
+    expect(result5._readSignal.message).toContain('bps_update_entity');
+  });
+
+  it('should reset _readSignal counter after a write call', async () => {
+    // Make 4 reads
+    for (let i = 0; i < 4; i++) {
+      await tools.get('bps_list_services')!.execute(`call-${i}`, {});
+    }
+
+    // Write call resets counter
+    await tools.get('bps_update_entity')!.execute('write-call', {
+      entityType: 'test', entityId: 'reset-test', data: { x: 1 },
+    });
+
+    // Next 4 reads should NOT trigger signal
+    for (let i = 0; i < 4; i++) {
+      const result = await tools.get('bps_list_services')!.execute(`post-write-${i}`, {}) as any;
+      expect(result._readSignal).toBeUndefined();
+    }
+
+    // But the 5th read after reset does trigger
+    const result5 = await tools.get('bps_list_services')!.execute('post-write-5', {}) as any;
+    expect(result5._readSignal).toBeDefined();
+    expect(result5._readSignal.consecutiveReads).toBe(5);
+  });
+
+  it('should accumulate _readSignal past threshold', async () => {
+    // Make 7 consecutive reads
+    for (let i = 0; i < 7; i++) {
+      await tools.get('bps_query_entities')!.execute(`call-${i}`, {});
+    }
+
+    const result = await tools.get('bps_scan_work')!.execute('call-8', {}) as any;
+    expect(result._readSignal).toBeDefined();
+    expect(result._readSignal.consecutiveReads).toBe(8);
+  });
+});

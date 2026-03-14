@@ -29,12 +29,19 @@
 
 ## Common Patterns
 
-- **Status check**: `bps_scan_work` → one call returns top-5 per group (sorted by deadline then priority) + `summary` string + outcome distribution. Use `total` field to know if there are more.
+- **Status check**: `bps_scan_work` → one call returns top-5 per group (sorted by deadline then priority) + `summary` string + `suggestedActions` + outcome distribution. Use `total` field to know if there are more. Read `suggestedActions` for concrete next steps with tool names and params.
 - **Entity lifecycle**: `bps_query_entities` (brief=true for listing) → `bps_get_entity` (includes related entities) → `bps_update_entity` (accepts `relations`)
 - **Batch operations**: `bps_create_task` with `groupId` → ... → `bps_batch_update` to cancel/complete all
 - **Task flow**: `bps_create_task` → `bps_update_task` → `bps_complete_task` → `bps_next_steps`
 - **Blueprint load**: write simplified YAML (services + flow) → `bps_load_blueprint` → verify `health: "complete"`
 - **Management interaction**: When a write tool returns REQUIRE_APPROVAL with an approval ID, report it to the user with the Dashboard link and stop that workflow until approved
+
+## Execution Patterns (Anti-"Say-Not-Do")
+
+- **Entity discovery → action**: `bps_query_entities` (brief=true) → pick target → `bps_update_entity` (in same turn)
+- **Work scan → triage**: `bps_scan_work` → read `suggestedActions` → execute top suggestion immediately
+- **Heartbeat loop**: scan → act → report. Never scan → report without acting.
+- **Read budget**: 3 reads max before 1 write. If `_readSignal` appears in tool results, you've exceeded the budget — act now.
 
 ## Known Behaviors
 

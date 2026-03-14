@@ -146,6 +146,38 @@ for f in IDENTITY.md SOUL.md AGENTS.md HEARTBEAT.md BOOT.md USER.md TOOLS.md; do
   fi
 done
 
+# --- 3a-memory: MEMORY.md 初始化（仅首次，不覆盖已有 memory）---
+if [ ! -f "$MAIN_WS/MEMORY.md" ]; then
+  cat > "$MAIN_WS/MEMORY.md" << 'MEMORY_EOF'
+# Aida Memory
+
+## Tool Call Patterns (from successful runs)
+
+### Entity Lifecycle
+1. `bps_query_entities brief=true` → get list (1 read)
+2. `bps_get_entity` → get details for target (1 read)
+3. `bps_update_entity` → update with new data (1 write)
+Total: 2 reads + 1 write
+
+### Content Production
+1. `bps_scan_work` → find due items (1 read)
+2. `bps_create_task` → create work item (1 write)
+3. Write content to file (1 external action)
+4. `bps_update_entity` → record output reference (1 write)
+5. `bps_complete_task` → mark done (1 write)
+Total: 1 read + 3 writes
+
+### Management Interaction
+1. `bps_update_entity` with status change → may trigger REQUIRE_APPROVAL
+2. If approved: entity auto-updated by management system
+3. `bps_management_status` → verify approval processed (1 read)
+Total: 1 write + 1 read
+MEMORY_EOF
+  log "  MEMORY.md 初始化完成"
+else
+  log "  MEMORY.md 已存在，保留现有内容"
+fi
+
 # --- 3a-skills: Aida skills ---
 if [ -d "$AGENTS_DIR/aida/skills" ]; then
   info "安装 Aida skills → $MAIN_WS/skills/"

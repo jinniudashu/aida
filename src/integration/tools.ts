@@ -428,6 +428,7 @@ function createQueryEntitiesTool(deps: BpsToolDeps): OpenClawAgentTool {
         lifecycle: 'ACTIVE',
       });
       const limited = results.slice(0, limit ?? 50);
+      const isComplete = limited.length >= results.length;
       return {
         count: limited.length,
         totalCount: results.length,
@@ -446,6 +447,12 @@ function createQueryEntitiesTool(deps: BpsToolDeps): OpenClawAgentTool {
               data: r.data,
             }
         ),
+        _signal: {
+          completeness: isComplete ? 'FULL' as const : 'PARTIAL' as const,
+          hint: isComplete
+            ? 'All matching entities returned. You have complete visibility — proceed to action.'
+            : `Showing ${limited.length} of ${results.length}. Use filters to narrow, or proceed with current data if sufficient.`,
+        },
       };
     },
   };
@@ -497,9 +504,13 @@ function createNextStepsTool(deps: BpsToolDeps): OpenClawAgentTool {
         }
       }
 
-      return {
-        completedService: { id: service.id, label: service.label },
-        nextSteps: steps.map(s => ({
+      const mappedSteps = steps.map(s => {
+        // Determine readyToExecute: deterministic with start_service and currentValues available
+        let readyToExecute: boolean | undefined;
+        if (s.instructionSysCall === 'start_service' && s.evaluationMode === 'deterministic') {
+          readyToExecute = currentValues !== undefined; // values available = ready to trigger
+        }
+        return {
           ruleId: s.ruleId,
           ruleLabel: s.ruleLabel,
           trigger: {
@@ -519,9 +530,25 @@ function createNextStepsTool(deps: BpsToolDeps): OpenClawAgentTool {
             targetServiceId: s.operandServiceId,
             targetServiceLabel: s.operandServiceLabel,
           },
+          readyToExecute,
           order: s.order,
-        })),
+        };
+      });
+
+      const readyCount = mappedSteps.filter(s => s.readyToExecute === true).length;
+
+      return {
+        completedService: { id: service.id, label: service.label },
+        nextSteps: mappedSteps,
         recommendation,
+        _signal: {
+          readySteps: readyCount,
+          hint: readyCount > 0
+            ? `${readyCount} step(s) ready to execute. Call bps_create_task to start them.`
+            : steps.length === 0
+              ? 'No downstream rules found. This may be a terminal service.'
+              : 'Review trigger conditions before proceeding.',
+        },
         hint: steps.length === 0
           ? 'No downstream rules found. This may be a terminal service or rules are not yet defined.'
           : `Found ${steps.length} downstream rule(s). Review triggers and decide which to execute.`,
@@ -591,6 +618,40 @@ function createScanWorkTool(deps: BpsToolDeps): OpenClawAgentTool {
       parts.push(`${inProgressTasks.length} in-progress`);
       const summary = parts.join(', ');
 
+      // Suggested actions: concrete tool calls the Agent can execute immediately
+      const suggestedActions: Array<{ tool: string; reason: string; params: Record<string, unknown> }> = [];
+      for (const t of overdueTasks.slice(0, 3)) {
+        suggestedActions.push({
+          tool: 'bps_update_task',
+          reason: `Task #${t.pid} is overdue (deadline: ${t.deadline})`,
+          params: { taskId: t.id, state: 'IN_PROGRESS' },
+        });
+      }
+      for (const t of failedTasks.slice(0, 2)) {
+        suggestedActions.push({
+          tool: 'bps_create_task',
+          reason: `Retry failed task #${t.pid} (${t.serviceId})`,
+          params: { serviceId: t.serviceId, entityType: t.entityType, entityId: t.entityId },
+        });
+      }
+      for (const plan of activePlans) {
+        const items = (plan.data as Record<string, unknown>).items as Array<Record<string, unknown>> | undefined;
+        if (items) {
+          const dueItems = items.filter(item =>
+            item.status !== 'done' && item.dueDate && (item.dueDate as string) <= nowIso
+          );
+          if (dueItems.length > 0) {
+            suggestedActions.push({
+              tool: 'bps_create_task',
+              reason: `Action plan "${plan.dossier.entityId}" has ${dueItems.length} due item(s)`,
+              params: { serviceId: 'action-plan-item', entityId: plan.dossier.entityId },
+            });
+          }
+        }
+      }
+
+      const actionableCount = overdueTasks.length + failedTasks.length + openTasks.length;
+
       // Dormant skills: skills in workspace with no invocation in 90 days
       let dormantSkills: string[] | undefined;
       if (deps.skillMetricsStore && deps.skillsDir && fs.existsSync(deps.skillsDir)) {
@@ -610,6 +671,14 @@ function createScanWorkTool(deps: BpsToolDeps): OpenClawAgentTool {
 
       return {
         summary,
+        _signal: {
+          actionableItems: actionableCount,
+          readiness: actionableCount > 0 ? 'ACTION_NEEDED' as const : 'ALL_CLEAR' as const,
+          hint: actionableCount > 0
+            ? `${actionableCount} items need action. Start with overdue/failed tasks, then open tasks by priority.`
+            : 'No pending work. Check action plans for upcoming items.',
+        },
+        suggestedActions: suggestedActions.slice(0, 5),
         overdueTasks: topN(overdueTasks.map(taskSummary), SCAN_WORK_TOP_N),
         failedTasks: topN(failedTasks.map(taskSummary), SCAN_WORK_TOP_N),
         openTasks: topN(openTasks.map(taskSummary), SCAN_WORK_TOP_N),
@@ -1077,6 +1146,53 @@ function createBatchUpdateTool(deps: BpsToolDeps): OpenClawAgentTool {
 import { GATED_WRITE_TOOLS } from '../management/constants.js';
 const WRITE_TOOLS = new Set<string>(GATED_WRITE_TOOLS);
 
+// ——— Read counter for saturation signal ———
+
+const READ_TOOL_NAMES = new Set([
+  'bps_list_services', 'bps_get_task', 'bps_query_tasks',
+  'bps_get_entity', 'bps_query_entities', 'bps_next_steps',
+  'bps_scan_work', 'bps_management_status',
+]);
+const CONSECUTIVE_READ_THRESHOLD = 5;
+
+/** Wrap a tool to track consecutive read-only calls and inject _readSignal when threshold exceeded */
+function wrapWithReadCounter(
+  tool: OpenClawAgentTool,
+  counter: { value: number },
+): OpenClawAgentTool {
+  const isRead = READ_TOOL_NAMES.has(tool.name);
+  if (!isRead) {
+    // Write tools reset the counter
+    const originalExecute = tool.execute.bind(tool);
+    return {
+      ...tool,
+      async execute(callId: string, input: unknown) {
+        counter.value = 0;
+        return originalExecute(callId, input);
+      },
+    };
+  }
+
+  // Read tools increment counter and inject signal when over threshold
+  const originalExecute = tool.execute.bind(tool);
+  return {
+    ...tool,
+    async execute(callId: string, input: unknown) {
+      const result = await originalExecute(callId, input);
+      counter.value++;
+      if (counter.value >= CONSECUTIVE_READ_THRESHOLD && typeof result === 'object' && result !== null) {
+        (result as Record<string, unknown>)._readSignal = {
+          consecutiveReads: counter.value,
+          message: `You have made ${counter.value} consecutive read calls without any write action. `
+            + `If you have enough information, proceed to execute. `
+            + `Describe → bps_update_entity. Plan → bps_create_task. Complete → bps_complete_task.`,
+        };
+      }
+      return result;
+    },
+  };
+}
+
 // ——— 导出：创建所有工具 ———
 
 export function createBpsTools(deps: BpsToolDeps): OpenClawAgentTool[] {
@@ -1112,6 +1228,10 @@ export function createBpsTools(deps: BpsToolDeps): OpenClawAgentTool[] {
         : tool
     );
   }
+
+  // Wrap ALL tools with read counter for saturation signal
+  const readCounter = { value: 0 };
+  tools = tools.map(tool => wrapWithReadCounter(tool, readCounter));
 
   return tools;
 }
