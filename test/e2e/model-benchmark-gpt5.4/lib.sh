@@ -62,7 +62,7 @@ model_primary() {
     claude-opus-4.6) printf 'openrouter/anthropic/claude-opus-4.6' ;;
     gpt-5.4) printf 'openrouter/openai/gpt-5.4' ;;
     gemini-3.1-pro) printf 'google/gemini-3.1-pro-preview' ;;
-    kimi-k2.5) printf 'moonshot/kimi-k2.5' ;;
+    kimi-k2.5) printf 'kimi/kimi-for-coding' ;;
     qwen3.5-plus) printf 'dashscope/qwen3.5-plus' ;;
     glm-5) printf 'zhipu/glm-5' ;;
     *) die "Unknown model id: $1" ;;

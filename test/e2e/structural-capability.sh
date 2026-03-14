@@ -157,6 +157,31 @@ if [ "$START_PHASE" -le 0 ]; then
   ACTUAL_MODEL=$(node -e "try{const c=JSON.parse(require('fs').readFileSync('$OPENCLAW_HOME/openclaw.json','utf8'));console.log(c.agents?.defaults?.model?.primary||'UNKNOWN')}catch{console.log('ERROR')}" 2>/dev/null)
   check "V0.7 Model locked to $SC_MODEL (got $ACTUAL_MODEL)" "test '$ACTUAL_MODEL' = '$SC_MODEL'"
 
+  # V0.8: Validate model route — provider + model ID exist in models.json
+  MODELS_JSON="$OPENCLAW_HOME/agents/main/agent/models.json"
+  if [ -f "$MODELS_JSON" ]; then
+    ROUTE_CHECK=$(node -e "
+      const fs = require('fs');
+      const model = '$SC_MODEL';
+      const [provider, modelId] = model.split('/');
+      const data = JSON.parse(fs.readFileSync('$MODELS_JSON', 'utf8'));
+      const p = data.providers?.[provider];
+      if (!p) { console.log('NO_PROVIDER:' + provider); process.exit(0); }
+      const hasModel = p.models?.some(m => m.id === modelId);
+      if (!hasModel) { console.log('NO_MODEL:' + modelId + ' in ' + provider + ' (available: ' + (p.models||[]).map(m=>m.id).join(',') + ')'); process.exit(0); }
+      console.log('OK');
+    " 2>/dev/null || echo "PARSE_ERROR")
+    if [ "$ROUTE_CHECK" = "OK" ]; then
+      pass "V0.8 Model route valid: $SC_MODEL exists in models.json"
+    else
+      fail "V0.8 Model route broken: $ROUTE_CHECK"
+      log "  Fix: use a provider/model that exists in $MODELS_JSON"
+      log "  Available providers: $(node -e "const d=JSON.parse(require('fs').readFileSync('$MODELS_JSON','utf8'));console.log(Object.keys(d.providers||{}).join(', '))" 2>/dev/null)"
+    fi
+  else
+    warn_ "V0.8 models.json not found at $MODELS_JSON (non-critical)"
+  fi
+
   log "Phase 0 complete."
 fi
 

@@ -59,7 +59,7 @@ print(json.dumps({
     'defaults': {
       'model': {
         'primary': __import__('os').environ['PRIMARY'],
-        'fallbacks': ['dashscope/qwen3.5-plus', 'moonshot/kimi-k2.5']
+        'fallbacks': ['dashscope/qwen3.5-plus', 'kimi/kimi-for-coding']
       }
     }
   }
