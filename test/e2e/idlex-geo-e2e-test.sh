@@ -86,11 +86,11 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
     log "Backed up ~/.aida/ to $BACKUP"
   fi
 
-  log "Cleaning workspace (preserving MEMORY.md)..."
-  if [ -f "$OPENCLAW_HOME/workspace/MEMORY.md" ]; then
-    cp "$OPENCLAW_HOME/workspace/MEMORY.md" /tmp/aida-memory-backup.md
-  fi
-  rm -rf "$OPENCLAW_HOME/workspace/skills/" 2>/dev/null || true
+  log "Wiping OpenClaw state..."
+  rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/cron/" 2>/dev/null || true
 
   log "Updating repository..."
   cd "$AIDA_REPO"
@@ -99,12 +99,6 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
 
   log "Running install-aida.sh..."
   bash packages/bps-engine/deploy/install-aida.sh
-
-  # Restore memory if backed up
-  if [ -f /tmp/aida-memory-backup.md ]; then
-    cp /tmp/aida-memory-backup.md "$OPENCLAW_HOME/workspace/MEMORY.md"
-    log "Restored MEMORY.md"
-  fi
 
   log "Waiting for Dashboard to start..."
   sleep 5

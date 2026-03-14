@@ -2,13 +2,27 @@
 # ============================================================
 # AIDA End-to-End Capability Test Script
 # Tests all core capabilities against the Dashboard API
-# Usage: bash /tmp/aida-e2e-test.sh
+# Usage: bash test/e2e/aida-e2e-test.sh [--clean]
+#
+# Options:
+#   --clean   Reset environment before testing (wipe ~/.aida,
+#             OpenClaw state, re-run install-aida.sh)
+#
+# Prerequisites: Dashboard running on localhost:3456
 # ============================================================
 set -euo pipefail
 BASE="http://localhost:3456"
 PASS=0
 FAIL=0
 TOTAL=0
+AIDA_HOME="${AIDA_HOME:-$HOME/.aida}"
+OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
+
+# Parse args
+DO_CLEAN=false
+for arg in "$@"; do
+  case $arg in --clean) DO_CLEAN=true ;; esac
+done
 
 test_pass() { echo "  [PASS] $1"; PASS=$((PASS + 1)); TOTAL=$((TOTAL + 1)); }
 test_fail() { echo "  [FAIL] $1: $2"; FAIL=$((FAIL + 1)); TOTAL=$((TOTAL + 1)); }
@@ -16,6 +30,29 @@ test_fail() { echo "  [FAIL] $1: $2"; FAIL=$((FAIL + 1)); TOTAL=$((TOTAL + 1)); 
 pyjson() {
   python3 -c "import json,sys; d=json.load(sys.stdin); $1" 2>/dev/null
 }
+
+# Optional: clean environment
+if [ "$DO_CLEAN" = true ]; then
+  echo "[clean] Stopping services..."
+  systemctl stop bps-dashboard 2>/dev/null || true
+  pkill -f "openclaw gateway" 2>/dev/null || true
+  sleep 2
+
+  echo "[clean] Wiping state..."
+  [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
+  rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/cron/" 2>/dev/null || true
+
+  echo "[clean] Running install-aida.sh..."
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  bash "$SCRIPT_DIR/../../deploy/install-aida.sh"
+
+  echo "[clean] Waiting for Dashboard..."
+  sleep 5
+  echo "[clean] Done."
+fi
 
 echo ""
 echo "============================================"

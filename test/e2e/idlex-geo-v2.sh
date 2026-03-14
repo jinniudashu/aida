@@ -103,11 +103,11 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
   log "Backing up ~/.aida/ ..."
   [ -d "$AIDA_HOME" ] && mv "$AIDA_HOME" "$AIDA_HOME.bak.$(date +%Y%m%d%H%M%S)"
 
-  log "Cleaning workspace (preserving MEMORY.md)..."
-  [ -f "$OPENCLAW_HOME/workspace/MEMORY.md" ] && \
-    cp "$OPENCLAW_HOME/workspace/MEMORY.md" /tmp/aida-memory-backup.md 2>/dev/null || true
-  rm -rf "$OPENCLAW_HOME/workspace/skills/" 2>/dev/null || true
+  log "Wiping OpenClaw state..."
+  rm -rf "$OPENCLAW_HOME/workspace/" 2>/dev/null || true
   rm -rf "$OPENCLAW_HOME"/workspace-* 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/agents/main/sessions/" 2>/dev/null || true
+  rm -rf "$OPENCLAW_HOME/cron/" 2>/dev/null || true
 
   log "Updating repo..."
   cd "$AIDA_REPO"
@@ -115,10 +115,6 @@ if [ "$SKIP_INSTALL" = false ] && [ "$START_PHASE" -le 0 ]; then
 
   log "Running install-aida.sh..."
   bash deploy/install-aida.sh
-
-  # Restore memory
-  [ -f /tmp/aida-memory-backup.md ] && \
-    cp /tmp/aida-memory-backup.md "$OPENCLAW_HOME/workspace/MEMORY.md" 2>/dev/null || true
 
   log "Starting OpenClaw gateway..."
   openclaw gateway start 2>/dev/null || warn_ "Gateway start returned non-zero (may already be running)"

@@ -182,6 +182,22 @@ fi
 if [ -d "$AGENTS_DIR/aida/skills" ]; then
   info "安装 Aida skills → $MAIN_WS/skills/"
   mkdir -p "$MAIN_WS/skills"
+
+  # 清理非仓库 Skill（Agent 历史运行残留）
+  CLEANED=0
+  if [ -d "$MAIN_WS/skills" ]; then
+    for existing in "$MAIN_WS/skills"/*/; do
+      [ -d "$existing" ] || continue
+      skill_name="$(basename "$existing")"
+      if [ ! -d "$AGENTS_DIR/aida/skills/$skill_name" ]; then
+        rm -rf "$existing"
+        CLEANED=$((CLEANED + 1))
+        log "  清理残留 skill/$skill_name"
+      fi
+    done
+    [ "$CLEANED" -gt 0 ] && log "$CLEANED 个残留 skill 已清理"
+  fi
+
   SKILL_COUNT=0
   for skill_dir in "$AGENTS_DIR/aida/skills"/*/; do
     skill_name="$(basename "$skill_dir")"

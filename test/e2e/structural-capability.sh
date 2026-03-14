@@ -1627,7 +1627,7 @@ if [ "$START_PHASE" -le 3 ]; then
   soft "S3.13 Collaboration round-trip (Engine tasks visible in Dashboard API)" "test '$COLLAB_RT' = 'yes'"
 
   # S3.14: Collaboration task detail 404 for missing
-  COLLAB_404=$(curl -sf -o /dev/null -w "%{http_code}" "$DASHBOARD_URL/api/collaboration/tasks/nonexistent" 2>/dev/null || echo "000")
+  COLLAB_404=$(curl -s -o /dev/null -w "%{http_code}" "$DASHBOARD_URL/api/collaboration/tasks/nonexistent" 2>/dev/null || echo "000")
   check "S3.14 Collaboration task detail returns 404 for missing" "test '$COLLAB_404' = '404'"
 
   log "Phase 3 complete."
