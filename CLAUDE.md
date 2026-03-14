@@ -39,23 +39,23 @@ aida/
 ├── tsconfig.json             ← 引擎 TypeScript 配置
 ├── openclaw.plugin.json      ← 插件清单
 ├── src/                      ← 引擎核心（tsc 编译域）
-│   ├── store/                ← SQLite 持久化（6 文件）
+│   ├── store/                ← SQLite 持久化（7 文件，含 skill-metrics-store）
 │   ├── engine/               ← 任务追踪 + 状态机（2 文件）
-│   ├── management/           ← 管理层（5 文件）
-│   ├── collaboration/        ← 协作输入（2 文件）
+│   ├── management/           ← 管理层（5 文件：types/store/action-gate/loader/constants）
+│   ├── collaboration/        ← 协作输入（2 文件：types/collaboration-store）
 │   ├── knowledge/            ← BKM 知识管理（3 文件）
-│   ├── loader/               ← 项目装载（4 文件）
-│   ├── integration/          ← OpenClaw 桥接（5 文件）
+│   ├── loader/               ← 项目装载（4 文件，含 blueprint-compiler）
+│   ├── integration/          ← OpenClaw 桥接（6 文件，含 tool-observer）
 │   ├── mcp/                  ← MCP Server（1 文件）
 │   ├── schema/               ← TypeBox 类型定义（8 文件）
 │   ├── system/               ← 项目初始化（1 文件）
 │   └── index.ts              ← 主导出 + createBpsEngine()
 ├── dashboard/                ← Dashboard（Vite + tsx 编译域，平行于 src/）
 │   ├── client/               ← Vue 3 SPA（13 页面）
-│   ├── server/               ← Hono API + SSE（33 endpoints）
-│   ├── test/                 ← Dashboard API 测试（112 tests）
+│   ├── server/               ← Hono API + SSE（~40 endpoints）
+│   ├── test/                 ← Dashboard API 测试（136 tests）
 │   └── blueprints/           ← 演示蓝图
-├── test/                     ← 引擎核心测试（255 tests）
+├── test/                     ← 引擎核心测试（416 tests）
 ├── agents/                   ← Agent workspace（Aida + 7 Skills）
 ├── deploy/                   ← install-aida.sh 一键部署
 ├── docs/                     ← 全部文档（BPS 规范 + 引擎文档 + ADR）
@@ -120,7 +120,7 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 - Dashboard 前端：Vue 3, Vue Router, Pinia, Naive UI, ECharts
 - Dashboard 后端：Hono, @hono/node-server, SSE 实时推送
 - 构建：tsc (引擎 src/ → dist/), Vite (dashboard/)
-- Vitest（测试框架）, 391 tests（266 引擎 + 125 Dashboard）
+- Vitest（测试框架）, 552 tests（416 引擎 + 136 Dashboard）
 
 ### erpsys（BPS 引擎 Django 版，仅供借鉴）
 - Django 4.2.7, DRF, PostgreSQL/SQLite, Redis, Celery, Django Channels
@@ -130,7 +130,7 @@ OpenClaw 是 AI Agent 基础设施，bps-engine 作为其原生插件运行。
 ```bash
 npm install               # 安装依赖
 npx tsc --noEmit          # 引擎类型检查
-npx vitest run            # 全部测试（引擎 255 + Dashboard 112 = 367）
+npx vitest run            # 全部测试（引擎 416 + Dashboard 136 = 552）
 npm run build:dashboard   # 构建 Dashboard SPA
 npm run dev:dashboard     # 开发模式（API + Vite HMR）
 ```
@@ -237,8 +237,9 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **业务场景端到端验证**：`server/simulate.ts` 注入晨光咖啡三店标准化运营完整场景
   - 测试服务器 `http://47.236.109.62:3456` 全部页面数据可见
   - 三频操作全景 + HITL 审批闭环 + 动态 Skill 创建记录
-- **工具总览**：17 BPS tools + 3 MCP tools
-  - bps_list_services, bps_create_task, bps_get_task, bps_query_tasks, bps_update_task, bps_complete_task, bps_get_entity, bps_update_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_create_skill, bps_load_blueprint, bps_governance_status, bps_load_governance, bps_request_collaboration, bps_get_collaboration_response
+- **工具总览**：19 BPS tools + 3 MCP tools
+  - 读操作：bps_list_services, bps_get_task, bps_query_tasks, bps_get_entity, bps_query_entities, bps_next_steps, bps_scan_work, bps_management_status, bps_get_collaboration_response
+  - 写操作（受管理管控）：bps_create_task, bps_update_task, bps_complete_task, bps_update_entity, bps_create_skill, bps_load_blueprint, bps_load_management, bps_register_agent, bps_batch_update, bps_request_collaboration
 - **Aida Skills**：7 个（project-init, action-plan, dashboard-guide, blueprint-modeling, agent-create, business-execution, skill-create）
 
 ### 端到端能力验证 -- 基础设施级（2026-03-05）
@@ -262,11 +263,12 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - 讨论纪要：`archive/Blueprint管理层讨论纪要 (2026-03-05).md`
 - 管理层设计文档：`docs/Agent 管理层规范 (AGS) v0.1.md`
 - **核心决策**：Blueprint 从"流程编排器"重定位为"管理规则"——定义 Agent 不能做什么，而非应该做什么
-- **管理层实现**（`src/governance/`，4 文件）：
+- **管理层实现**（`src/management/`，5 文件）：
   - `types.ts`：类型定义（Constraint/Verdict/CircuitBreakerState/ViolationRecord/ApprovalRequest）
-  - `governance-store.ts`：SQLite 持久化（4 表：constraints/violations/circuit_breaker/approvals）
+  - `management-store.ts`：SQLite 持久化（4 表：constraints/violations/circuit_breaker/approvals）
   - `action-gate.ts`：前置拦截器（scope 匹配 + expr-eval 求值 + verdict 判定 + 熔断器状态机）
-  - `governance-loader.ts`：governance.yaml 解析 + 校验
+  - `management-loader.ts`：management.yaml 解析 + 校验
+  - `constants.ts`：GATED_WRITE_TOOLS 单一来源（9 个写操作工具）
 - **工具集成**：
   - 5 个写操作工具自动包装管理检查（bps_update_entity/create_task/update_task/complete_task/create_skill）
   - 新增 `bps_governance_status` tool (#13)：查询熔断器状态 + 违规记录 + 待审批
@@ -756,6 +758,15 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **MAOr 驱动的需求场景**：面诊参数填写（医生）、知情同意确认（护士/患者）、治疗用量记录（医生）、术后随访观察（护士）
 - **测试**：+28 新测试（17 engine + 11 Dashboard），总计 475 tests
 - **BPS tools**：19 个（15 base + 2 management + 2 collaboration）
+
+### 工具观测层 + 信息饱和信号（2026-03-14）
+- **ToolObserver**（`src/integration/tool-observer.ts`）：OpenClaw `after_tool_call` Hook 观测层
+  - 全景观测：为原生工具（write/edit/exec）emit 事件到 Dashboard SSE
+  - 纵深防御：检测 Agent 通过原生文件 I/O 绕过 BPS 工具写入 AIDA 数据目录（管理绕过检测）
+- **信息饱和信号**：4 层反「说而不做」机制（详见 commit `386f8b4`）
+- **AIDA 能力清单**：65 个能力 + AEF 映射（详见 `docs/`）
+- **E2E 测试框架改进**：SC_MODEL 环境变量 + 模型验证探针 + 脚本清理标准化
+- **模型更新**：moonshot/kimi-k2.5（已弃用）→ kimi/kimi-for-coding
 
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
