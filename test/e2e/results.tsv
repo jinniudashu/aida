@@ -8,3 +8,4 @@ timestamp	scheme	commit	model	pass	fail	score	entities	violations	skills	notes
 2026-03-12 18:00:00	aef-v1	hist	qwen3.5-plus	123	0	4.91	3	3	2	R3 best AEF
 2026-03-14 14:00:00	structural-v2	hist	qwen3.5-plus	121	1	8.20	21	4	18	SC-v2 R1
 2026-03-14 20:00:00	structural-v2	hist	kimi-for-coding	127	0	8.28	17	6	12	SC-v2 R3 best
+2026-03-15 07:40:55	structural-v2	f9b532d	kimi/kimi-for-coding	127	0	7.78	30	15	11	framework validation R1
