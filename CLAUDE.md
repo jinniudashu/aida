@@ -757,6 +757,21 @@ npm run dev:dashboard     # 开发模式（API + Vite HMR）
 - **测试**：+28 新测试（17 engine + 11 Dashboard），总计 475 tests
 - **BPS tools**：19 个（15 base + 2 management + 2 collaboration）
 
+### Structural Capability v2 E2E 测试 R1（2026-03-14）
+- R1 报告：`test/e2e/structural-capability/SC-v2-R1-REPORT.md`
+- **目标**：验证 D9（信息饱和信号）+ D10（协作输入）+ D11（Dashboard 协作 API）升级效果
+- **模型**：dashscope/qwen3.5-plus
+- **结果**：**121 PASS / 1 FAIL / 5 WARN / 127 TOTAL**（618s, 10.3 分钟）
+- **v1→v2 升级**：97→127 检查点（+30），D1-D8→D1-D10（+D9 饱和信号 + D10 协作输入）
+- **新维度结果**：
+  - D9 信息饱和信号：6/6 PASS（阈值触发、写重置、累积、动作提示、协作读分类）
+  - D10 协作输入：10/10 PASS（创建/查询/响应/取消/过期/事件/错误处理全通过）
+  - D11 Dashboard 协作 API：4/5 PASS（S3.14 curl -sf 导致 404 检测失败，已修复）
+- **协作机制端到端验证**：Agent 调用 `bps_request_collaboration` → 3 个协作任务 → Dashboard API 模拟店长响应 → 数据回流
+- **1 FAIL**：S3.14 curl -sf flag 吞掉 404 状态码（已修复为 curl -s）
+- **5 WARN**：4 个为 Qwen "说而不做" 模式（Skill/Agent 描述但未创建），1 个审批检测遗漏
+- **测试**：475 单元测试全部通过
+
 ### BPS 论文研究
 - 论文标题: 《AI-Native 组织运营的计算机科学原理》
 - 状态: 学术工作暂时搁置，聚焦商业落地
