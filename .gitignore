@@ -5,3 +5,4 @@ dist/
 .dev/
 .test-data/
 .DS_Store
+test/e2e/results-local/

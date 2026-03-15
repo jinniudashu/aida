@@ -1943,6 +1943,10 @@ FINAL_CONSTRAINTS=$(api_get "/api/management/constraints" | jlen)
 FINAL_SKILLS=$(find "$OPENCLAW_HOME/workspace/skills/" -name SKILL.md 2>/dev/null | wc -l)
 FINAL_BLUEPRINTS=$(find "$AIDA_HOME/blueprints/" -name "*.yaml" 2>/dev/null | wc -l)
 FINAL_WORKSPACES=$(find "$OPENCLAW_HOME/" -maxdepth 1 -name "workspace-*" -type d 2>/dev/null | wc -l)
+FINAL_CRON=$(find "$OPENCLAW_HOME/cron/" -name "*.json" -o -name "*.yaml" 2>/dev/null | wc -l)
+FINAL_APPROVAL_DECIDED=$(api_get "/api/management/approvals" | node -e "
+  try{const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+  console.log(d.filter(a=>a.status==='APPROVED'||a.status==='REJECTED').length)}catch{console.log(0)}" 2>/dev/null || echo 0)
 
 check "V5.1 Final entity count stable (got $FINAL_ENTITIES)" "test $FINAL_ENTITIES -ge 7"
 check "V5.2 Management constraints loaded (got $FINAL_CONSTRAINTS)" "test $FINAL_CONSTRAINTS -ge 2"
@@ -2065,6 +2069,8 @@ cat > "$LOG_DIR/metrics.json" << METRICS
   "blueprints": $FINAL_BLUEPRINTS,
   "writeToolCalls": ${TOTAL_WRITES:-0},
   "agentWorkspaces": $FINAL_WORKSPACES,
+  "cronJobs": ${FINAL_CRON:-0},
+  "approvalDecided": ${FINAL_APPROVAL_DECIDED:-0},
   "collaborationTasks": ${FINAL_COLLAB_TOTAL:-0},
   "collaborationCompleted": ${FINAL_COLLAB_COMPLETED:-0},
   "saturationSignals": ${SATURATION_DETECTED:-0},
@@ -2168,5 +2174,25 @@ log "Metrics: $LOG_DIR/metrics.json"
 
 echo ""
 echo "Output: $LOG_DIR/"
+
+# ════════════════════════════════════════════════════════════
+# Auto-scoring (when not invoked via aida-eval.sh)
+# ════════════════════════════════════════════════════════════
+
+if [ -z "${AIDA_EVAL_WRAPPER:-}" ]; then
+  SCORE_CALC="$(dirname "${BASH_SOURCE[0]}")/lib/score-calculator.cjs"
+  RUBRIC="$(dirname "${BASH_SOURCE[0]}")/rubrics/structural.json"
+  RESULTS="$(dirname "${BASH_SOURCE[0]}")/results.tsv"
+  if [ -f "$SCORE_CALC" ] && [ -f "$RUBRIC" ]; then
+    GIT_COMMIT=$(git -C "$AIDA_REPO" rev-parse --short HEAD 2>/dev/null || echo "?")
+    node "$SCORE_CALC" \
+      --metrics "$LOG_DIR/metrics.json" \
+      --rubric "$RUBRIC" \
+      --results "$RESULTS" \
+      --scheme "structural-v2" \
+      --commit "$GIT_COMMIT" \
+      --model "$SC_MODEL" || true
+  fi
+fi
 
 exit "$FAIL"
